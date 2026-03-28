@@ -17,12 +17,7 @@
     <meta property="og:url" content="https://exchanger-pro.web.app/">
     <meta property="og:title" content="Exchanger Pro - Trusted Gmail Exchange Platform">
     <meta property="og:description" content="Join Exchanger Pro to exchange Gmails safely and earn money. Fast payment system with 24/7 support.">
-    <meta property="og:image" content="https://exchanger-pro.web.app/og-image.png"> <!-- Ensure you add an image at this URL -->
-
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Exchanger Pro - Gmail Exchange">
-    <meta name="twitter:description" content="Best Gmail exchange platform in Bangladesh. Trusted and fast.">
+    <meta property="og:image" content="https://exchanger-pro.web.app/og-image.png">
 
     <!-- Theme & PWA Config -->
     <meta name="theme-color" content="#4F46E5">
@@ -40,28 +35,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <!-- Schema.org Markup for SEO -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "Exchanger Pro",
-      "url": "https://exchanger-pro.web.app",
-      "description": "Trusted Gmail exchange and online earning platform in Bangladesh.",
-      "applicationCategory": "FinanceApplication",
-      "operatingSystem": "Android, iOS, Windows",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "BDT"
-      },
-      "author": {
-        "@type": "Organization",
-        "name": "Exchanger Pro"
-      }
-    }
-    </script>
     
     <style>
         /* CSS Code Starts */
@@ -91,6 +64,7 @@
         .loader-spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; }
         .loader-text { color: white; margin-top: 15px; font-weight: 600; font-size: 14px; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
         /* Network Error Overlay */
         .network-overlay {
@@ -182,7 +156,7 @@
         .rb-value { font-size: 22px; font-weight: 800; color: #111827; }
         .rb-value small { font-size: 11px; font-weight: 600; color: #9ca3af; }
 
-        /* --- DYNAMIC REVIEW TIME DESIGN (UPDATED SIZES) --- */
+        /* --- DYNAMIC REVIEW TIME DESIGN --- */
         .review-time-container-v3 {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -210,12 +184,10 @@
         .type-left .rt-v3-icon { background: rgba(79, 70, 229, 0.1); color: var(--primary-color); }
         .type-right .rt-v3-icon { background: rgba(16, 185, 129, 0.1); color: #10B981; }
 
-        /* UPDATED: Font size increased to 16px */
         .rt-v3-title { font-size: 16px; font-weight: 700; color: #111827; margin-bottom: 2px; line-height: 1.3; }
         .rt-v3-date { font-size: 10px; color: #6b7280; margin-bottom: 8px; }
         .rt-v3-time-box { background: #f9fafb; border-radius: 8px; padding: 8px; border: 1px solid #e5e7eb; }
         
-        /* UPDATED: Timer font size increased to 26px for prominence */
         .rt-v3-sec { font-size: 26px; font-weight: 800; font-family: 'Courier New', Courier, monospace; color: #111; letter-spacing: 1px; }
         
         .rt-v3-label { font-size: 10px; color: #10B981; font-weight: 700; background: #ecfdf5; display: inline-block; padding: 2px 8px; border-radius: 10px; margin-top: 5px; }
@@ -474,7 +446,7 @@
 
 <!-- NAVBAR -->
 <nav class="navbar navbar-dark">
-    <a class="navbar-brand-center" href="#">
+    <a class="navbar-brand-center" href="#" onclick="switchTab('home')">
         <div class="nav-logo-icon">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="white"/>
@@ -527,12 +499,12 @@
             <h6 class="mb-3 fw-bold text-dark"><i class="bi bi-currency-exchange text-primary me-2"></i>লেনদেন শুরু করুন</h6>
             <div class="mb-3">
                 <label class="form-label text-muted small fw-bold">Choose Gmail Type</label>
-                <select class="form-select-custom" id="dollarType" onchange="updateTotal()">
+                <select class="form-select-custom" id="dollarType" onchange="window.updateTotal()">
                     <option value="new">New Gmail (Level Rate)</option>
                     <option value="old">Old Gmail (Level Rate)</option>
                 </select>
             </div>
-            <button class="trans-btn" id="startTransBtn" onclick="protectedAction('exchange')">Start Gmail Selling <i class="bi bi-arrow-right-circle ms-2"></i></button>
+            <button class="trans-btn" id="startTransBtn" onclick="protectedAction('exchange_step')">Start Gmail Selling <i class="bi bi-arrow-right-circle ms-2"></i></button>
         </div>
 
         <div id="reviewTimeContainer" class="review-time-container-v3"></div>
@@ -570,13 +542,13 @@
 
         <form id="gmailForm">
             <div id="gmailRows"></div>
-            <button type="button" class="btn btn-outline-primary btn-sm mb-3 w-100 py-2" style="border-radius:10px;" onclick="addMoreRow()"><i class="bi bi-plus-circle me-1"></i>Add Another</button>
+            <button type="button" class="btn btn-outline-primary btn-sm mb-3 w-100 py-2" style="border-radius:10px;" onclick="window.addMoreRow()"><i class="bi bi-plus-circle me-1"></i>Add Another</button>
             <div class="card p-3 mb-3 bg-white border text-center shadow-sm" style="border-radius:12px;">
                 <small class="text-muted" style="font-size:11px;">Estimated Earnings</small>
                 <h3 class="mb-0 fw-bold text-success">৳ <span id="tempTotal">0</span></h3>
             </div>
             <div id="masterError" class="alert alert-danger py-2 text-center fw-bold" style="display:none; border-radius:10px; font-size:12px;"></div>
-            <button type="button" id="submitBtn" class="trans-btn" onclick="validateAndSubmit()"><span id="btnText">Submit Details</span><span id="btnLoad" class="spinner-border spinner-border-sm d-none"></span></button>
+            <button type="button" id="submitBtn" class="trans-btn" onclick="window.validateAndSubmit()"><span id="btnText">Submit Details</span><span id="btnLoad" class="spinner-border spinner-border-sm d-none"></span></button>
         </form>
     </div>
 
@@ -846,7 +818,7 @@
       }
   });
 
-  // --- TIMER LOGIC START (UPDATED) ---
+  // --- TIMER LOGIC START ---
   let globalTimerInterval = null;
   let activeShifts = defaultReviewShifts; 
 
@@ -1032,7 +1004,7 @@
           if(homeRateOld) homeRateOld.innerHTML = `${defaultLvl.old_rate} <small>টাকা</small>`;
       }
       
-      updateTotal();
+      if(typeof window.updateTotal === 'function') window.updateTotal();
   }
 
   function showToast(icon, title) {
@@ -1283,8 +1255,12 @@
     try {
       await signInWithEmailAndPassword(auth, email, pass);
       if(auth.currentUser) await update(ref(db, 'users/' + auth.currentUser.uid), { last_login: Date.now(), device: getDeviceInfo(), forceLogout: false });
-      showPopup('success', 'Login Successful', 'Welcome to Exchanger Pro!'); switchTab('home');
+      showPopup('success', 'Login Successful', 'Welcome to Exchanger Pro!');
       document.getElementById('auth-page').style.display = 'none';
+      // Stay on current route or go home
+      const path = window.location.pathname.replace('/', '');
+      const valid = ['home', 'history', 'sellers', 'profile'];
+      if (!valid.includes(path)) switchTab('home');
     } catch (err) { showError("Login Failed", getErrorReason(err)); } 
     finally { btn.disabled = false; btnText.innerText = "Login"; btnSpinner.classList.add('d-none'); }
   };
@@ -1386,7 +1362,7 @@
       
       showPopup('success', 'Success', 'Submission recorded.');
       document.getElementById('gmailRows').innerHTML = '';
-      addMoreRow(); addMoreRow();
+      window.addMoreRow(); window.addMoreRow();
       switchTab('history');
       
     } catch (err) { showError("Server Error", err.message); } 
@@ -1466,12 +1442,43 @@
 </script>
 
 <script>
-    // UI Logic
-    function switchTab(tabId) {
+    // UI Logic - Fixing updateTotal is not defined
+    const validTabs = ['home', 'history', 'sellers', 'profile', 'exchange_step'];
+
+    function switchTab(tabId, pushState = true) {
+        if (!validTabs.includes(tabId)) tabId = 'home';
+
         document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
+        
+        const target = document.getElementById(tabId);
+        if(target) target.classList.add('active');
+        
         if(document.getElementById(tabId + '-btn')) document.getElementById(tabId + '-btn').classList.add('active');
+
+        if (pushState) {
+            const url = tabId === 'home' ? '/' : '/' + tabId;
+            history.pushState({ tab: tabId }, "", url);
+        }
+    }
+
+    window.addEventListener('popstate', (e) => {
+        if (e.state && e.state.tab) {
+            switchTab(e.state.tab, false);
+        } else {
+            switchTab('home', false);
+        }
+    });
+
+    function initAppRoute() {
+        let path = window.location.pathname.replace('/', '');
+        if (path.includes('/')) path = path.split('/')[0]; 
+        
+        if (path && validTabs.includes(path)) {
+            switchTab(path, false);
+        } else {
+            switchTab('home', false);
+        }
     }
 
     function showHistoryTab(tab, e) {
@@ -1484,7 +1491,7 @@
 
     function protectedAction(tabId) {
         if (!window.currentUser) document.getElementById('auth-page').style.display = 'block';
-        else if (tabId === 'exchange') switchTab('exchange_step');
+        else if (tabId === 'exchange_step') switchTab('exchange_step');
         else switchTab(tabId);
     }
     
@@ -1504,31 +1511,30 @@
         }
     }
 
-    document.addEventListener('DOMContentLoaded', () => { addMoreRow(); addMoreRow(); });
-
-    function addMoreRow(email='', pass='') {
-        const row = document.createElement('div');
-        row.className = 'gmail-row position-relative';
-        row.innerHTML = `<button type="button" class="remove-btn" onclick="removeRow(this)"><i class="bi bi-x"></i></button><input type="email" class="g-input" value="${email}" placeholder="Enter Gmail Address" required><input type="text" class="p-input" value="${pass}" placeholder="Enter Password" required>`;
-        document.getElementById('gmailRows').appendChild(row);
-        updateTotal();
-    }
-
-    function removeRow(element) {
-        const rows = document.querySelectorAll('.gmail-row');
-        if (rows.length <= 2) { showError("Warning", "Minimum 2 emails required."); return; }
-        element.parentElement.remove();
-        updateTotal();
-    }
-
-    function updateTotal() {
+    // Define updateTotal globally
+    window.updateTotal = function() {
         const count = document.querySelectorAll('.gmail-row').length;
         const type = document.getElementById('dollarType').value;
         const rate = (type === 'new') ? (window.currentDynamicRate || 10) : (window.baseOldRate || 8);
         document.getElementById('tempTotal').innerText = count * rate;
+    };
+
+    window.addMoreRow = function(email='', pass='') {
+        const row = document.createElement('div');
+        row.className = 'gmail-row position-relative';
+        row.innerHTML = `<button type="button" class="remove-btn" onclick="removeRow(this)"><i class="bi bi-x"></i></button><input type="email" class="g-input" value="${email}" placeholder="Enter Gmail Address" required><input type="text" class="p-input" value="${pass}" placeholder="Enter Password" required>`;
+        document.getElementById('gmailRows').appendChild(row);
+        window.updateTotal();
     }
 
-    function validateAndSubmit() {
+    window.removeRow = function(element) {
+        const rows = document.querySelectorAll('.gmail-row');
+        if (rows.length <= 2) { showError("Warning", "Minimum 2 emails required."); return; }
+        element.parentElement.remove();
+        window.updateTotal();
+    }
+
+    window.validateAndSubmit = function() {
         const rows = document.querySelectorAll('.gmail-row');
         if (rows.length < 2) { return showError("Validation Error", "Minimum 2 emails required."); }
 
@@ -1551,6 +1557,12 @@
     }
     
     function showError(title, msg) { Swal.fire({ icon: 'error', title: title, text: msg, confirmButtonColor: '#4F46E5' }); }
+
+    document.addEventListener('DOMContentLoaded', () => { 
+        window.addMoreRow(); 
+        window.addMoreRow(); 
+        initAppRoute();
+    });
 </script>
 
 </body>
