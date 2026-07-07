@@ -267,18 +267,199 @@
         .level-footer-v2 { display: flex; justify-content: space-between; font-size: 11px; }
         .level-footer-v2 .next { color: var(--primary); font-weight: 700; }
 
-        .referral-card-v2 { background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 22px; padding: 22px 18px; color: white; margin-bottom: 16px; box-shadow: 0 12px 32px rgba(102,126,234,0.3); position: relative; overflow: hidden; }
-        .ref-top-v2 { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; position: relative; z-index: 1; }
-        .ref-icon-v2 { width: 48px; height: 48px; border-radius: 14px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 24px; }
-        .ref-title-v2 { font-size: 16px; font-weight: 800; }
-        .ref-sub-v2 { font-size: 11px; opacity: 0.85; }
-        .ref-stats-v2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; position: relative; z-index: 1; }
-        .ref-stat-box-v2 { background: rgba(255,255,255,0.15); border-radius: 14px; padding: 12px; text-align: center; }
-        .ref-stat-val-v2 { font-size: 24px; font-weight: 900; }
-        .ref-stat-label-v2 { font-size: 9px; opacity: 0.85; font-weight: 700; }
-        .ref-code-box-v2 { background: rgba(255,255,255,0.12); border-radius: 14px; padding: 12px; display: flex; align-items: center; gap: 10px; border: 1px solid rgba(255,255,255,0.15); }
-        .ref-code-text-v2 { font-size: 18px; font-weight: 800; letter-spacing: 1.5px; flex-grow: 1; font-family: 'Courier New', monospace; }
-        .ref-copy-btn-v2 { background: white; color: #667eea; border: none; padding: 8px 14px; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        /* Referral Card V3 with Tabs */
+        .referral-card-v3 { background: white; border-radius: 22px; margin-bottom: 16px; box-shadow: var(--shadow); border: 1px solid var(--border); overflow: hidden; }
+        
+        .referral-header-v3 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        .referral-header-v3::before {
+            content: '🎁';
+            position: absolute;
+            top: -15px; right: -15px;
+            font-size: 90px;
+            opacity: 0.15;
+            transform: rotate(15deg);
+        }
+        .ref-top-v3 { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; position: relative; z-index: 1; }
+        .ref-icon-v3 { width: 48px; height: 48px; border-radius: 14px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 24px; backdrop-filter: blur(10px); }
+        .ref-title-v3 { font-size: 17px; font-weight: 800; }
+        .ref-sub-v3 { font-size: 11px; opacity: 0.9; }
+        
+        .ref-stats-v3 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; position: relative; z-index: 1; }
+        .ref-stat-box-v3 { background: rgba(255,255,255,0.15); border-radius: 14px; padding: 12px; text-align: center; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .ref-stat-val-v3 { font-size: 22px; font-weight: 900; }
+        .ref-stat-label-v3 { font-size: 9px; opacity: 0.9; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        /* Referral Tabs */
+        .referral-tabs-v3 {
+            display: flex;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border);
+        }
+        .ref-tab-v3 {
+            flex: 1;
+            padding: 12px 10px;
+            background: transparent;
+            border: none;
+            font-weight: 700;
+            font-size: 12px;
+            color: var(--text-mid);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            position: relative;
+        }
+        .ref-tab-v3 i { font-size: 16px; }
+        .ref-tab-v3.active {
+            color: var(--primary);
+            background: white;
+        }
+        .ref-tab-v3.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 20%; right: 20%;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 3px 3px 0 0;
+        }
+        .ref-tab-v3:active { transform: scale(0.98); }
+        
+        .referral-content-v3 { padding: 16px; }
+        .ref-tab-content { display: none; }
+        .ref-tab-content.active { display: block; animation: fadeIn 0.3s; }
+        
+        /* Referral Code Box */
+        .ref-code-box-v3 { background: linear-gradient(135deg, #f8fafc, #f1f5f9); border-radius: 14px; padding: 14px; display: flex; align-items: center; gap: 10px; border: 2px solid var(--border); margin-bottom: 12px; }
+        .ref-code-text-v3 { font-size: 18px; font-weight: 800; letter-spacing: 1.5px; flex-grow: 1; font-family: 'Courier New', monospace; color: var(--primary-dark); }
+        .ref-copy-btn-v3 { background: var(--gradient); color: white; border: none; padding: 8px 14px; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 4px 12px rgba(79,70,229,0.25); }
+        .ref-copy-btn-v3:active { transform: scale(0.95); }
+        
+        /* Referral Friend List */
+        .ref-friend-list { max-height: 400px; overflow-y: auto; }
+        .ref-friend-item {
+            background: linear-gradient(135deg, #f9fafb, #f3f4f6);
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border);
+            position: relative;
+            transition: all 0.2s;
+        }
+        .ref-friend-item:active { transform: scale(0.99); }
+        .ref-friend-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        .ref-friend-info { flex: 1; min-width: 0; }
+        .ref-friend-name {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 2px;
+        }
+        .ref-friend-email {
+            font-size: 11px;
+            color: var(--text-mid);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .ref-friend-earn-badge {
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 800;
+            box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+        .ref-friend-stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .ref-friend-stat {
+            background: white;
+            padding: 6px 4px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+        .ref-friend-stat-val {
+            font-weight: 800;
+            font-size: 13px;
+            color: var(--primary);
+            display: block;
+        }
+        .ref-friend-stat-lbl {
+            color: var(--text-light);
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .ref-friend-status {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+        .ref-friend-status.active { background: #dcfce7; color: #166534; }
+        .ref-friend-status.blocked { background: #fee2e2; color: #991b1b; }
+        
+        .ref-empty-state {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--text-mid);
+        }
+        .ref-empty-state i {
+            font-size: 50px;
+            opacity: 0.3;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .ref-empty-state h6 {
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: var(--text);
+        }
+        .ref-empty-state p {
+            font-size: 12px;
+            margin: 0;
+        }
+        
+        .ref-share-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            width: 100%;
+            font-weight: 700;
+            font-size: 14px;
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 6px 18px rgba(102,126,234,0.3);
+        }
+        .ref-share-btn:active { transform: scale(0.98); }
 
         .settings-card-v2 { background: white; border-radius: 20px; padding: 8px; margin-bottom: 16px; box-shadow: var(--shadow); border: 1px solid var(--border); }
         .settings-section-title { font-size: 11px; font-weight: 800; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; padding: 10px 14px 4px; }
@@ -370,6 +551,8 @@
             .notif-panel { width: 290px; }
             .review-sec { font-size: 22px; }
             .review-title { font-size: 12px; }
+            .ref-stat-val-v3 { font-size: 20px; }
+            .ref-friend-name { font-size: 13px; }
         }
     </style>
 </head>
@@ -718,23 +901,81 @@
             <div class="level-footer-v2"><span>Current Level</span><span class="next" id="levelRemainCount">Next: 40 Left</span></div>
         </div>
 
-        <div class="referral-card-v2">
-            <div class="ref-top-v2">
-                <div class="ref-icon-v2">🎁</div>
-                <div>
-                    <div class="ref-title-v2">Invite & Earn</div>
-                    <div class="ref-sub-v2">Commission: <span id="commRateDisplay">0</span>% per referral</div>
+        <!-- NEW Referral Card V3 with Tabs -->
+        <div class="referral-card-v3">
+            <div class="referral-header-v3">
+                <div class="ref-top-v3">
+                    <div class="ref-icon-v3">🎁</div>
+                    <div>
+                        <div class="ref-title-v3">Invite & Earn</div>
+                        <div class="ref-sub-v3">Commission: <span id="commRateDisplay">0</span>% per referral</div>
+                    </div>
+                </div>
+                <div class="ref-stats-v3">
+                    <div class="ref-stat-box-v3">
+                        <div class="ref-stat-val-v3" id="totalReferred">0</div>
+                        <div class="ref-stat-label-v3">Total Refers</div>
+                    </div>
+                    <div class="ref-stat-box-v3">
+                        <div class="ref-stat-val-v3">৳ <span id="referralEarnings">0.00</span></div>
+                        <div class="ref-stat-label-v3">Total Earned</div>
+                    </div>
                 </div>
             </div>
-            <div class="ref-stats-v2">
-                <div class="ref-stat-box-v2"><div class="ref-stat-val-v2" id="totalReferred">0</div><div class="ref-stat-label-v2">Total Refers</div></div>
-                <div class="ref-stat-box-v2"><div class="ref-stat-val-v2">৳ <span id="referralEarnings">0.00</span></div><div class="ref-stat-label-v2">Total Earned</div></div>
+            
+            <!-- Tabs -->
+            <div class="referral-tabs-v3">
+                <button class="ref-tab-v3 active" onclick="switchRefTab('overview', this)">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <span>Overview</span>
+                </button>
+                <button class="ref-tab-v3" onclick="switchRefTab('friends', this)">
+                    <i class="bi bi-people-fill"></i>
+                    <span>My Friends</span>
+                </button>
             </div>
-            <div class="ref-code-box-v2">
-                <div><small style="font-size:9px;opacity:0.8;display:block;">YOUR CODE</small><span class="ref-code-text-v2" id="myReferralCode">LOADING</span></div>
-                <button class="ref-copy-btn-v2" onclick="window.copyRefLink()"><i class="bi bi-clipboard-check"></i> Copy</button>
+            
+            <div class="referral-content-v3">
+                <!-- Overview Tab -->
+                <div id="ref-tab-overview" class="ref-tab-content active">
+                    <div class="ref-code-box-v3">
+                        <div style="flex:1;min-width:0;">
+                            <small style="font-size:9px;opacity:0.7;display:block;color:var(--text-mid);">YOUR CODE</small>
+                            <span class="ref-code-text-v3" id="myReferralCode">LOADING</span>
+                        </div>
+                        <button class="ref-copy-btn-v3" onclick="window.copyRefLink()">
+                            <i class="bi bi-clipboard-check"></i> Copy
+                        </button>
+                    </div>
+                    <input type="hidden" id="refLinkInput" value="Loading...">
+                    
+                    <div style="background:linear-gradient(135deg, #f8fafc, #f1f5f9);border-radius:12px;padding:14px;border:1px solid var(--border);">
+                        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                            <i class="bi bi-lightbulb-fill" style="color:var(--orange);"></i> How it works
+                        </div>
+                        <div style="font-size:11px;color:var(--text-mid);line-height:1.6;">
+                            <div style="margin-bottom:6px;">✅ আপনার রেফারেল লিংক শেয়ার করুন বন্ধুদের সাথে</div>
+                            <div style="margin-bottom:6px;">✅ তারা রেজিস্ট্রেশন করলে আপনি <b id="refBonusDisplay" style="color:var(--green);">0৳</b> বোনাস পাবেন</div>
+                            <div>✅ তারা Gmail সেল করলে আপনি <span id="refCommDisplay" style="color:var(--primary);font-weight:700;">0%</span> কমিশন পাবেন</div>
+                        </div>
+                    </div>
+                    
+                    <button class="ref-share-btn" onclick="window.shareRefLink()">
+                        <i class="bi bi-share-fill"></i> Share Referral Link
+                    </button>
+                </div>
+                
+                <!-- Friends Tab -->
+                <div id="ref-tab-friends" class="ref-tab-content">
+                    <div id="referralFriendList" class="ref-friend-list">
+                        <div class="ref-empty-state">
+                            <i class="bi bi-people-fill"></i>
+                            <h6>Loading...</h6>
+                            <p>Please wait</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <input type="hidden" id="refLinkInput" value="Loading...">
         </div>
 
         <div class="settings-card-v2">
@@ -803,6 +1044,10 @@
   let currentUserData = null;
   let pendingPhotoData = null;
   let chatListenerActive = false;
+  let allUsersCache = [];
+  let allSubmissionsCache = [];
+  let currentCommissionRate = 0;
+  let currentSignupBonus = 0;
 
   const defaultReviewShifts = {
       shift1: { title: "শুভ রাত্রি প্রথম সময়", time: "12:00 AM", active: true, order: 1 },
@@ -842,61 +1087,25 @@
                   var canvas = document.createElement('canvas');
                   var width = img.width;
                   var height = img.height;
-                  
-                  if (width > height) {
-                      if (width > 500) {
-                          height = Math.round(height * 500 / width);
-                          width = 500;
-                      }
-                  } else {
-                      if (height > 500) {
-                          width = Math.round(width * 500 / height);
-                          height = 500;
-                      }
-                  }
-                  
-                  canvas.width = width;
-                  canvas.height = height;
+                  if (width > height) { if (width > 500) { height = Math.round(height * 500 / width); width = 500; } }
+                  else { if (height > 500) { width = Math.round(width * 500 / height); height = 500; } }
+                  canvas.width = width; canvas.height = height;
                   var ctx = canvas.getContext('2d');
                   ctx.drawImage(img, 0, 0, width, height);
-                  
                   var base64Image = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
-                  
                   var formData = new FormData();
                   formData.append('key', IMGBB_API_KEY);
                   formData.append('image', base64Image);
                   formData.append('name', 'profile_' + Date.now());
-                  
-                  fetch('https://api.imgbb.com/1/upload', {
-                      method: 'POST',
-                      body: formData
-                  })
-                  .then(function(response) {
-                      if (!response.ok) {
-                          throw new Error('Upload failed with status: ' + response.status);
-                      }
-                      return response.json();
-                  })
-                  .then(function(data) {
-                      if (data.success && data.data && data.data.url) {
-                          resolve(data.data.url);
-                      } else {
-                          reject(new Error('Upload failed: Invalid response'));
-                      }
-                  })
-                  .catch(function(err) {
-                      console.error('ImgBB Upload Error:', err);
-                      reject(err);
-                  });
+                  fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData })
+                  .then(function(response) { if (!response.ok) throw new Error('Upload failed'); return response.json(); })
+                  .then(function(data) { if (data.success && data.data && data.data.url) resolve(data.data.url); else reject(new Error('Upload failed')); })
+                  .catch(function(err) { reject(err); });
               };
-              img.onerror = function() {
-                  reject(new Error('Image load failed'));
-              };
+              img.onerror = function() { reject(new Error('Image load failed')); };
               img.src = e.target.result;
           };
-          reader.onerror = function() {
-              reject(new Error('File read failed'));
-          };
+          reader.onerror = function() { reject(new Error('File read failed')); };
           reader.readAsDataURL(file);
       });
   };
@@ -1037,23 +1246,18 @@
       var time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
       msgs.innerHTML += '<div class="chat-msg user">' + text + '<span class="msg-time">' + time + '</span></div>';
       input.value = ''; msgs.scrollTop = msgs.scrollHeight;
-      
       if (window.currentUser) {
           push(ref(db, 'support_chats/' + window.currentUser.uid), {
               uid: window.currentUser.uid,
               username: currentUserData ? currentUserData.username : 'User',
-              message: text,
-              timestamp: Date.now(),
-              from: 'user',
-              read: false
+              message: text, timestamp: Date.now(), from: 'user', read: false
           });
       }
-      
       setTimeout(function() {
-          var reply = "Thanks for your message! Our admin will respond shortly. For quick help, visit our Telegram.";
-          if (text.toLowerCase().includes('withdraw')) reply = "Withdrawals are processed within 24-48 hours. Go to Profile > Withdraw.";
-          else if (text.toLowerCase().includes('rate') || text.toLowerCase().includes('price')) reply = "Current rates depend on your level. Check Home page.";
-          else if (text.toLowerCase().includes('payment') || text.toLowerCase().includes('pay')) reply = "We support bKash, Nagad, and USDT. Min withdrawal: 100 BDT.";
+          var reply = "Thanks for your message! Our admin will respond shortly.";
+          if (text.toLowerCase().includes('withdraw')) reply = "Withdrawals are processed within 24-48 hours.";
+          else if (text.toLowerCase().includes('rate') || text.toLowerCase().includes('price')) reply = "Current rates depend on your level.";
+          else if (text.toLowerCase().includes('payment') || text.toLowerCase().includes('pay')) reply = "We support bKash, Nagad, and USDT.";
           msgs.innerHTML += '<div class="chat-msg bot">' + reply + '<span class="msg-time">' + time + '</span></div>';
           msgs.scrollTop = msgs.scrollHeight;
       }, 1000);
@@ -1089,7 +1293,7 @@
   function initTimerSystem() {
       var container = document.getElementById('reviewTimeContainer'); if (!container) return;
       var now = new Date(); var dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-      container.innerHTML = '<div class="review-card type-left"><div class="review-icon"><i class="bi bi-moon-stars-fill"></i></div><div class="review-title" id="shift-title-1">Loading...</div><div class="review-date">(' + dateStr + ')</div><div class="review-time-box"><div class="review-sec" id="shift-timer-1">--:--:--</div><div class="review-label" id="shift-label-1">Waiting...</label></div></div></div><div class="review-card type-right"><div class="review-icon"><i class="bi bi-sun-fill"></i></div><div class="review-title" id="shift-title-2">Loading...</div><div class="review-date">(' + dateStr + ')</div><div class="review-time-box"><div class="review-sec" id="shift-timer-2">--:--:--</div><div class="review-label" id="shift-label-2">Waiting...</label></div></div></div>';
+      container.innerHTML = '<div class="review-card type-left"><div class="review-icon"><i class="bi bi-moon-stars-fill"></i></div><div class="review-title" id="shift-title-1">Loading...</div><div class="review-date">(' + dateStr + ')</div><div class="review-time-box"><div class="review-sec" id="shift-timer-1">--:--:--</div><div class="review-label" id="shift-label-1">Waiting...</div></div></div><div class="review-card type-right"><div class="review-icon"><i class="bi bi-sun-fill"></i></div><div class="review-title" id="shift-title-2">Loading...</div><div class="review-date">(' + dateStr + ')</div><div class="review-time-box"><div class="review-sec" id="shift-timer-2">--:--:--</div><div class="review-label" id="shift-label-2">Waiting...</div></div></div>';
       if (!globalTimerInterval) globalTimerInterval = setInterval(updateTimers, 1000);
       updateTimers();
   }
@@ -1159,7 +1363,12 @@
       syncWithdrawUI(data.withdraw_disabled || false);
       if (data.levels) { levels = []; Object.keys(data.levels).forEach(function(k) { var l = data.levels[k]; levels.push({ level: Number(k), approved: l.req || 0, rate: l.new_rate || 10, old_rate: l.old_rate || 8 }); }); }
       syncRatesAndTotal();
-      var cr = data.commission_percent || 0; window.safeSetText('commRateDisplay', cr);
+      var cr = data.commission_percent || 0; 
+      currentCommissionRate = cr;
+      window.safeSetText('commRateDisplay', cr);
+      window.safeSetText('refCommDisplay', cr + '%');
+      currentSignupBonus = Number(data.signup_bonus_user) || 0;
+      window.safeSetText('refBonusDisplay', currentSignupBonus + '৳');
       var minW = data.min_withdraw || 100; window.safeSetText('wdMinLabel', 'সর্বনিম্ন উত্তোলন: ' + minW + ' টাকা');
       var wdAmt = document.getElementById('wdAmount'); if (wdAmt) wdAmt.setAttribute('min', minW);
   });
@@ -1180,7 +1389,159 @@
   function renderSellers(snap, cid) { var list = document.getElementById(cid); if (!list) return; var h = ''; var users = []; snap.forEach(function(c) { var u = c.val(); if (u.isTopSeller === true) users.push(u); }); users.sort(function(a, b) { return (Number(b.balance) || 0) - (Number(a.balance) || 0); }); 
   users = users.slice(0, 5);
   users.forEach(function(u, i) { var badge = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : '')); var rc = i === 0 ? 'gold' : (i === 1 ? 'silver' : ''); h += '<div class="seller-card"><div class="seller-rank ' + rc + '">' + (badge || (i + 1)) + '</div><div class="seller-info"><div class="seller-name">' + u.username + '</div></div><div class="text-end"><div class="seller-amount">' + (Number(u.balance) || 0).toFixed(0) + ' <small>BDT</small></div></div></div>'; }); if (!users.length) h = '<div class="text-center text-muted p-4">No sellers found</div>'; list.innerHTML = h; }
-  onValue(ref(db, "users"), function(snap) { renderSellers(snap, 'topSellersList'); renderSellers(snap, 'trendingList'); });
+  onValue(ref(db, "users"), function(snap) { 
+      allUsersCache = [];
+      snap.forEach(function(c) { 
+          var u = c.val(); 
+          u.uid = c.key;
+          allUsersCache.push(u);
+      });
+      renderSellers(snap, 'topSellersList'); 
+      renderSellers(snap, 'trendingList');
+      // Update referral friend list if user is logged in
+      if (window.currentUser) {
+          renderReferralFriendList();
+      }
+  });
+
+  // Cache submissions for referral earnings calculation
+  onValue(ref(db, "submissions"), function(snap) {
+      allSubmissionsCache = [];
+      snap.forEach(function(c) {
+          var s = c.val();
+          s.key = c.key;
+          allSubmissionsCache.push(s);
+      });
+      if (window.currentUser) {
+          renderReferralFriendList();
+      }
+  });
+
+  // Calculate earnings from a specific referral
+  function calculateFriendEarnings(friendUid) {
+      let earnings = 0;
+      let approvedEmails = 0;
+      let totalEmails = 0;
+      
+      allSubmissionsCache.forEach(sub => {
+          if (sub.userId === friendUid && sub.gmails && Array.isArray(sub.gmails)) {
+              sub.gmails.forEach(g => {
+                  totalEmails++;
+                  if (g.status === 'approved') {
+                      approvedEmails++;
+                      const rate = sub.rate || 10;
+                      const commission = (rate * currentCommissionRate) / 100;
+                      earnings += commission;
+                  }
+              });
+          }
+      });
+      
+      return { earnings, approvedEmails, totalEmails };
+  }
+
+  // Render referral friend list
+  function renderReferralFriendList() {
+      const container = document.getElementById('referralFriendList');
+      if (!container || !window.currentUser) return;
+      
+      const referrals = allUsersCache.filter(u => u.referredBy === window.currentUser.uid);
+      
+      if (referrals.length === 0) {
+          container.innerHTML = `
+              <div class="ref-empty-state">
+                  <i class="bi bi-people-fill"></i>
+                  <h6>No Referrals Yet</h6>
+                  <p>Share your referral link to invite friends and start earning!</p>
+              </div>
+          `;
+          return;
+      }
+      
+      // Sort by earnings (highest first)
+      const referralData = referrals.map(ref => {
+          const earningsData = calculateFriendEarnings(ref.uid);
+          return {
+              uid: ref.uid,
+              username: ref.username || 'Unknown',
+              email: ref.email || 'N/A',
+              joinDate: ref.createdAt ? new Date(ref.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A',
+              isBlocked: ref.is_blocked || false,
+              earnings: earningsData.earnings,
+              approvedEmails: earningsData.approvedEmails,
+              totalEmails: earningsData.totalEmails
+          };
+      }).sort((a, b) => b.earnings - a.earnings);
+      
+      let html = '';
+      referralData.forEach((ref, idx) => {
+          const statusBadge = ref.isBlocked 
+              ? '<span class="ref-friend-status blocked">Blocked</span>'
+              : '<span class="ref-friend-status active">Active</span>';
+          
+          html += `
+              <div class="ref-friend-item">
+                  <div class="ref-friend-top">
+                      <div class="ref-friend-info">
+                          <div class="ref-friend-name">
+                              <span>${idx + 1}. ${ref.username}</span>
+                              ${statusBadge}
+                          </div>
+                          <div class="ref-friend-email">${ref.email}</div>
+                      </div>
+                      <div class="ref-friend-earn-badge">+${ref.earnings.toFixed(2)}৳</div>
+                  </div>
+                  <div class="ref-friend-stats-row">
+                      <div class="ref-friend-stat">
+                          <span class="ref-friend-stat-val">${ref.approvedEmails}</span>
+                          <span class="ref-friend-stat-lbl">Approved</span>
+                      </div>
+                      <div class="ref-friend-stat">
+                          <span class="ref-friend-stat-val">${ref.totalEmails}</span>
+                          <span class="ref-friend-stat-lbl">Emails</span>
+                      </div>
+                      <div class="ref-friend-stat">
+                          <span class="ref-friend-stat-val" style="font-size:10px;">${ref.joinDate}</span>
+                          <span class="ref-friend-stat-lbl">Joined</span>
+                      </div>
+                  </div>
+              </div>
+          `;
+      });
+      
+      container.innerHTML = html;
+  }
+
+  // Switch referral tabs
+  window.switchRefTab = function(tabName, btn) {
+      document.querySelectorAll('.ref-tab-v3').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.ref-tab-content').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('ref-tab-' + tabName).classList.add('active');
+  };
+
+  // Share referral link using Web Share API
+  window.shareRefLink = function() {
+      const link = document.getElementById('refLinkInput').value;
+      if (!link || link === 'Loading...') {
+          showError("Wait", "Loading...");
+          return;
+      }
+      
+      const shareData = {
+          title: 'Mail Factory - Earn Money Selling Gmail',
+          text: `Join Mail Factory and earn money! Use my referral code to get bonus.`,
+          url: link
+      };
+      
+      if (navigator.share) {
+          navigator.share(shareData).catch(() => {
+              window.copyRefLink();
+          });
+      } else {
+          window.copyRefLink();
+      }
+  };
 
   async function updateLoginStreak(uid) { try { var snap = await get(ref(db, 'users/' + uid)); if (!snap.exists()) return; var d = snap.val(); var today = new Date().toDateString(); var lastLogin = d.last_login_date || ''; var streak = d.login_streak || 0; if (lastLogin !== today) { var yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1); streak = (lastLogin === yesterday.toDateString()) ? streak + 1 : 1; await update(ref(db, 'users/' + uid), { login_streak: streak, last_login_date: today }); } } catch(e) { console.log('Streak error:', e); } }
 
@@ -1228,7 +1589,13 @@
                   renderStreak(d.login_streak || 0);
               }
           });
-          onValue(ref(db, 'users'), function(snap) { var c = 0; snap.forEach(function(ch) { if (ch.val().referredBy === user.uid) c++; }); window.safeSetText('totalReferred', c); });
+          onValue(ref(db, 'users'), function(snap) { 
+              var c = 0; 
+              snap.forEach(function(ch) { 
+                  if (ch.val().referredBy === user.uid) c++; 
+              }); 
+              window.safeSetText('totalReferred', c); 
+          });
           onValue(ref(db, 'submissions'), function(snap) {
               var list = document.getElementById('historyList'); if (!list) return; list.innerHTML = '';
               var te = 0, pe = 0, ap = 0, re = 0; var subs = [];
@@ -1339,9 +1706,7 @@
       if (!currentUserData) return;
       var d = currentUserData; 
       pendingPhotoData = d.photoURL || null;
-      
       var photoHtml = d.photoURL ? '<img src="' + d.photoURL + '" alt="photo" id="edit-photo-preview-img">' : '<i class="bi bi-camera-fill placeholder-icon" id="edit-photo-preview-img"></i>';
-      
       Swal.fire({
           title: '✏️ Edit Profile',
           html: '<div style="text-align:left;">' +
@@ -1361,144 +1726,63 @@
               '<label class="small fw-bold text-muted mb-1 d-block">📧 Email (Read-only)</label>' +
               '<input class="swal2-input" style="width:100%;margin:0;border-radius:10px;background:#f3f4f6;" value="' + (d.email || '') + '" disabled>' +
           '</div>',
-          confirmButtonText: 'Save Changes', 
-          confirmButtonColor: '#4F46E5', 
-          showCancelButton: true, 
-          width: '400px',
-          didOpen: function() {
-              var preview = document.getElementById('edit-photo-preview-img');
-              if (preview && d.photoURL) {
-                  preview.src = d.photoURL;
-              }
-          },
+          confirmButtonText: 'Save Changes', confirmButtonColor: '#4F46E5', showCancelButton: true, width: '400px',
+          didOpen: function() { var preview = document.getElementById('edit-photo-preview-img'); if (preview && d.photoURL) preview.src = d.photoURL; },
           preConfirm: function() {
               var name = document.getElementById('edit-name').value.trim(); 
               var phone = document.getElementById('edit-phone').value.trim(); 
               var payment = document.getElementById('edit-payment').value.trim();
-              
               if (!name) { Swal.showValidationMessage('Name required'); return false; }
               if (!/^[a-zA-Z\s]+$/.test(name)) { Swal.showValidationMessage('Only letters'); return false; }
               if (phone && !/^(\+?88)?0?1[3-9]\d{8}$/.test(phone)) { Swal.showValidationMessage('Invalid phone'); return false; }
-              
-              return { 
-                  name: name, 
-                  phone: phone, 
-                  payment: payment, 
-                  photoURL: pendingPhotoData 
-              };
+              return { name: name, phone: phone, payment: payment, photoURL: pendingPhotoData };
           }
       }).then(async function(result) {
           if (result.isConfirmed && window.currentUser) {
               try {
-                  Swal.fire({ 
-                      title: 'Saving...', 
-                      html: '<small>Please wait while we update your profile</small>',
-                      didOpen: function() { Swal.showLoading(); },
-                      allowOutsideClick: false
-                  });
-                  
-                  var updateData = {
-                      username: result.value.name,
-                      phone: result.value.phone,
-                      paymentNumber: result.value.payment
-                  };
-                  
-                  if (result.value.photoURL !== currentUserData.photoURL) {
-                      updateData.photoURL = result.value.photoURL;
-                  }
-                  
+                  Swal.fire({ title: 'Saving...', html: '<small>Please wait</small>', didOpen: function() { Swal.showLoading(); }, allowOutsideClick: false });
+                  var updateData = { username: result.value.name, phone: result.value.phone, paymentNumber: result.value.payment };
+                  if (result.value.photoURL !== currentUserData.photoURL) updateData.photoURL = result.value.photoURL;
                   await update(ref(db, 'users/' + window.currentUser.uid), updateData);
-                  
-                  try {
-                      if (result.value.photoURL && !result.value.photoURL.startsWith('data:')) {
-                          await updateProfile(window.currentUser, {
-                              photoURL: result.value.photoURL,
-                              displayName: result.value.name
-                          });
-                      }
-                  } catch(e) {
-                      console.log('Auth profile update error:', e);
-                  }
-                  
+                  try { if (result.value.photoURL && !result.value.photoURL.startsWith('data:')) await updateProfile(window.currentUser, { photoURL: result.value.photoURL, displayName: result.value.name }); } catch(e) {}
                   var avatarEl = document.getElementById('userAvatar');
                   if (avatarEl) {
-                      if (result.value.photoURL) {
-                          avatarEl.innerHTML = '<img src="' + result.value.photoURL + '" alt="avatar" style="animation: avatarEntry 0.6s ease-out;">';
-                      } else {
-                          var initialEl = document.getElementById('avatarInitial');
-                          avatarEl.innerHTML = '<span id="avatarInitial">' + result.value.name.charAt(0).toUpperCase() + '</span>';
-                      }
+                      if (result.value.photoURL) avatarEl.innerHTML = '<img src="' + result.value.photoURL + '" alt="avatar" style="animation: avatarEntry 0.6s ease-out;">';
+                      else { var initialEl = document.getElementById('avatarInitial'); avatarEl.innerHTML = '<span id="avatarInitial">' + result.value.name.charAt(0).toUpperCase() + '</span>'; }
                   }
-                  
                   window.safeSetText('userDisplayName', result.value.name);
-                  
                   Swal.close();
                   showToast('success', 'Profile updated successfully!');
-                  
-              } catch(err) {
-                  Swal.close();
-                  console.error('Profile update error:', err);
-                  showError("Error", "Could not update profile: " + err.message);
-              }
+              } catch(err) { Swal.close(); showError("Error", "Could not update profile: " + err.message); }
           }
           pendingPhotoData = null;
       });
   };
 
   window.handlePhotoSelect = async function(event) {
-      var file = event.target.files[0];
-      if (!file) return;
-      
-      if (file.size > 5 * 1024 * 1024) {
-          showError("File Too Large", "Max 5MB allowed. Your file is " + (file.size / 1024 / 1024).toFixed(2) + "MB");
-          return;
-      }
-      
-      if (!file.type.startsWith('image/')) {
-          showError("Invalid File", "Please select an image file.");
-          return;
-      }
-      
-      Swal.fire({
-          title: 'Uploading Photo...',
-          html: '<small>Compressing and uploading to imgbb</small>',
-          didOpen: function() { Swal.showLoading(); },
-          allowOutsideClick: false,
-          showConfirmButton: false
-      });
-      
+      var file = event.target.files[0]; if (!file) return;
+      if (file.size > 5 * 1024 * 1024) { showError("File Too Large", "Max 5MB allowed."); return; }
+      if (!file.type.startsWith('image/')) { showError("Invalid File", "Please select an image file."); return; }
+      Swal.fire({ title: 'Uploading Photo...', html: '<small>Compressing...</small>', didOpen: function() { Swal.showLoading(); }, allowOutsideClick: false, showConfirmButton: false });
       try {
           var photoURL = await window.uploadToImgBB(file);
-          
           pendingPhotoData = photoURL;
-          
           var preview = document.getElementById('edit-photo-preview-img');
           if (preview) {
-              if (preview.tagName === 'IMG') {
-                  preview.src = photoURL;
-              } else {
-                  preview.parentElement.innerHTML = '<img src="' + photoURL + '" alt="photo" id="edit-photo-preview-img">';
-              }
+              if (preview.tagName === 'IMG') preview.src = photoURL;
+              else preview.parentElement.innerHTML = '<img src="' + photoURL + '" alt="photo" id="edit-photo-preview-img">';
           }
-          
           var removeBtn = document.getElementById('edit-photo-remove');
           if (removeBtn) removeBtn.classList.add('show');
-          
           Swal.close();
           showToast('success', 'Photo uploaded successfully!');
-      } catch (err) {
-          Swal.close();
-          console.error('Photo upload error:', err);
-          showError("Upload Failed", err.message || "Please try again");
-      }
+      } catch (err) { Swal.close(); showError("Upload Failed", err.message || "Please try again"); }
   };
   
   window.removeEditPhoto = function() { 
       pendingPhotoData = null; 
       var preview = document.getElementById('edit-photo-preview-img'); 
-      if (preview) { 
-          preview.parentElement.innerHTML = '<i class="bi bi-camera-fill placeholder-icon" id="edit-photo-preview-img"></i>'; 
-      } 
+      if (preview) preview.parentElement.innerHTML = '<i class="bi bi-camera-fill placeholder-icon" id="edit-photo-preview-img"></i>'; 
       var removeBtn = document.getElementById('edit-photo-remove'); 
       if (removeBtn) removeBtn.classList.remove('show'); 
       var input = document.getElementById('edit-photo-input'); 
@@ -1510,8 +1794,8 @@
   window.logoutAllDevices = async function() { if (!window.currentUser) return; var res = await Swal.fire({ title: 'Logout All Devices?', text: "You will be logged out too.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Yes' }); if (res.isConfirmed) { await update(ref(db, 'users/' + window.currentUser.uid), { forceLogout: true }); signOut(auth); } };
   window.showChangePasswordModal = function() { if (currentUserData && currentUserData.auth_provider === 'google') { showError("Google Account", "Password managed by Google."); return; } Swal.fire({ title: 'Change Password', html: '<input id="swal-curr-pass" type="password" class="swal2-input" placeholder="Current Password"><input id="swal-new-pass" type="password" class="swal2-input" placeholder="New Password (min 6 chars)">', confirmButtonText: 'Update', focusConfirm: false, preConfirm: function() { var cp = document.getElementById('swal-curr-pass').value; var np = document.getElementById('swal-new-pass').value; if (!cp || !np) { Swal.showValidationMessage('Enter both'); return false; } if (np.length < 6) { Swal.showValidationMessage('Min 6 chars'); return false; } return { cp: cp, np: np }; } }).then(async function(r) { if (r.isConfirmed) { try { var u = auth.currentUser; var cred = EmailAuthProvider.credential(u.email, r.value.cp); Swal.fire({ title: 'Updating...', didOpen: function() { Swal.showLoading(); } }); await reauthenticateWithCredential(u, cred); await updatePassword(u, r.value.np); showPopup('success', 'Success', 'Password updated!'); } catch(e) { showError("Error", getErrorReason(e)); } } }); };
   window.handleDeleteAccount = async function() { if (!window.currentUser) return; var isGoogle = currentUserData && currentUserData.auth_provider === 'google'; var inputConfig = {}; if (!isGoogle) { inputConfig = { input: 'password', inputPlaceholder: 'Enter password' }; } var res = await Swal.fire({ title: 'Delete Account?', text: "Irreversible!", icon: 'warning', ...inputConfig, showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Delete' }); if (res.isConfirmed) { try { Swal.fire({ title: 'Deleting...', didOpen: function() { Swal.showLoading(); } }); if (!isGoogle) { var cred = EmailAuthProvider.credential(auth.currentUser.email, res.value); await reauthenticateWithCredential(auth.currentUser, cred); } await remove(ref(db, 'users/' + window.currentUser.uid)); await deleteUser(auth.currentUser); showPopup('success', 'Deleted', 'Account deleted.'); } catch(e) { showError("Error", getErrorReason(e)); } } };
-  window.copyRefLink = function() { var link = document.getElementById('refLinkInput').value; if (!link || link === 'Loading...') { showError("Wait", "Loading..."); return; } if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(link).then(function() { showToast('success', 'Copied!'); }).catch(function() { fallbackCopy(link); }); } else { fallbackCopy(link); } };
-  function fallbackCopy(text) { var t = document.createElement('textarea'); t.style.position = 'fixed'; t.style.left = '-9999px'; t.value = text; document.body.appendChild(t); t.select(); t.setSelectionRange(0, 99999); try { document.execCommand('copy'); showToast('success', 'Copied!'); } catch(e) { showError("Copy Failed", "Manual copy."); } document.body.removeChild(t); }
+  window.copyRefLink = function() { var link = document.getElementById('refLinkInput').value; if (!link || link === 'Loading...') { showError("Wait", "Loading..."); return; } if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(link).then(function() { showToast('success', 'Link Copied!'); }).catch(function() { fallbackCopy(link); }); } else { fallbackCopy(link); } };
+  function fallbackCopy(text) { var t = document.createElement('textarea'); t.style.position = 'fixed'; t.style.left = '-9999px'; t.value = text; document.body.appendChild(t); t.select(); t.setSelectionRange(0, 99999); try { document.execCommand('copy'); showToast('success', 'Link Copied!'); } catch(e) { showError("Copy Failed", "Manual copy."); } document.body.removeChild(t); }
 
   window.submitGmails = async function(sd) {
       if (!navigator.onLine) return showError("Network Error", "ইন্টারনেট সংযোগ নেই।");
@@ -1519,7 +1803,7 @@
       btn.disabled = true; bt.innerText = "Processing..."; bl.classList.remove('d-none');
       try {
           for (var i = 0; i < sd.gmails.length; i++) { var item = sd.gmails[i]; var q = query(ref(db, 'used_emails'), orderByChild('email'), equalTo(item.email)); var sn = await get(q); if (sn.exists()) { btn.disabled = false; bt.innerText = "Confirm & Submit"; bl.classList.add('d-none'); return showError("Duplicate", item.email + " already submitted."); } }
-          var nr = push(ref(db, 'submissions')); await set(nr, { userId: currentUser.uid, username: document.getElementById('userDisplayName').innerText, submittedAt: Date.now(), status: "pending", gmails: sd.gmails, totalAmount: sd.totalAmount, rate: sd.rate, count: sd.count });
+          var nr = push(ref(db, 'submissions')); await set(nr, { userId: currentUser.uid, username: document.getElementById('userDisplayName').innerText, submittedAt: Date.now(), status: "pending", gmails: sd.gmails, totalAmount: sd.totalAmount, rate: sd.rate, count: sd.count, commission_percent: currentCommissionRate });
           for (var j = 0; j < sd.gmails.length; j++) { await push(ref(db, 'used_emails'), { email: sd.gmails[j].email }); }
           var ur = ref(db, 'users/' + currentUser.uid); var us = await get(ur); var ud = us.val();
           await update(ur, { hold: (Number(ud.hold) || 0) + sd.totalAmount, total_submitted: increment(sd.count) });
@@ -1558,20 +1842,14 @@
       btn.disabled = false;
       window.safeSetText('withdrawBtnText', "Submit Request");
       document.getElementById('withdrawBtnSpinner').classList.add('d-none');
-      
-      if (pushState) {
-          history.pushState({ type: 'withdraw' }, "", window.getRouteUrl('withdraw'));
-      }
+      if (pushState) history.pushState({ type: 'withdraw' }, "", window.getRouteUrl('withdraw'));
   };
   
   window.closeWithdrawPage = function() {
       document.getElementById('withdraw-page').style.display = 'none';
       document.querySelector('.page-container').style.display = 'block';
       document.querySelector('.nav-bottom').style.display = 'flex';
-      
-      if (history.state && history.state.type === 'withdraw') {
-          history.back();
-      }
+      if (history.state && history.state.type === 'withdraw') history.back();
   };
   
   window.selectPaymentMethod = function(el, mk, mn) { document.querySelectorAll('.pm-card').forEach(function(c) { c.classList.remove('active'); }); el.classList.add('active'); document.getElementById('selectedMethod').value = mk; document.getElementById('selectedMethodName').value = mn; };
@@ -1587,167 +1865,61 @@
 
 <script>
     var validTabs = ['home', 'history', 'sellers', 'profile', 'exchange_step'];
-    
-    // Calculate base path for routing
     var basePath = (function() {
         var path = window.location.pathname;
-        // Remove trailing slash
         if (path.endsWith('/')) path = path.slice(0, -1);
-        // Get directory path
         var lastSlash = path.lastIndexOf('/');
-        if (lastSlash > 0) {
-            return path.substring(0, lastSlash);
-        }
+        if (lastSlash > 0) return path.substring(0, lastSlash);
         return '';
     })();
-    
-    // Helper function to generate route URL
     window.getRouteUrl = function(tabId) {
-        if (tabId === 'home') {
-            return basePath + '/';
-        }
+        if (tabId === 'home') return basePath + '/';
         return basePath + '/' + tabId;
     };
-    
     function switchTab(tabId, pushState) {
         if (pushState === undefined) pushState = true;
         if (validTabs.indexOf(tabId) === -1) tabId = 'home';
-        
         document.querySelectorAll('.content-section').forEach(function(s) { s.classList.remove('active'); });
         document.querySelectorAll('.nav-item').forEach(function(i) { i.classList.remove('active'); });
-        
         var t = document.getElementById(tabId);
         if (t) t.classList.add('active');
         var btn = document.getElementById(tabId + '-btn');
         if (btn) btn.classList.add('active');
-        
-        if (pushState) {
-            history.pushState({ type: 'tab', tab: tabId }, "", window.getRouteUrl(tabId));
-        }
+        if (pushState) history.pushState({ type: 'tab', tab: tabId }, "", window.getRouteUrl(tabId));
         window.scrollTo(0, 0);
     }
-    
     window.addEventListener('popstate', function(e) {
         if (e.state) {
-            if (e.state.type === 'tab') {
-                switchTab(e.state.tab, false);
-            } else if (e.state.type === 'withdraw') {
-                window.openWithdrawPage(false);
-            }
-        } else {
-            switchTab('home', false);
-        }
+            if (e.state.type === 'tab') switchTab(e.state.tab, false);
+            else if (e.state.type === 'withdraw') window.openWithdrawPage(false);
+        } else switchTab('home', false);
     });
-    
     function initAppRoute() {
         var path = window.location.pathname;
-        
-        // Remove base path
-        if (basePath && path.startsWith(basePath)) {
-            path = path.substring(basePath.length);
-        }
-        
-        // Remove leading and trailing slashes
+        if (basePath && path.startsWith(basePath)) path = path.substring(basePath.length);
         if (path.startsWith('/')) path = path.substring(1);
         if (path.endsWith('/')) path = path.slice(0, -1);
-        
-        if (path && validTabs.indexOf(path) !== -1) {
-            switchTab(path, false);
-        } else {
-            switchTab('home', false);
-        }
+        if (path && validTabs.indexOf(path) !== -1) switchTab(path, false);
+        else switchTab('home', false);
     }
-    
-    function showHistoryTab(tab, e) {
-        document.querySelectorAll('.h-tab-btn').forEach(function(b) { b.classList.remove('active'); });
-        if (e && e.target) e.target.closest('.h-tab-btn').classList.add('active');
-        document.getElementById('history_sub').style.display = tab === 'sub' ? 'block' : 'none';
-        document.getElementById('history_wd').style.display = tab === 'wd' ? 'block' : 'none';
-        document.getElementById('history_trend').style.display = tab === 'trend' ? 'block' : 'none';
-    }
-    
-    function protectedAction(tabId) {
-        if (!window.currentUser) {
-            document.getElementById('auth-page').style.display = 'block';
-            history.pushState({ type: 'auth' }, "", window.getRouteUrl('login'));
-        } else if (tabId === 'exchange_step') {
-            switchTab('exchange_step');
-        } else {
-            switchTab(tabId);
-        }
-    }
-    
-    function toggleAuth(type) {
-        var title = document.getElementById('authTitle');
-        var sub = document.getElementById('authSubtitle');
-        document.getElementById('login-form').style.display = type === 'login' ? 'block' : 'none';
-        document.getElementById('reg-form').style.display = type === 'reg' ? 'block' : 'none';
-        if (type === 'login') {
-            title.innerText = "Welcome Back";
-            sub.innerText = "আপনার একাউন্টে লগইন করুন।";
-        } else {
-            title.innerText = "Create Account";
-            sub.innerText = "রেজিস্ট্রেশন করুন।";
-        }
-    }
-    
-    window.updateTotal = function() {
-        var count = document.querySelectorAll('.gmail-row').length;
-        var type = document.getElementById('dollarType').value;
-        var rate = (type === 'new') ? (window.currentDynamicRate || 10) : (window.baseOldRate || 8);
-        document.getElementById('tempTotal').innerText = count * rate;
-    };
-    
-    window.addMoreRow = function(email, pass) {
-        email = email || '';
-        pass = pass || '';
-        var row = document.createElement('div');
-        row.className = 'gmail-row position-relative';
-        row.innerHTML = '<button type="button" class="remove-btn" onclick="window.removeRow(this)"><i class="bi bi-x"></i></button><input type="email" class="g-input" value="' + email + '" placeholder="Enter Gmail Address" required><input type="text" class="p-input" value="' + pass + '" placeholder="Enter Password" required>';
-        document.getElementById('gmailRows').appendChild(row);
-        window.updateTotal();
-    };
-    
-    window.removeRow = function(el) {
-        var rows = document.querySelectorAll('.gmail-row');
-        if (rows.length <= 2) {
-            showError("Warning", "Minimum 2 emails.");
-            return;
-        }
-        el.parentElement.remove();
-        window.updateTotal();
-    };
-    
+    function showHistoryTab(tab, e) { document.querySelectorAll('.h-tab-btn').forEach(function(b) { b.classList.remove('active'); }); if (e && e.target) e.target.closest('.h-tab-btn').classList.add('active'); document.getElementById('history_sub').style.display = tab === 'sub' ? 'block' : 'none'; document.getElementById('history_wd').style.display = tab === 'wd' ? 'block' : 'none'; document.getElementById('history_trend').style.display = tab === 'trend' ? 'block' : 'none'; }
+    function protectedAction(tabId) { if (!window.currentUser) document.getElementById('auth-page').style.display = 'block'; else if (tabId === 'exchange_step') switchTab('exchange_step'); else switchTab(tabId); }
+    function toggleAuth(type) { var title = document.getElementById('authTitle'); var sub = document.getElementById('authSubtitle'); document.getElementById('login-form').style.display = type === 'login' ? 'block' : 'none'; document.getElementById('reg-form').style.display = type === 'reg' ? 'block' : 'none'; if (type === 'login') { title.innerText = "Welcome Back"; sub.innerText = "আপনার একাউন্টে লগইন করুন।"; } else { title.innerText = "Create Account"; sub.innerText = "রেজিস্ট্রেশন করুন।"; } }
+    window.updateTotal = function() { var count = document.querySelectorAll('.gmail-row').length; var type = document.getElementById('dollarType').value; var rate = (type === 'new') ? (window.currentDynamicRate || 10) : (window.baseOldRate || 8); document.getElementById('tempTotal').innerText = count * rate; };
+    window.addMoreRow = function(email, pass) { email = email || ''; pass = pass || ''; var row = document.createElement('div'); row.className = 'gmail-row position-relative'; row.innerHTML = '<button type="button" class="remove-btn" onclick="window.removeRow(this)"><i class="bi bi-x"></i></button><input type="email" class="g-input" value="' + email + '" placeholder="Enter Gmail Address" required><input type="text" class="p-input" value="' + pass + '" placeholder="Enter Password" required>'; document.getElementById('gmailRows').appendChild(row); window.updateTotal(); };
+    window.removeRow = function(el) { var rows = document.querySelectorAll('.gmail-row'); if (rows.length <= 2) { showError("Warning", "Minimum 2 emails."); return; } el.parentElement.remove(); window.updateTotal(); };
     window.validateAndSubmit = function() {
         var rows = document.querySelectorAll('.gmail-row');
-        if (rows.length < 2) {
-            showError("Validation Error", "Minimum 2 emails.");
-            return;
-        }
-        var gmails = [];
-        var hasError = false;
-        var ls = new Set();
-        var rx = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+        if (rows.length < 2) { showError("Validation Error", "Minimum 2 emails."); return; }
+        var gmails = []; var hasError = false; var ls = new Set(); var rx = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
         rows.forEach(function(row, idx) {
             var email = row.querySelector('.g-input').value.trim().toLowerCase();
             var pass = row.querySelector('.p-input').value.trim();
-            if (!email || !pass) {
-                hasError = true;
-                showError("Input Error", "Row " + (idx + 1) + " empty.");
-            } else if (!rx.test(email)) {
-                hasError = true;
-                showError("Invalid Email", "Row " + (idx + 1) + " not Gmail.");
-            } else if (pass.length < 6) {
-                hasError = true;
-                showError("Weak Password", "Row " + (idx + 1) + " too short.");
-            } else if (ls.has(email)) {
-                hasError = true;
-                showError("Duplicate", email + " twice.");
-            }
-            if (!hasError) {
-                ls.add(email);
-                gmails.push({ email: email, password: pass });
-            }
+            if (!email || !pass) { hasError = true; showError("Input Error", "Row " + (idx + 1) + " empty."); }
+            else if (!rx.test(email)) { hasError = true; showError("Invalid Email", "Row " + (idx + 1) + " not Gmail."); }
+            else if (pass.length < 6) { hasError = true; showError("Weak Password", "Row " + (idx + 1) + " too short."); }
+            else if (ls.has(email)) { hasError = true; showError("Duplicate", email + " twice."); }
+            if (!hasError) { ls.add(email); gmails.push({ email: email, password: pass }); }
         });
         if (!hasError) {
             var type = document.getElementById('dollarType').value;
@@ -1755,10 +1927,7 @@
             window.submitGmails({ gmails: gmails, totalAmount: gmails.length * rate, rate: rate, count: gmails.length });
         }
     };
-    
-    function showError(title, msg) {
-        Swal.fire({ icon: 'error', title: title, text: msg, confirmButtonColor: '#4F46E5' });
-    }
+    function showError(title, msg) { Swal.fire({ icon: 'error', title: title, text: msg, confirmButtonColor: '#4F46E5' }); }
 </script>
 
 </body>
