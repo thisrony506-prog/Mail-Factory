@@ -833,7 +833,6 @@
       });
   }
 
-  // IMPROVED IMGBB UPLOAD FUNCTION
   window.uploadToImgBB = function(file) {
       return new Promise(function(resolve, reject) {
           var reader = new FileReader();
@@ -844,7 +843,6 @@
                   var width = img.width;
                   var height = img.height;
                   
-                  // Resize to max 500px
                   if (width > height) {
                       if (width > 500) {
                           height = Math.round(height * 500 / width);
@@ -1091,7 +1089,7 @@
   function initTimerSystem() {
       var container = document.getElementById('reviewTimeContainer'); if (!container) return;
       var now = new Date(); var dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-      container.innerHTML = '<div class="review-card type-left"><div class="review-icon"><i class="bi bi-moon-stars-fill"></i></div><div class="review-title" id="shift-title-1">Loading...</div><div class="review-date">(' + dateStr + ')</div><div class="review-time-box"><div class="review-sec" id="shift-timer-1">--:--:--</div><div class="review-label" id="shift-label-1">Waiting...</div></div></div><div class="review-card type-right"><div class="review-icon"><i class="bi bi-sun-fill"></i></div><div class="review-title" id="shift-title-2">Loading...</div><div class="review-date">(' + dateStr + ')</div><div class="review-time-box"><div class="review-sec" id="shift-timer-2">--:--:--</div><div class="review-label" id="shift-label-2">Waiting...</div></div></div>';
+      container.innerHTML = '<div class="review-card type-left"><div class="review-icon"><i class="bi bi-moon-stars-fill"></i></div><div class="review-title" id="shift-title-1">Loading...</div><div class="review-date">(' + dateStr + ')</div><div class="review-time-box"><div class="review-sec" id="shift-timer-1">--:--:--</div><div class="review-label" id="shift-label-1">Waiting...</label></div></div></div><div class="review-card type-right"><div class="review-icon"><i class="bi bi-sun-fill"></i></div><div class="review-title" id="shift-title-2">Loading...</div><div class="review-date">(' + dateStr + ')</div><div class="review-time-box"><div class="review-sec" id="shift-timer-2">--:--:--</div><div class="review-label" id="shift-label-2">Waiting...</label></div></div></div>';
       if (!globalTimerInterval) globalTimerInterval = setInterval(updateTimers, 1000);
       updateTimers();
   }
@@ -1337,7 +1335,6 @@
 
   window.showForgotPassword = async function() { var res = await Swal.fire({ title: '🔑 Forgot Password', html: '<p>Enter email for reset link.</p>', input: 'email', inputPlaceholder: 'your@gmail.com', confirmButtonText: 'Send Reset Link', confirmButtonColor: '#4F46E5', showCancelButton: true, inputValidator: function(value) { if (!value) return 'Enter email!'; if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Invalid email!'; } }); if (res.value) { try { Swal.fire({ title: 'Sending...', didOpen: function() { Swal.showLoading(); } }); await sendPasswordResetEmail(auth, res.value); Swal.fire({ icon: 'success', title: 'Email Sent! 📧', html: 'Check inbox for <b>' + res.value + '</b>', confirmButtonColor: '#4F46E5' }); window.addNotification('Password Reset', 'Reset link sent to ' + res.value, 'info'); } catch(err) { showError("Error", getErrorReason(err)); } } };
 
-  // FIXED EDIT PROFILE MODAL WITH IMPROVED PHOTO UPLOAD
   window.showEditProfileModal = function() {
       if (!currentUserData) return;
       var d = currentUserData; 
@@ -1369,7 +1366,6 @@
           showCancelButton: true, 
           width: '400px',
           didOpen: function() {
-              // Ensure photo preview is properly initialized
               var preview = document.getElementById('edit-photo-preview-img');
               if (preview && d.photoURL) {
                   preview.src = d.photoURL;
@@ -1407,15 +1403,12 @@
                       paymentNumber: result.value.payment
                   };
                   
-                  // Only update photoURL if it has changed
                   if (result.value.photoURL !== currentUserData.photoURL) {
                       updateData.photoURL = result.value.photoURL;
                   }
                   
-                  // Update database
                   await update(ref(db, 'users/' + window.currentUser.uid), updateData);
                   
-                  // Update Firebase Auth profile if photo changed
                   try {
                       if (result.value.photoURL && !result.value.photoURL.startsWith('data:')) {
                           await updateProfile(window.currentUser, {
@@ -1427,7 +1420,6 @@
                       console.log('Auth profile update error:', e);
                   }
                   
-                  // Update UI immediately
                   var avatarEl = document.getElementById('userAvatar');
                   if (avatarEl) {
                       if (result.value.photoURL) {
@@ -1453,18 +1445,15 @@
       });
   };
 
-  // IMPROVED PHOTO SELECT HANDLER
   window.handlePhotoSelect = async function(event) {
       var file = event.target.files[0];
       if (!file) return;
       
-      // Check file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
           showError("File Too Large", "Max 5MB allowed. Your file is " + (file.size / 1024 / 1024).toFixed(2) + "MB");
           return;
       }
       
-      // Check file type
       if (!file.type.startsWith('image/')) {
           showError("Invalid File", "Please select an image file.");
           return;
@@ -1479,13 +1468,10 @@
       });
       
       try {
-          // Upload to imgbb
           var photoURL = await window.uploadToImgBB(file);
           
-          // Set pending photo data
           pendingPhotoData = photoURL;
           
-          // Update preview in modal
           var preview = document.getElementById('edit-photo-preview-img');
           if (preview) {
               if (preview.tagName === 'IMG') {
@@ -1495,7 +1481,6 @@
               }
           }
           
-          // Show remove button
           var removeBtn = document.getElementById('edit-photo-remove');
           if (removeBtn) removeBtn.classList.add('show');
           
@@ -1563,11 +1548,34 @@
       } catch(e) { showError("Error", "Could not connect."); btn.disabled = false; bt.innerText = "Submit Request"; bs.classList.add('d-none'); }
   };
 
-  window.openWithdrawPage = function() { if (window.isWithdrawDisabled) { showError("Closed", "Withdraw closed."); return; } document.getElementById('withdraw-page').style.display = 'block'; document.querySelector('.page-container').style.display = 'none'; document.querySelector('.nav-bottom').style.display = 'none'; var btn = document.getElementById('withdrawSubmitBtn'); btn.disabled = false; window.safeSetText('withdrawBtnText', "Submit Request"); document.getElementById('withdrawBtnSpinner').classList.add('d-none'); };
-  window.closeWithdrawPage = function() { document.getElementById('withdraw-page').style.display = 'none'; document.querySelector('.page-container').style.display = 'block'; document.querySelector('.nav-bottom').style.display = 'flex'; };
+  window.openWithdrawPage = function(pushState) {
+      if (pushState === undefined) pushState = true;
+      if (window.isWithdrawDisabled) { showError("Closed", "Withdraw closed."); return; }
+      document.getElementById('withdraw-page').style.display = 'block';
+      document.querySelector('.page-container').style.display = 'none';
+      document.querySelector('.nav-bottom').style.display = 'none';
+      var btn = document.getElementById('withdrawSubmitBtn');
+      btn.disabled = false;
+      window.safeSetText('withdrawBtnText', "Submit Request");
+      document.getElementById('withdrawBtnSpinner').classList.add('d-none');
+      
+      if (pushState) {
+          history.pushState({ type: 'withdraw' }, "", window.getRouteUrl('withdraw'));
+      }
+  };
+  
+  window.closeWithdrawPage = function() {
+      document.getElementById('withdraw-page').style.display = 'none';
+      document.querySelector('.page-container').style.display = 'block';
+      document.querySelector('.nav-bottom').style.display = 'flex';
+      
+      if (history.state && history.state.type === 'withdraw') {
+          history.back();
+      }
+  };
+  
   window.selectPaymentMethod = function(el, mk, mn) { document.querySelectorAll('.pm-card').forEach(function(c) { c.classList.remove('active'); }); el.classList.add('active'); document.getElementById('selectedMethod').value = mk; document.getElementById('selectedMethodName').value = mn; };
 
-  // INIT
   setupPWA();
   if (localStorage.getItem('mf_banner_dismissed') === '1') { var b = document.getElementById('installBanner'); if (b) b.style.display = 'none'; }
   initAppRoute();
@@ -1579,17 +1587,178 @@
 
 <script>
     var validTabs = ['home', 'history', 'sellers', 'profile', 'exchange_step'];
-    function switchTab(tabId, pushState) { if (pushState === undefined) pushState = true; if (validTabs.indexOf(tabId) === -1) tabId = 'home'; document.querySelectorAll('.content-section').forEach(function(s) { s.classList.remove('active'); }); document.querySelectorAll('.nav-item').forEach(function(i) { i.classList.remove('active'); }); var t = document.getElementById(tabId); if (t) t.classList.add('active'); var btn = document.getElementById(tabId + '-btn'); if (btn) btn.classList.add('active'); if (pushState) { var url = tabId === 'home' ? '/' : '/' + tabId; history.pushState({ tab: tabId }, "", url); } window.scrollTo(0, 0); }
-    window.addEventListener('popstate', function(e) { if (e.state && e.state.tab) switchTab(e.state.tab, false); else switchTab('home', false); });
-    function initAppRoute() { var path = window.location.pathname.replace('/', ''); if (path.indexOf('/') !== -1) path = path.split('/')[0]; if (path && validTabs.indexOf(path) !== -1) switchTab(path, false); else switchTab('home', false); }
-    function showHistoryTab(tab, e) { document.querySelectorAll('.h-tab-btn').forEach(function(b) { b.classList.remove('active'); }); if (e && e.target) e.target.closest('.h-tab-btn').classList.add('active'); document.getElementById('history_sub').style.display = tab === 'sub' ? 'block' : 'none'; document.getElementById('history_wd').style.display = tab === 'wd' ? 'block' : 'none'; document.getElementById('history_trend').style.display = tab === 'trend' ? 'block' : 'none'; }
-    function protectedAction(tabId) { if (!window.currentUser) document.getElementById('auth-page').style.display = 'block'; else if (tabId === 'exchange_step') switchTab('exchange_step'); else switchTab(tabId); }
-    function toggleAuth(type) { var title = document.getElementById('authTitle'); var sub = document.getElementById('authSubtitle'); document.getElementById('login-form').style.display = type === 'login' ? 'block' : 'none'; document.getElementById('reg-form').style.display = type === 'reg' ? 'block' : 'none'; if (type === 'login') { title.innerText = "Welcome Back"; sub.innerText = "আপনার একাউন্টে লগইন করুন।"; } else { title.innerText = "Create Account"; sub.innerText = "রেজিস্ট্রেশন করুন।"; } }
-    window.updateTotal = function() { var count = document.querySelectorAll('.gmail-row').length; var type = document.getElementById('dollarType').value; var rate = (type === 'new') ? (window.currentDynamicRate || 10) : (window.baseOldRate || 8); document.getElementById('tempTotal').innerText = count * rate; };
-    window.addMoreRow = function(email, pass) { email = email || ''; pass = pass || ''; var row = document.createElement('div'); row.className = 'gmail-row position-relative'; row.innerHTML = '<button type="button" class="remove-btn" onclick="window.removeRow(this)"><i class="bi bi-x"></i></button><input type="email" class="g-input" value="' + email + '" placeholder="Enter Gmail Address" required><input type="text" class="p-input" value="' + pass + '" placeholder="Enter Password" required>'; document.getElementById('gmailRows').appendChild(row); window.updateTotal(); };
-    window.removeRow = function(el) { var rows = document.querySelectorAll('.gmail-row'); if (rows.length <= 2) { showError("Warning", "Minimum 2 emails."); return; } el.parentElement.remove(); window.updateTotal(); };
-    window.validateAndSubmit = function() { var rows = document.querySelectorAll('.gmail-row'); if (rows.length < 2) { showError("Validation Error", "Minimum 2 emails."); return; } var gmails = []; var hasError = false; var ls = new Set(); var rx = /^[a-zA-Z0-9._%+-]+@gmail\.com$/; rows.forEach(function(row, idx) { var email = row.querySelector('.g-input').value.trim().toLowerCase(); var pass = row.querySelector('.p-input').value.trim(); if (!email || !pass) { hasError = true; showError("Input Error", "Row " + (idx + 1) + " empty."); } else if (!rx.test(email)) { hasError = true; showError("Invalid Email", "Row " + (idx + 1) + " not Gmail."); } else if (pass.length < 6) { hasError = true; showError("Weak Password", "Row " + (idx + 1) + " too short."); } else if (ls.has(email)) { hasError = true; showError("Duplicate", email + " twice."); } if (!hasError) { ls.add(email); gmails.push({ email: email, password: pass }); } }); if (!hasError) { var type = document.getElementById('dollarType').value; var rate = (type === 'new') ? (window.currentDynamicRate || 10) : (window.baseOldRate || 8); window.submitGmails({ gmails: gmails, totalAmount: gmails.length * rate, rate: rate, count: gmails.length }); } };
-    function showError(title, msg) { Swal.fire({ icon: 'error', title: title, text: msg, confirmButtonColor: '#4F46E5' }); }
+    
+    // Calculate base path for routing
+    var basePath = (function() {
+        var path = window.location.pathname;
+        // Remove trailing slash
+        if (path.endsWith('/')) path = path.slice(0, -1);
+        // Get directory path
+        var lastSlash = path.lastIndexOf('/');
+        if (lastSlash > 0) {
+            return path.substring(0, lastSlash);
+        }
+        return '';
+    })();
+    
+    // Helper function to generate route URL
+    window.getRouteUrl = function(tabId) {
+        if (tabId === 'home') {
+            return basePath + '/';
+        }
+        return basePath + '/' + tabId;
+    };
+    
+    function switchTab(tabId, pushState) {
+        if (pushState === undefined) pushState = true;
+        if (validTabs.indexOf(tabId) === -1) tabId = 'home';
+        
+        document.querySelectorAll('.content-section').forEach(function(s) { s.classList.remove('active'); });
+        document.querySelectorAll('.nav-item').forEach(function(i) { i.classList.remove('active'); });
+        
+        var t = document.getElementById(tabId);
+        if (t) t.classList.add('active');
+        var btn = document.getElementById(tabId + '-btn');
+        if (btn) btn.classList.add('active');
+        
+        if (pushState) {
+            history.pushState({ type: 'tab', tab: tabId }, "", window.getRouteUrl(tabId));
+        }
+        window.scrollTo(0, 0);
+    }
+    
+    window.addEventListener('popstate', function(e) {
+        if (e.state) {
+            if (e.state.type === 'tab') {
+                switchTab(e.state.tab, false);
+            } else if (e.state.type === 'withdraw') {
+                window.openWithdrawPage(false);
+            }
+        } else {
+            switchTab('home', false);
+        }
+    });
+    
+    function initAppRoute() {
+        var path = window.location.pathname;
+        
+        // Remove base path
+        if (basePath && path.startsWith(basePath)) {
+            path = path.substring(basePath.length);
+        }
+        
+        // Remove leading and trailing slashes
+        if (path.startsWith('/')) path = path.substring(1);
+        if (path.endsWith('/')) path = path.slice(0, -1);
+        
+        if (path && validTabs.indexOf(path) !== -1) {
+            switchTab(path, false);
+        } else {
+            switchTab('home', false);
+        }
+    }
+    
+    function showHistoryTab(tab, e) {
+        document.querySelectorAll('.h-tab-btn').forEach(function(b) { b.classList.remove('active'); });
+        if (e && e.target) e.target.closest('.h-tab-btn').classList.add('active');
+        document.getElementById('history_sub').style.display = tab === 'sub' ? 'block' : 'none';
+        document.getElementById('history_wd').style.display = tab === 'wd' ? 'block' : 'none';
+        document.getElementById('history_trend').style.display = tab === 'trend' ? 'block' : 'none';
+    }
+    
+    function protectedAction(tabId) {
+        if (!window.currentUser) {
+            document.getElementById('auth-page').style.display = 'block';
+            history.pushState({ type: 'auth' }, "", window.getRouteUrl('login'));
+        } else if (tabId === 'exchange_step') {
+            switchTab('exchange_step');
+        } else {
+            switchTab(tabId);
+        }
+    }
+    
+    function toggleAuth(type) {
+        var title = document.getElementById('authTitle');
+        var sub = document.getElementById('authSubtitle');
+        document.getElementById('login-form').style.display = type === 'login' ? 'block' : 'none';
+        document.getElementById('reg-form').style.display = type === 'reg' ? 'block' : 'none';
+        if (type === 'login') {
+            title.innerText = "Welcome Back";
+            sub.innerText = "আপনার একাউন্টে লগইন করুন।";
+        } else {
+            title.innerText = "Create Account";
+            sub.innerText = "রেজিস্ট্রেশন করুন।";
+        }
+    }
+    
+    window.updateTotal = function() {
+        var count = document.querySelectorAll('.gmail-row').length;
+        var type = document.getElementById('dollarType').value;
+        var rate = (type === 'new') ? (window.currentDynamicRate || 10) : (window.baseOldRate || 8);
+        document.getElementById('tempTotal').innerText = count * rate;
+    };
+    
+    window.addMoreRow = function(email, pass) {
+        email = email || '';
+        pass = pass || '';
+        var row = document.createElement('div');
+        row.className = 'gmail-row position-relative';
+        row.innerHTML = '<button type="button" class="remove-btn" onclick="window.removeRow(this)"><i class="bi bi-x"></i></button><input type="email" class="g-input" value="' + email + '" placeholder="Enter Gmail Address" required><input type="text" class="p-input" value="' + pass + '" placeholder="Enter Password" required>';
+        document.getElementById('gmailRows').appendChild(row);
+        window.updateTotal();
+    };
+    
+    window.removeRow = function(el) {
+        var rows = document.querySelectorAll('.gmail-row');
+        if (rows.length <= 2) {
+            showError("Warning", "Minimum 2 emails.");
+            return;
+        }
+        el.parentElement.remove();
+        window.updateTotal();
+    };
+    
+    window.validateAndSubmit = function() {
+        var rows = document.querySelectorAll('.gmail-row');
+        if (rows.length < 2) {
+            showError("Validation Error", "Minimum 2 emails.");
+            return;
+        }
+        var gmails = [];
+        var hasError = false;
+        var ls = new Set();
+        var rx = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+        rows.forEach(function(row, idx) {
+            var email = row.querySelector('.g-input').value.trim().toLowerCase();
+            var pass = row.querySelector('.p-input').value.trim();
+            if (!email || !pass) {
+                hasError = true;
+                showError("Input Error", "Row " + (idx + 1) + " empty.");
+            } else if (!rx.test(email)) {
+                hasError = true;
+                showError("Invalid Email", "Row " + (idx + 1) + " not Gmail.");
+            } else if (pass.length < 6) {
+                hasError = true;
+                showError("Weak Password", "Row " + (idx + 1) + " too short.");
+            } else if (ls.has(email)) {
+                hasError = true;
+                showError("Duplicate", email + " twice.");
+            }
+            if (!hasError) {
+                ls.add(email);
+                gmails.push({ email: email, password: pass });
+            }
+        });
+        if (!hasError) {
+            var type = document.getElementById('dollarType').value;
+            var rate = (type === 'new') ? (window.currentDynamicRate || 10) : (window.baseOldRate || 8);
+            window.submitGmails({ gmails: gmails, totalAmount: gmails.length * rate, rate: rate, count: gmails.length });
+        }
+    };
+    
+    function showError(title, msg) {
+        Swal.fire({ icon: 'error', title: title, text: msg, confirmButtonColor: '#4F46E5' });
+    }
 </script>
 
 </body>
