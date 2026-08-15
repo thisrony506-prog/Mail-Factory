@@ -1,0 +1,6 @@
+{
+  "name": "Mail Factory",
+  "description": "Trusted Gmail Exchange and Selling Platform with multi-level reward tiers, live review countdowns, instant withdrawals, and real-time referral earnings.",
+  "requestFramePermissions": ["camera", "microphone", "notifications"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
