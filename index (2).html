@@ -1,0 +1,1934 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mail Factory - Trusted Gmail Exchange Platform</title>
+    <meta name="theme-color" content="#4F46E5">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --primary: #4F46E5; --primary-light: #818CF8; --primary-dark: #3730A3;
+            --green: #10B981; --blue: #3B82F6; --orange: #F59E0B; --red: #EF4444; --purple: #8B5CF6;
+            --bg: #F3F4F6; --card: #FFFFFF; --text: #1F2937; --text-mid: #6B7280; --text-light: #9CA3AF;
+            --border: #E5E7EB; --radius: 16px;
+            --shadow: 0 4px 24px rgba(79, 70, 229, 0.08);
+            --gradient: linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #6D28D9 100%);
+        }
+        body { background-color: var(--bg); font-family: 'Segoe UI', system-ui, sans-serif; color: var(--text); overflow-x: hidden; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+        .page-container { padding-bottom: 80px; padding-top: 15px; }
+
+        #app-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--gradient); z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s, visibility 0.5s; }
+        #app-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .loader-logo-wrap { width: 96px; height: 96px; margin-bottom: 24px; animation: lfloat 2s ease-in-out infinite; }
+        @keyframes lfloat { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-6px) scale(1.03); } }
+        .loader-logo-wrap img { width: 96px; height: 96px; object-fit: contain; filter: drop-shadow(0 8px 24px rgba(0,0,0,0.25)); }
+        .loader-spinner { width: 30px; height: 30px; border: 3px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loader-text { color: rgba(255,255,255,0.8); margin-top: 18px; font-weight: 600; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
+        .loader-brand { color: white; font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+        .loader-brand span:last-child { background: linear-gradient(135deg, #FFD700, #FFA500); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .network-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.97); z-index: 99998; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+        .network-overlay.show { display: flex; }
+        .network-overlay i { font-size: 60px; color: var(--red); margin-bottom: 20px; }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--primary-light); border-radius: 10px; }
+        .swal2-container { z-index: 99999 !important; }
+
+        .navbar { background: var(--gradient) !important; box-shadow: 0 4px 30px rgba(79, 70, 229, 0.35); padding: 8px 15px; position: sticky; top: 0; z-index: 1001; display: flex; justify-content: center; align-items: center; min-height: 64px; }
+        .navbar-brand-center { display: flex; align-items: center; gap: 11px; text-decoration: none; }
+        .nav-logo-icon { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; }
+        .nav-logo-icon img { width: 38px; height: 38px; object-fit: contain; }
+        .nav-text-block { display: flex; flex-direction: column; line-height: 1.1; }
+        .nav-text-mail { font-size: 19px; font-weight: 800; color: white; letter-spacing: -0.5px; }
+        .nav-text-factory { font-size: 19px; font-weight: 900; background: linear-gradient(135deg, #FFD700, #FFA500); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.5px; }
+        .nav-slogan { font-size: 9px; color: rgba(255,255,255,0.85); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+
+        .nav-bottom { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(255,255,255,0.97); backdrop-filter: blur(16px); display: flex; justify-content: space-around; padding: 5px 0 12px; z-index: 1000; box-shadow: 0 -4px 24px rgba(0,0,0,0.06); border-top: 1px solid var(--border); }
+        .nav-item { color: var(--text-light); font-size: 10px; font-weight: 600; transition: 0.3s; width: 25%; text-align: center; padding: 4px 0; cursor: pointer; position: relative; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item i { font-size: 21px; margin-bottom: 2px; display: block; transition: transform 0.3s; }
+        .nav-item.active i { transform: scale(1.15) translateY(-1px); }
+        .nav-item.active::before { content: ''; position: absolute; top: -5px; left: 50%; transform: translateX(-50%); width: 20px; height: 3px; background: var(--primary); border-radius: 0 0 4px 4px; }
+
+        .float-right { position: fixed; bottom: 140px; right: 14px; z-index: 999; display: flex; flex-direction: column; gap: 12px; }
+        .float-btn { width: 52px; height: 52px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 6px 24px rgba(0,0,0,0.18); color: white; transition: transform 0.2s; cursor: pointer; border: none; position: relative; }
+        .float-btn:active { transform: scale(0.9); }
+        .chat-float { background: linear-gradient(135deg, var(--primary), #7C3AED); }
+        .notif-float { background: white; color: var(--text-mid); border: 2px solid var(--border); }
+        .notif-float.has-notif { color: var(--orange); border-color: var(--orange); background: #FFFBEB; }
+        .notif-dot { position: absolute; top: 6px; right: 6px; width: 10px; height: 10px; background: var(--red); border-radius: 50%; border: 2px solid white; display: none; }
+        .notif-float.has-notif .notif-dot { display: block; }
+
+        .notif-panel { position: fixed; top: 0; right: -100%; width: 320px; max-width: 85%; height: 100%; background: white; z-index: 1002; box-shadow: -10px 0 40px rgba(0,0,0,0.2); transition: right 0.3s ease; overflow-y: auto; }
+        .notif-panel.open { right: 0; }
+        .notif-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1001; display: none; }
+        .notif-overlay.show { display: block; }
+        .notif-header { background: var(--gradient); color: white; padding: 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 1; }
+        .notif-header h5 { margin: 0; font-size: 16px; font-weight: 800; }
+        .notif-close { background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .notif-list { padding: 10px; }
+        .notif-item { display: flex; gap: 12px; padding: 12px; border-radius: 12px; margin-bottom: 8px; background: #F8FAFC; border-left: 4px solid var(--border); transition: 0.2s; cursor: pointer; }
+        .notif-item:hover { transform: translateX(-2px); }
+        .notif-item.unread { background: #EEF2FF; border-left-color: var(--primary); }
+        .notif-item.type-success { border-left-color: var(--green); }
+        .notif-item.type-warning { border-left-color: var(--orange); }
+        .notif-item.type-danger { border-left-color: var(--red); }
+        .notif-item.type-info { border-left-color: var(--blue); }
+        .notif-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .notif-icon.success { background: #D1FAE5; color: var(--green); }
+        .notif-icon.warning { background: #FEF3C7; color: var(--orange); }
+        .notif-icon.danger { background: #FEE2E2; color: var(--red); }
+        .notif-icon.info { background: #DBEAFE; color: var(--blue); }
+        .notif-content { flex: 1; }
+        .notif-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+        .notif-desc { font-size: 11px; color: var(--text-mid); }
+        .notif-time { font-size: 10px; color: var(--text-light); margin-top: 4px; }
+
+        .chat-panel { position: fixed; bottom: 140px; right: 14px; width: 320px; max-width: 85%; height: 440px; background: white; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); z-index: 1000; display: none; flex-direction: column; overflow: hidden; }
+        .chat-panel.open { display: flex; }
+        .chat-header { background: var(--gradient); color: white; padding: 16px; display: flex; align-items: center; justify-content: space-between; }
+        .chat-header h6 { margin: 0; font-weight: 800; }
+        .chat-status { font-size: 11px; opacity: 0.85; display: flex; align-items: center; gap: 4px; }
+        .chat-status-dot { width: 8px; height: 8px; background: #10B981; border-radius: 50%; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; background: #F9FAFB; }
+        .chat-msg { max-width: 80%; padding: 10px 14px; border-radius: 14px; font-size: 13px; line-height: 1.4; }
+        .chat-msg.bot { background: white; color: var(--text); align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .chat-msg.user { background: var(--primary); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .chat-msg.admin { background: linear-gradient(135deg, #10B981, #059669); color: white; align-self: flex-start; border-bottom-left-radius: 4px; }
+        .chat-msg .msg-time { font-size: 9px; opacity: 0.7; margin-top: 4px; display: block; }
+        .chat-input-area { padding: 10px; border-top: 1px solid var(--border); display: flex; gap: 8px; background: white; }
+        .chat-input { flex: 1; border: 2px solid var(--border); border-radius: 10px; padding: 8px 12px; font-size: 13px; outline: none; }
+        .chat-input:focus { border-color: var(--primary); }
+        .chat-send { background: var(--gradient); color: white; border: none; width: 36px; height: 36px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+
+        .card-main { background: var(--card); border-radius: var(--radius); padding: 20px; margin-bottom: 15px; box-shadow: var(--shadow); border: 1px solid rgba(0,0,0,0.03); animation: fadeInUp 0.5s ease-out forwards; opacity: 0; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .install-banner { background: linear-gradient(135deg, #0EA5E9, #4F46E5, #7C3AED); border-radius: 18px; padding: 14px 16px; margin-bottom: 15px; display: flex; align-items: center; gap: 12px; box-shadow: 0 8px 28px rgba(79, 70, 229, 0.25); cursor: pointer; position: relative; overflow: hidden; }
+        .install-banner:active { transform: scale(0.98); }
+        .install-banner-icon { width: 44px; height: 44px; flex-shrink: 0; object-fit: contain; filter: drop-shadow(0 3px 8px rgba(0,0,0,0.2)); }
+        .install-banner-text { flex-grow: 1; }
+        .install-banner-text h6 { color: white; font-weight: 700; font-size: 13px; margin-bottom: 1px; }
+        .install-banner-text small { color: rgba(255,255,255,0.8); font-size: 11px; }
+        .install-banner-close { position: absolute; top: 6px; right: 6px; background: rgba(255,255,255,0.15); border: none; color: white; width: 20px; height: 20px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 2; }
+        .banner-safe { background: #F0FDF4; border-left: 4px solid var(--green); border-radius: 14px; padding: 12px 14px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        .banner-safe i { color: var(--green); font-size: 20px; }
+        .banner-safe b { color: var(--green); }
+
+        .rate-card { background: var(--card); border-radius: 18px; margin-bottom: 15px; box-shadow: 0 4px 18px rgba(0,0,0,0.04); overflow: hidden; border: 1px solid var(--border); }
+        .rate-header { background: linear-gradient(135deg, #f8fafc, #f1f5f9); padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .rate-grid { display: grid; grid-template-columns: 1fr 1fr; padding: 16px; gap: 14px; }
+        .rate-box { background: linear-gradient(135deg, #f9fafb, #f3f4f6); border-radius: 14px; padding: 16px; text-align: center; border: 1px solid var(--border); }
+        .rate-box.new { border-left: 4px solid var(--green); }
+        .rate-box.old { border-left: 4px solid var(--purple); }
+        .rb-title { font-size: 11px; color: var(--text-mid); font-weight: 600; margin-bottom: 6px; text-transform: uppercase; }
+        .rb-value { font-size: 24px; font-weight: 800; color: var(--text); }
+        .rb-value small { font-size: 11px; font-weight: 600; color: var(--text-light); }
+        .badge-active { background: #F0FDF4; color: #059669; border: 1px solid #a7f3d0; font-size: 9px; font-weight: 700; padding: 4px 8px; border-radius: 8px; }
+
+        .form-select-custom { background-color: #f8fafc; border: 2px solid var(--border); border-radius: 12px; padding: 12px 16px; font-weight: 600; color: var(--text); width: 100%; cursor: pointer; -webkit-appearance: none; appearance: none; }
+        .form-select-custom:focus { outline: none; border-color: var(--primary); background-color: #fff; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        .trans-btn { background: var(--gradient); color: white; border: none; padding: 14px; border-radius: 14px; font-weight: 700; width: 100%; font-size: 16px; transition: 0.2s; box-shadow: 0 4px 18px rgba(79, 70, 229, 0.25); display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .trans-btn:active { transform: scale(0.98); }
+        .trans-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+
+        .gmail-row { background: white; border-radius: 14px; padding: 14px; margin-bottom: 10px; position: relative; border: 1.5px solid var(--border); transition: all 0.3s; animation: fadeIn 0.3s; }
+        .gmail-row:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.08); }
+        .gmail-row input { border: none; background: #f8fafc; border-radius: 8px; padding: 10px 12px; font-size: 14px; width: 100%; margin-bottom: 8px; }
+        .gmail-row input:focus { outline: none; background: #EEF2FF; }
+        .remove-btn { position: absolute; top: -8px; right: -8px; background: var(--red); color: white; border: 2px solid white; border-radius: 50%; width: 24px; height: 24px; font-size: 12px; cursor: pointer; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3); display: flex; align-items: center; justify-content: center; }
+
+        .trust-box { text-align: center; }
+        .trust-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 18px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .trust-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .trust-item { background: linear-gradient(135deg, #f9fafb, #f3f4f6); border-radius: 16px; padding: 16px 5px; border: 1px solid var(--border); }
+        .trust-item:active { transform: scale(0.95); border-color: var(--primary-light); }
+        .trust-icon { width: 46px; height: 46px; border-radius: 13px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; color: white; font-size: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+        .trust-icon.t1 { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .trust-icon.t2 { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .trust-icon.t3 { background: linear-gradient(135deg, #10b981, #059669); }
+        .trust-text { font-size: 11px; font-weight: 700; color: #4b5563; }
+
+        .review-container { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 15px; }
+        .review-card { background: white; border-radius: 20px; padding: 18px; text-align: center; border: 2px solid var(--border); box-shadow: 0 4px 16px rgba(0,0,0,0.05); overflow: hidden; position: relative; }
+        .review-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+        .review-card.type-left::before { background: linear-gradient(90deg, var(--primary), var(--primary-light)); }
+        .review-card.type-right::before { background: linear-gradient(90deg, var(--green), #34D399); }
+        .review-card.type-left { border-top: none; }
+        .review-card.type-right { border-top: none; }
+        .review-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .type-left .review-icon { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; }
+        .type-right .review-icon { background: linear-gradient(135deg, var(--green), #34D399); color: white; }
+        .review-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; line-height: 1.3; }
+        .review-date { font-size: 10px; color: var(--text-light); margin-bottom: 12px; font-weight: 500; }
+        .review-time-box { background: linear-gradient(135deg, #F8FAFC, #F1F5F9); border-radius: 12px; padding: 12px; border: 2px solid var(--border); position: relative; overflow: hidden; }
+        .review-time-box::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: shimmer 3s infinite; }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        .review-sec { font-size: 26px; font-weight: 800; font-family: 'Courier New', monospace; color: var(--text); letter-spacing: 2px; position: relative; z-index: 1; }
+        .review-label { font-size: 10px; font-weight: 700; background: linear-gradient(135deg, #10B981, #34D399); color: white; display: inline-block; padding: 4px 10px; border-radius: 8px; margin-top: 8px; position: relative; z-index: 1; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); }
+        .countdown-active { animation: pulse 1s infinite; color: #059669 !important; text-shadow: 0 0 10px rgba(5, 150, 105, 0.3); }
+        @keyframes pulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.9; } }
+
+        .history-tabs-container { background: white; padding: 6px; border-radius: 18px; margin-bottom: 15px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+        .history-tabs { display: flex; gap: 6px; }
+        .h-tab-btn { flex: 1; border: none; background: transparent; padding: 10px 5px; font-weight: 600; color: var(--text-light); font-size: 10px; border-radius: 14px; transition: 0.3s; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+        .h-tab-btn i { font-size: 18px; transition: 0.3s; }
+        .h-tab-btn.active { background: var(--gradient); color: white; box-shadow: 0 4px 16px rgba(79, 70, 229, 0.3); }
+
+        .seller-card { background: white; border-radius: 16px; padding: 14px; margin-bottom: 10px; display: flex; align-items: center; box-shadow: 0 2px 12px rgba(0,0,0,0.03); border: 1px solid var(--border); transition: 0.2s; }
+        .seller-card:active { transform: translateY(-2px); }
+        .seller-rank { width: 44px; height: 44px; border-radius: 50%; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-weight: 900; margin-right: 14px; color: var(--text-light); font-size: 15px; flex-shrink: 0; }
+        .seller-rank.gold { background: linear-gradient(135deg, #FFD700, #FFA500); color: white; }
+        .seller-rank.silver { background: linear-gradient(135deg, #C0C0C0, #A9A9A9); color: white; }
+        .seller-info { flex-grow: 1; }
+        .seller-name { font-weight: 700; font-size: 14px; color: var(--text); }
+        .seller-amount { font-weight: 800; color: var(--primary); font-size: 17px; text-align: right; }
+
+        .profile-header-v2 { background: var(--gradient); padding: 30px 20px 90px; margin: -15px -15px 20px -15px; color: white; text-align: center; position: relative; border-radius: 0 0 40px 40px; overflow: hidden; }
+        .profile-header-v2::before { content: ''; position: absolute; top: -50%; right: -30%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%); border-radius: 50%; animation: floatBg 8s ease-in-out infinite; }
+        .profile-header-v2::after { content: ''; position: absolute; bottom: -30%; left: -20%; width: 200px; height: 200px; background: radial-gradient(circle, rgba(255,215,0,0.1) 0%, transparent 70%); border-radius: 50%; animation: floatBg 10s ease-in-out infinite reverse; }
+        @keyframes floatBg { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(20px,-20px) scale(1.1); } }
+        
+        .ph-avatar-wrap { position: relative; display: inline-block; margin-bottom: 15px; z-index: 2; }
+        .ph-avatar { width: 110px; height: 110px; border-radius: 50%; background: linear-gradient(135deg, #FFD700, #FFA500); display: flex; align-items: center; justify-content: center; font-size: 44px; font-weight: 900; color: white; box-shadow: 0 8px 24px rgba(0,0,0,0.25), 0 0 0 4px rgba(255,255,255,0.2); overflow: hidden; animation: avatarEntry 0.6s ease-out; cursor: pointer; }
+        .ph-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        @keyframes avatarEntry { from { opacity:0; transform: scale(0.5) rotate(-180deg); } to { opacity:1; transform: scale(1) rotate(0); } }
+        .ph-avatar-badge { position: absolute; bottom: -4px; right: -4px; background: linear-gradient(135deg, #10B981, #059669); color: white; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        .ph-name-v2 { font-size: 24px; font-weight: 800; margin-bottom: 6px; position: relative; z-index: 2; }
+        .ph-email-v2 { font-size: 12px; opacity: 0.85; margin-bottom: 12px; position: relative; z-index: 2; word-break: break-all; }
+        .ph-badges-row { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; position: relative; z-index: 2; }
+        .ph-badge-chip { background: rgba(255,255,255,0.18); backdrop-filter: blur(10px); padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 5px; border: 1px solid rgba(255,255,255,0.2); }
+
+        .balance-card-v2 { background: white; border-radius: 24px; padding: 20px; margin: -60px auto 20px; position: relative; z-index: 10; box-shadow: 0 16px 40px rgba(0,0,0,0.12); max-width: 95%; border: 1px solid rgba(0,0,0,0.04); }
+        .balance-row-v2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+        .bal-card-v2 { padding: 14px; border-radius: 16px; text-align: center; }
+        .bal-card-v2.main { background: linear-gradient(135deg, #EEF2FF, #E0E7FF); border: 1px solid #C7D2FE; }
+        .bal-card-v2.hold { background: linear-gradient(135deg, #FEF3C7, #FDE68A); border: 1px solid #FCD34D; }
+        .bal-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-size: 18px; }
+        .bal-card-v2.main .bal-icon { background: linear-gradient(135deg, #4F46E5, #7C3AED); color: white; box-shadow: 0 4px 12px rgba(79,70,229,0.3); }
+        .bal-card-v2.hold .bal-icon { background: linear-gradient(135deg, #F59E0B, #D97706); color: white; box-shadow: 0 4px 12px rgba(245,158,11,0.3); }
+        .bal-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-mid); margin-bottom: 4px; }
+        .bal-amount { font-size: 22px; font-weight: 800; color: var(--text); }
+        
+        .quick-actions-v2 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; }
+        .qa-btn { background: white; border: 2px solid var(--border); border-radius: 16px; padding: 16px 8px; text-align: center; cursor: pointer; transition: all 0.3s; text-decoration: none; color: var(--text); position: relative; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .qa-btn:active { transform: scale(0.95); }
+        .qa-btn i { font-size: 26px; display: block; margin-bottom: 6px; transition: transform 0.3s; }
+        .qa-btn:active i { transform: scale(1.2) rotate(5deg); }
+        .qa-btn span { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .qa-btn.withdraw { background: linear-gradient(135deg, #10B981, #059669); border-color: var(--green); color: white; box-shadow: 0 4px 16px rgba(16,185,129,0.3); }
+        .qa-btn.withdraw i { color: white; }
+        .qa-btn.history { background: linear-gradient(135deg, #3B82F6, #2563EB); border-color: var(--blue); color: white; box-shadow: 0 4px 16px rgba(59,130,246,0.3); }
+        .qa-btn.history i { color: white; }
+        .qa-btn.invite { background: linear-gradient(135deg, #F59E0B, #D97706); border-color: var(--orange); color: white; box-shadow: 0 4px 16px rgba(245,158,11,0.3); }
+        .qa-btn.invite i { color: white; }
+
+        .streak-card { background: linear-gradient(135deg, #F97316, #EF4444, #EC4899); border-radius: 20px; padding: 18px; margin-bottom: 16px; color: white; position: relative; overflow: hidden; box-shadow: 0 12px 28px rgba(239,68,68,0.25); }
+        .streak-card::before { content: '🔥'; position: absolute; top: -20px; right: -20px; font-size: 100px; opacity: 0.15; transform: rotate(15deg); }
+        .streak-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; position: relative; z-index: 1; }
+        .streak-title { font-size: 14px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
+        .streak-count { font-size: 28px; font-weight: 900; }
+        .streak-days { display: flex; gap: 6px; position: relative; z-index: 1; }
+        .streak-day { flex: 1; text-align: center; padding: 6px 2px; background: rgba(255,255,255,0.15); border-radius: 8px; font-size: 10px; font-weight: 700; border: 1px solid rgba(255,255,255,0.2); }
+        .streak-day.active { background: rgba(255,255,255,0.95); color: #EF4444; }
+        .streak-day.today { border: 2px solid #FFD700; animation: pulseToday 1.5s infinite; }
+        @keyframes pulseToday { 0%,100% { box-shadow:0 0 0 0 rgba(255,215,0,0.7); } 50% { box-shadow:0 0 0 6px rgba(255,215,0,0); } }
+
+        .stats-card-v2 { background: white; border-radius: 20px; padding: 18px; margin-bottom: 16px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+        .ach-title { font-size: 14px; font-weight: 800; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; color: var(--text); }
+        .stats-grid-v2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .stat-box-v2 { background: linear-gradient(135deg, #F8FAFC, #F1F5F9); border-radius: 14px; padding: 14px 10px; text-align: center; transition: all 0.2s; }
+        .stat-box-v2:active { transform: scale(0.97); }
+        .stat-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-size: 16px; }
+        .stat-box-v2.total .stat-icon { background: rgba(79,70,229,0.1); color: var(--primary); }
+        .stat-box-v2.app .stat-icon { background: rgba(34,197,94,0.1); color: #22C55E; }
+        .stat-box-v2.pend .stat-icon { background: rgba(234,179,8,0.1); color: #EAB308; }
+        .stat-box-v2.rej .stat-icon { background: rgba(239,68,68,0.1); color: var(--red); }
+        .stat-val { font-size: 22px; font-weight: 800; display: block; color: var(--text); }
+        .stat-label { font-size: 10px; color: var(--text-light); font-weight: 700; text-transform: uppercase; }
+
+        .level-card-v2 { background: white; border-radius: 20px; padding: 18px; margin-bottom: 16px; box-shadow: var(--shadow); border: 1px solid var(--border); position: relative; overflow: hidden; }
+        .level-top-v2 { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; position: relative; z-index: 1; }
+        .level-info-v2 { display: flex; align-items: center; gap: 12px; }
+        .level-icon-v2 { width: 48px; height: 48px; border-radius: 14px; background: var(--gradient); display: flex; align-items: center; justify-content: center; font-size: 22px; color: white; box-shadow: 0 6px 16px rgba(79,70,229,0.3); }
+        .level-title-v2 { font-size: 16px; font-weight: 800; color: var(--text); }
+        .level-sub-v2 { font-size: 11px; color: var(--text-mid); }
+        .level-rate-badge { background: linear-gradient(135deg, #E0E7FF, #C7D2FE); color: var(--primary-dark); padding: 6px 14px; border-radius: 12px; font-weight: 800; font-size: 13px; }
+        .level-progress-bar-v2 { height: 10px; background: #F1F5F9; border-radius: 10px; overflow: hidden; margin-bottom: 8px; }
+        .level-progress-fill-v2 { height: 100%; background: var(--gradient); border-radius: 10px; transition: width 1s ease-in-out; position: relative; }
+        .level-progress-fill-v2::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4)); animation: shimmer 2s infinite; }
+        @keyframes shimmer { to { left: 100%; } }
+        .level-footer-v2 { display: flex; justify-content: space-between; font-size: 11px; }
+        .level-footer-v2 .next { color: var(--primary); font-weight: 700; }
+
+        /* Referral Card V3 with Tabs */
+        .referral-card-v3 { background: white; border-radius: 22px; margin-bottom: 16px; box-shadow: var(--shadow); border: 1px solid var(--border); overflow: hidden; }
+        
+        .referral-header-v3 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        .referral-header-v3::before {
+            content: '🎁';
+            position: absolute;
+            top: -15px; right: -15px;
+            font-size: 90px;
+            opacity: 0.15;
+            transform: rotate(15deg);
+        }
+        .ref-top-v3 { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; position: relative; z-index: 1; }
+        .ref-icon-v3 { width: 48px; height: 48px; border-radius: 14px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 24px; backdrop-filter: blur(10px); }
+        .ref-title-v3 { font-size: 17px; font-weight: 800; }
+        .ref-sub-v3 { font-size: 11px; opacity: 0.9; }
+        
+        .ref-stats-v3 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; position: relative; z-index: 1; }
+        .ref-stat-box-v3 { background: rgba(255,255,255,0.15); border-radius: 14px; padding: 12px; text-align: center; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .ref-stat-val-v3 { font-size: 22px; font-weight: 900; }
+        .ref-stat-label-v3 { font-size: 9px; opacity: 0.9; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        /* Referral Tabs */
+        .referral-tabs-v3 {
+            display: flex;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border);
+        }
+        .ref-tab-v3 {
+            flex: 1;
+            padding: 12px 10px;
+            background: transparent;
+            border: none;
+            font-weight: 700;
+            font-size: 12px;
+            color: var(--text-mid);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            position: relative;
+        }
+        .ref-tab-v3 i { font-size: 16px; }
+        .ref-tab-v3.active {
+            color: var(--primary);
+            background: white;
+        }
+        .ref-tab-v3.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 20%; right: 20%;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 3px 3px 0 0;
+        }
+        .ref-tab-v3:active { transform: scale(0.98); }
+        
+        .referral-content-v3 { padding: 16px; }
+        .ref-tab-content { display: none; }
+        .ref-tab-content.active { display: block; animation: fadeIn 0.3s; }
+        
+        /* Referral Code Box */
+        .ref-code-box-v3 { background: linear-gradient(135deg, #f8fafc, #f1f5f9); border-radius: 14px; padding: 14px; display: flex; align-items: center; gap: 10px; border: 2px solid var(--border); margin-bottom: 12px; }
+        .ref-code-text-v3 { font-size: 18px; font-weight: 800; letter-spacing: 1.5px; flex-grow: 1; font-family: 'Courier New', monospace; color: var(--primary-dark); }
+        .ref-copy-btn-v3 { background: var(--gradient); color: white; border: none; padding: 8px 14px; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 4px 12px rgba(79,70,229,0.25); }
+        .ref-copy-btn-v3:active { transform: scale(0.95); }
+        
+        /* Referral Friend List */
+        .ref-friend-list { max-height: 400px; overflow-y: auto; }
+        .ref-friend-item {
+            background: linear-gradient(135deg, #f9fafb, #f3f4f6);
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border);
+            position: relative;
+            transition: all 0.2s;
+        }
+        .ref-friend-item:active { transform: scale(0.99); }
+        .ref-friend-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        .ref-friend-info { flex: 1; min-width: 0; }
+        .ref-friend-name {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 2px;
+        }
+        .ref-friend-email {
+            font-size: 11px;
+            color: var(--text-mid);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .ref-friend-earn-badge {
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 800;
+            box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+        .ref-friend-stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .ref-friend-stat {
+            background: white;
+            padding: 6px 4px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+        .ref-friend-stat-val {
+            font-weight: 800;
+            font-size: 13px;
+            color: var(--primary);
+            display: block;
+        }
+        .ref-friend-stat-lbl {
+            color: var(--text-light);
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .ref-friend-status {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+        .ref-friend-status.active { background: #dcfce7; color: #166534; }
+        .ref-friend-status.blocked { background: #fee2e2; color: #991b1b; }
+        
+        .ref-empty-state {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--text-mid);
+        }
+        .ref-empty-state i {
+            font-size: 50px;
+            opacity: 0.3;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .ref-empty-state h6 {
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: var(--text);
+        }
+        .ref-empty-state p {
+            font-size: 12px;
+            margin: 0;
+        }
+        
+        .ref-share-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            width: 100%;
+            font-weight: 700;
+            font-size: 14px;
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 6px 18px rgba(102,126,234,0.3);
+        }
+        .ref-share-btn:active { transform: scale(0.98); }
+
+        .settings-card-v2 { background: white; border-radius: 20px; padding: 8px; margin-bottom: 16px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+        .settings-section-title { font-size: 11px; font-weight: 800; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; padding: 10px 14px 4px; }
+        .settings-item-v2 { display: flex; align-items: center; padding: 12px 14px; border-radius: 14px; cursor: pointer; gap: 12px; transition: all 0.2s; }
+        .settings-item-v2:active { background: #F3F4F6; transform: translateX(4px); }
+        .settings-icon-v2 { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+        .si-edit .settings-icon-v2 { background: rgba(139,92,246,0.1); color: var(--purple); }
+        .si-notif .settings-icon-v2 { background: rgba(245,158,11,0.1); color: var(--orange); }
+        .si-support .settings-icon-v2 { background: rgba(79,70,229,0.1); color: var(--primary); }
+        .si-password .settings-icon-v2 { background: rgba(245,158,11,0.1); color: var(--orange); }
+        .si-logout-all .settings-icon-v2 { background: rgba(59,130,246,0.1); color: var(--blue); }
+        .si-privacy .settings-icon-v2 { background: rgba(16,185,129,0.1); color: var(--green); }
+        .si-faq .settings-icon-v2 { background: rgba(236,72,153,0.1); color: #EC4899; }
+        .si-about .settings-icon-v2 { background: rgba(139,92,246,0.1); color: var(--purple); }
+        .si-delete .settings-icon-v2 { background: rgba(239,68,68,0.1); color: var(--red); }
+        .settings-text-v2 { flex-grow: 1; }
+        .settings-text-v2 h6 { margin: 0; font-size: 14px; font-weight: 700; color: var(--text); }
+        .settings-text-v2 small { color: var(--text-light); font-size: 11px; }
+        .settings-item-v2.danger .settings-text-v2 h6 { color: var(--red); }
+
+        .photo-upload-wrap { text-align: center; margin-bottom: 16px; position: relative; }
+        .photo-preview { width: 110px; height: 110px; border-radius: 50%; background: linear-gradient(135deg, #EEF2FF, #E0E7FF); border: 3px solid var(--primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; overflow: hidden; box-shadow: 0 4px 16px rgba(79,70,229,0.2); cursor: pointer; transition: all 0.3s; }
+        .photo-preview:hover { transform: scale(1.05); }
+        .photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .photo-preview .placeholder-icon { font-size: 44px; color: var(--primary); }
+        .photo-upload-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--gradient); color: white; padding: 8px 16px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; border: none; margin-top: 8px; }
+        .photo-remove-btn { position: absolute; top: 0; right: calc(50% - 65px); background: var(--red); color: white; width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; font-size: 12px; display: none; align-items: center; justify-content: center; cursor: pointer; }
+        .photo-remove-btn.show { display: flex; }
+
+        #auth-page { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--gradient); z-index: 2000; overflow-y: auto; }
+        .auth-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .auth-card { width: 100%; max-width: 420px; background: #fff; border-radius: 28px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,0.2); }
+        .auth-header { padding: 32px 20px 18px; text-align: center; }
+        .auth-logo-box { width: 88px; height: 88px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; filter: drop-shadow(0 6px 16px rgba(0,0,0,0.12)); }
+        .auth-logo-box img { width: 88px; height: 88px; object-fit: contain; }
+        .auth-title { font-size: 21px; font-weight: 800; margin-bottom: 5px; color: var(--primary); }
+        .auth-subtitle { font-size: 13px; color: #6B7280; margin-bottom: 10px; }
+        .trust-badges { display: flex; justify-content: center; gap: 20px; margin-top: 16px; }
+        .trust-badge-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: var(--text-light); }
+        .trust-badge-item i { font-size: 18px; margin-bottom: 4px; color: var(--primary); }
+        .auth-body { padding: 22px 24px 26px; }
+        .form-control { border-radius: 12px; border: 2px solid var(--border); font-size: 15px; padding: 12px 14px; background: #f9fafc; }
+        .form-control:focus { border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(79,70,229,0.08); background: #fff; }
+        .google-btn { background: white; border: 2px solid var(--border); border-radius: 14px; padding: 12px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 700; font-size: 14px; color: var(--text); cursor: pointer; margin-bottom: 14px; transition: all 0.2s; }
+        .google-btn:hover { border-color: var(--primary); }
+        .google-btn img { width: 20px; height: 20px; }
+        .auth-divider { display: flex; align-items: center; gap: 10px; margin: 16px 0; color: var(--text-light); font-size: 11px; font-weight: 700; }
+        .auth-divider::before, .auth-divider::after { content: ''; flex-grow: 1; height: 1px; background: var(--border); }
+        .forgot-link { display: block; text-align: right; font-size: 12px; color: var(--primary); font-weight: 600; margin-top: -8px; margin-bottom: 14px; cursor: pointer; }
+        .btn-main { background: var(--gradient); border: none; font-weight: 700; border-radius: 14px; padding: 13px; box-shadow: 0 6px 20px rgba(79,70,229,0.25); color: white; width: 100%; cursor: pointer; transition: all 0.2s; }
+        .btn-main:active { transform: scale(0.98); }
+        .field-hint { font-size: 11px; margin-top: 4px; font-weight: 600; }
+        .field-hint.error { color: var(--red); }
+        .field-hint.success { color: var(--green); }
+        .form-control.is-invalid { border-color: var(--red); background: #FEF2F2; }
+        .form-control.is-valid { border-color: var(--green); background: #F0FDF4; }
+
+        #withdraw-page { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 1500; overflow-y: auto; animation: slideUp 0.3s; }
+        .wd-header { background: var(--gradient); padding: 50px 20px 30px; color: white; text-align: center; border-radius: 0 0 30px 30px; position: relative; overflow: hidden; }
+        .wd-back-btn { position: absolute; top: 15px; left: 15px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.1); color: white; width: 36px; height: 36px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .wd-balance-box { background: rgba(255,255,255,0.12); border-radius: 14px; padding: 16px; margin-top: 16px; border: 1px solid rgba(255,255,255,0.1); }
+        .wd-body { padding: 20px; }
+        .payment-method-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .pm-card { background: white; border: 2px solid var(--border); border-radius: 14px; padding: 14px 5px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .pm-card.active { border-color: var(--primary); background: rgba(79,70,229,0.04); transform: scale(1.05); }
+        .pm-card i { font-size: 24px; margin-bottom: 5px; display: block; }
+        .pm-card span { font-size: 11px; font-weight: 700; }
+        @keyframes slideUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+
+        .faq-item { border: 1px solid var(--border); border-radius: 12px; margin-bottom: 8px; overflow: hidden; background: white; }
+        .faq-q { padding: 14px; cursor: pointer; font-weight: 700; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
+        .faq-a { padding: 0 14px 14px; font-size: 12px; color: var(--text-mid); line-height: 1.6; display: none; }
+        .faq-item.open .faq-a { display: block; }
+        .faq-item.open .faq-q i { transform: rotate(180deg); }
+
+        .content-section { display: none; padding: 15px; animation: slideUp 0.3s; }
+        .content-section.active { display: block; }
+        .install-app-btn { display: flex; align-items: center; justify-content: center; gap: 10px; background: linear-gradient(135deg, #0EA5E9, #4F46E5); color: white; padding: 14px; border-radius: 16px; width: 100%; font-weight: 700; font-size: 15px; border: none; cursor: pointer; margin-top: 12px; margin-bottom: 15px; }
+
+        @media (max-width: 480px) {
+            .qa-btn { padding: 14px 6px; }
+            .qa-btn i { font-size: 24px; }
+            .qa-btn span { font-size: 10px; }
+            .balance-card-v2 { padding: 16px; }
+            .ph-name-v2 { font-size: 20px; }
+            .ph-email-v2 { font-size: 11px; }
+            .ph-avatar { width: 96px; height: 96px; font-size: 38px; }
+            .chat-panel { width: 290px; height: 400px; }
+            .notif-panel { width: 290px; }
+            .review-sec { font-size: 22px; }
+            .review-title { font-size: 12px; }
+            .ref-stat-val-v3 { font-size: 20px; }
+            .ref-friend-name { font-size: 13px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app-loader">
+    <div class="loader-logo-wrap">
+        <img src="https://z-cdn-media.chatglm.cn/files/254f7f82-610d-4700-abc8-2e10435c149a.png?auth_key=1874890147-5ce8a86650d0488299a25b07660a73f8-0-b25e70b5ad3109adec869d78d8584440" id="loaderLogo" alt="Mail Factory">
+    </div>
+    <div class="loader-brand"><span>Mail </span><span>Factory</span></div>
+    <div class="loader-spinner"></div>
+    <div class="loader-text">Loading your experience...</div>
+</div>
+
+<div id="networkErrorOverlay" class="network-overlay">
+    <i class="bi bi-wifi-off"></i>
+    <h4>🚫 No Internet Connection</h4>
+    <p>Please check your network and try again.</p>
+</div>
+
+<div id="auth-page">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo-box">
+                    <img src="https://z-cdn-media.chatglm.cn/files/254f7f82-610d-4700-abc8-2e10435c149a.png?auth_key=1874890147-5ce8a86650d0488299a25b07660a73f8-0-b25e70b5ad3109adec869d78d8584440" id="authLogo" alt="Mail Factory">
+                </div>
+                <div class="auth-title" id="authTitle">Welcome Back to Mail Factory</div>
+                <div class="auth-subtitle" id="authSubtitle">আপনার একাউন্টে লগইন করে এক্সচেঞ্জ এবং ব্যালেন্স ম্যানেজ করুন।</div>
+                <div class="trust-badges">
+                    <div class="trust-badge-item"><i class="bi bi-shield-lock-fill"></i><span>Trusted</span></div>
+                    <div class="trust-badge-item"><i class="bi bi-lightning-charge-fill"></i><span>Fast</span></div>
+                    <div class="trust-badge-item"><i class="bi bi-people-fill"></i><span>50K+ Users</span></div>
+                </div>
+            </div>
+            <div class="auth-body">
+                <div id="login-form">
+                    <button class="google-btn" onclick="window.handleGoogleSignIn()">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+                        <span>Continue with Google</span>
+                    </button>
+                    <div class="auth-divider">Or with Email</div>
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="loginEmail" placeholder="Email" autocomplete="email">
+                        <label>Gmail Address</label>
+                    </div>
+                    <div class="form-floating mb-2" style="position:relative;">
+                        <input type="password" class="form-control" id="loginPass" placeholder="Password" autocomplete="current-password">
+                        <label>Password</label>
+                        <button type="button" onclick="window.togglePass('loginPass', this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#9CA3AF;font-size:16px;z-index:5;"><i class="bi bi-eye"></i></button>
+                    </div>
+                    <a class="forgot-link" onclick="window.showForgotPassword()">Forgot Password?</a>
+                    <button class="btn btn-main py-3 fw-bold" id="loginBtn" onclick="window.handleLogin()">
+                        <span id="loginBtnText">Login</span>
+                        <span id="loginBtnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                    </button>
+                    <p class="text-center small mt-3 mb-0">একাউন্ট নেই? <a href="#" onclick="window.toggleAuth('reg')" style="color:var(--primary);font-weight:bold">Register করুন</a></p>
+                </div>
+                
+                <div id="reg-form" style="display: none;">
+                    <button class="google-btn" onclick="window.handleGoogleSignUp()">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+                        <span>Sign up with Google</span>
+                    </button>
+                    <div class="auth-divider">Or Register with Email</div>
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted mb-1 d-block">👤 Full Name</label>
+                        <input type="text" class="form-control" id="regName" placeholder="Enter your full name" oninput="window.validateRegField('name')">
+                        <div class="field-hint" id="regNameHint"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted mb-1 d-block">📧 Gmail Address</label>
+                        <input type="email" class="form-control" id="regEmail" placeholder="example@gmail.com" oninput="window.validateRegField('email')">
+                        <div class="field-hint" id="regEmailHint"></div>
+                    </div>
+                    <div class="mb-3" style="position:relative;">
+                        <label class="small fw-bold text-muted mb-1 d-block">🔒 Password</label>
+                        <input type="password" class="form-control" id="regPass" placeholder="Minimum 6 characters" oninput="window.validateRegField('pass')">
+                        <button type="button" onclick="window.togglePass('regPass', this)" style="position:absolute;right:12px;top:34px;background:none;border:none;color:#9CA3AF;font-size:16px;z-index:5;"><i class="bi bi-eye"></i></button>
+                        <div class="field-hint" id="regPassHint"></div>
+                        <div id="passStrengthBar" style="height:4px;background:#E5E7EB;border-radius:4px;margin-top:6px;overflow:hidden;display:none;">
+                            <div id="passStrengthFill" style="height:100%;width:0%;transition:all 0.3s;border-radius:4px;"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3" style="position:relative;">
+                        <label class="small fw-bold text-muted mb-1 d-block">🔐 Confirm Password</label>
+                        <input type="password" class="form-control" id="regConfirmPass" placeholder="Re-enter password" oninput="window.validateRegField('confirm')">
+                        <button type="button" onclick="window.togglePass('regConfirmPass', this)" style="position:absolute;right:12px;top:34px;background:none;border:none;color:#9CA3AF;font-size:16px;z-index:5;"><i class="bi bi-eye"></i></button>
+                        <div class="field-hint" id="regConfirmHint"></div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="agreeTerms">
+                        <label class="form-check-label small" for="agreeTerms">I agree to the <a href="#" style="color:var(--primary)" onclick="event.preventDefault();window.showTerms()">Terms & Conditions</a></label>
+                    </div>
+                    <button class="btn btn-main py-3 fw-bold" id="regBtn" onclick="window.handleRegister()">
+                        <span id="regBtnText">Create Account</span>
+                        <span id="regBtnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                    </button>
+                    <p class="text-center small mt-3 mb-0">আগে থেকেই একাউন্ট আছে? <a href="#" onclick="window.toggleAuth('login')" style="color:var(--primary);font-weight:bold">Login করুন</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="withdraw-page">
+    <div class="wd-header">
+        <button class="wd-back-btn" onclick="window.closeWithdrawPage()"><i class="bi bi-x-lg"></i></button>
+        <h5 class="fw-bold mb-0">Withdraw Funds 💸</h5>
+        <div class="wd-balance-box">
+            <div class="d-flex justify-content-around">
+                <div><small>Main Balance</small><h4 class="fw-bold mb-0">৳ <span id="wdMainBalance">0.00</span></h4></div>
+                <div><small>Hold Balance</small><h4 class="fw-bold mb-0 text-warning">৳ <span id="wdHoldBalance">0.00</span></h4></div>
+            </div>
+        </div>
+    </div>
+    <div class="wd-body">
+        <div class="card p-3 border-0 shadow-sm mb-3" style="border-radius:16px;">
+            <label class="text-muted small fw-bold mb-2">পেমেন্ট মেথড সিলেক্ট করুন</label>
+            <div id="paymentMethodGrid" class="payment-method-grid"></div>
+            <input type="hidden" id="selectedMethod" value="">
+            <input type="hidden" id="selectedMethodName" value="">
+        </div>
+        <div class="card p-3 border-0 shadow-sm mb-3" style="border-radius:16px;">
+            <div class="mb-3"><label class="form-label text-muted small fw-bold">একাউন্ট নম্বর</label><input type="text" class="form-control" id="wdAccNumber" placeholder="Number/Address" style="border-radius:12px;"></div>
+            <div class="mb-3">
+                <label class="form-label text-muted small fw-bold">টাকার পরিমাণ</label>
+                <input type="number" class="form-control" id="wdAmount" placeholder="Amount" min="100" style="border-radius:12px;">
+                <div class="form-text text-danger small fw-bold" id="wdMinLabel">সর্বনিম্ন উত্তোলন: 100 টাকা</div>
+            </div>
+        </div>
+        <button class="btn btn-main w-100 py-3 fw-bold" id="withdrawSubmitBtn" onclick="window.processWithdraw()">
+            <span id="withdrawBtnText">Submit Request</span>
+            <span id="withdrawBtnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+        </button>
+    </div>
+</div>
+
+<div class="float-right">
+    <button class="float-btn chat-float" onclick="window.toggleChat()" title="Live Support">
+        <i class="bi bi-chat-dots-fill"></i>
+    </button>
+    <button class="float-btn notif-float" id="notifFloatBtn" onclick="window.toggleNotifPanel()" title="Notifications">
+        <i class="bi bi-bell-fill"></i>
+        <div class="notif-dot" id="notifDot"></div>
+    </button>
+</div>
+
+<div class="notif-overlay" id="notifOverlay" onclick="window.toggleNotifPanel()"></div>
+<div class="notif-panel" id="notifPanel">
+    <div class="notif-header">
+        <h5>🔔 Notifications</h5>
+        <button class="notif-close" onclick="window.toggleNotifPanel()"><i class="bi bi-x"></i></button>
+    </div>
+    <div style="padding:10px;">
+        <button class="btn btn-sm btn-outline-primary w-100 mb-2" onclick="window.markAllRead()" style="border-radius:10px;">Mark all as read</button>
+        <button class="btn btn-sm btn-outline-success w-100" onclick="window.enablePushNotif()" style="border-radius:10px;">🔔 Enable Push Notifications</button>
+    </div>
+    <div class="notif-list" id="notifList">
+        <div class="text-center text-muted py-4">No notifications yet</div>
+    </div>
+</div>
+
+<div class="chat-panel" id="chatPanel">
+    <div class="chat-header">
+        <div>
+            <h6>💬 Live Support</h6>
+            <div class="chat-status"><div class="chat-status-dot"></div> Admin Online</div>
+        </div>
+        <button class="notif-close" onclick="window.toggleChat()"><i class="bi bi-x"></i></button>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+        <div class="chat-msg bot">Hello! 👋 How can I help you today?<span class="msg-time">Just now</span></div>
+    </div>
+    <div class="chat-input-area">
+        <input class="chat-input" id="chatInput" placeholder="Type a message..." onkeypress="if(event.key==='Enter')window.sendChat()">
+        <button class="chat-send" onclick="window.sendChat()"><i class="bi bi-send-fill"></i></button>
+    </div>
+</div>
+
+<nav class="navbar navbar-dark">
+    <a class="navbar-brand-center" href="#" onclick="switchTab('home')">
+        <div class="nav-logo-icon">
+            <img src="https://z-cdn-media.chatglm.cn/files/254f7f82-610d-4700-abc8-2e10435c149a.png?auth_key=1874890147-5ce8a86650d0488299a25b07660a73f8-0-b25e70b5ad3109adec869d78d8584440" id="navLogo" alt="Mail Factory">
+        </div>
+        <div class="nav-text-block">
+            <div><span class="nav-text-mail">Mail</span> <span class="nav-text-factory">Factory</span></div>
+            <span class="nav-slogan">★ TRUSTED & FAST ★</span>
+        </div>
+    </a>
+</nav>
+
+<div class="container mt-2 page-container">
+
+    <div id="home" class="content-section active">
+        <div class="install-banner" id="installBanner" onclick="window.handleInstallClick()">
+            <img src="https://z-cdn-media.chatglm.cn/files/254f7f82-610d-4700-abc8-2e10435c149a.png?auth_key=1874890147-5ce8a86650d0488299a25b07660a73f8-0-b25e70b5ad3109adec869d78d8584440" id="installLogo" class="install-banner-icon" alt="Mail Factory">
+            <div class="install-banner-text">
+                <h6>📱 Install Mail Factory App</h6>
+                <small>ফাস্ট অ্যাক্সেস পেতে অ্যাপ ইনস্টল করুন</small>
+            </div>
+            <button class="install-banner-close" onclick="event.stopPropagation(); window.dismissInstallBanner()"><i class="bi bi-x"></i></button>
+        </div>
+
+        <div class="banner-safe">
+            <i class="bi bi-patch-check-fill"></i> 
+            <div class="small"><b>১০০% নিরাপদ :</b> আমরা সততার সাথে সার্ভিস দিচ্ছি।</div>
+        </div>
+
+        <div class="rate-card">
+            <div class="rate-header">
+                <div class="d-flex align-items-center gap-2"><i class="bi bi-award-fill" style="color:var(--primary)"></i><span id="homeLevelTitle" style="font-weight:700;color:var(--primary)">Level 1 Rate</span></div>
+                <span class="badge-active">● Active</span>
+            </div>
+            <div class="rate-grid">
+                <div class="rate-box new"><div class="rb-title">New Gmail</div><div class="rb-value" id="rateNew">10 <small>৳</small></div></div>
+                <div class="rate-box old"><div class="rb-title">Old Gmail</div><div class="rb-value" id="rateOld">8 <small>৳</small></div></div>
+            </div>
+        </div>
+
+        <div class="card-main">
+            <h6 class="mb-3 fw-bold text-dark"><i class="bi bi-currency-exchange" style="color:var(--primary);margin-right:8px;"></i>লেনদেন শুরু করুন</h6>
+            <div class="mb-3">
+                <label class="form-label text-muted small fw-bold">Choose Gmail Type</label>
+                <select class="form-select-custom" id="dollarType" onchange="window.updateTotal()">
+                    <option value="new">New Gmail (Level Rate)</option>
+                    <option value="old">Old Gmail (Level Rate)</option>
+                </select>
+            </div>
+            <button class="trans-btn" id="startTransBtn" onclick="protectedAction('exchange_step')">Start Gmail Selling <i class="bi bi-arrow-right-circle ms-2"></i></button>
+        </div>
+
+        <div id="reviewTimeContainer" class="review-container"></div>
+
+        <div class="card-main trust-box">
+            <div class="trust-title"><i class="bi bi-shield-check" style="color:var(--primary)"></i> কেন আমাদের বেছে নিবেন?</div>
+            <div class="trust-grid">
+                <div class="trust-item"><div class="trust-icon t1"><i class="bi bi-lightning-charge-fill"></i></div><div class="trust-text">দ্রুত পেমেন্ট</div></div>
+                <div class="trust-item"><div class="trust-icon t2"><i class="bi bi-shield-lock-fill"></i></div><div class="trust-text">নিরাপদ ডাটা</div></div>
+                <div class="trust-item"><div class="trust-icon t3"><i class="bi bi-headset"></i></div><div class="trust-text">২৪/৭ সাপোর্ট</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="exchange_step" class="content-section">
+        <div class="d-flex align-items-center mb-3">
+            <button class="btn btn-sm btn-light me-2 rounded-circle shadow-sm" onclick="switchTab('home')" style="width:32px;height:32px;padding:0;"><i class="bi bi-chevron-left"></i></button>
+            <h6 class="mb-0 fw-bold text-dark">Enter Gmail Details :</h6>
+        </div>
+        <div class="alert py-2 px-3 d-flex justify-content-between align-items-center mb-3" style="border-radius:12px;font-size:13px;background:#eef2ff;border:1px solid #c7d2fe;color:#3730a3;">
+            <span><i class="bi bi-tag me-1"></i>Your Level Rate:</span><b id="currentRateDisplay">10 টাকা</b>
+        </div>
+        <form id="gmailForm">
+            <div id="gmailRows"></div>
+            <button type="button" class="btn btn-outline-primary btn-sm mb-3 w-100 py-2" style="border-radius:12px;border-width:2px;" onclick="window.addMoreRow()"><i class="bi bi-plus-circle me-1"></i>Add Another</button>
+            <div class="card p-3 mb-3 bg-white border text-center shadow-sm" style="border-radius:14px;">
+                <small class="text-muted" style="font-size:11px;">Estimated Earnings</small>
+                <h3 class="mb-0 fw-bold" style="color:#059669;">৳ <span id="tempTotal">0</span></h3>
+            </div>
+            <button type="button" id="submitBtn" class="trans-btn" onclick="window.validateAndSubmit()"><span id="btnText">Confirm & Submit</span><span id="btnLoad" class="spinner-border spinner-border-sm d-none"></span></button>
+        </form>
+    </div>
+
+    <div id="history" class="content-section">
+        <div class="history-tabs-container">
+            <div class="history-tabs">
+                <button class="h-tab-btn active" onclick="showHistoryTab('sub', event)"><i class="bi bi-list-check"></i> Submissions</button>
+                <button class="h-tab-btn" onclick="showHistoryTab('wd', event)"><i class="bi bi-cash-stack"></i> Withdraws</button>
+                <button class="h-tab-btn" onclick="showHistoryTab('trend', event)"><i class="bi bi-fire"></i> Trending</button>
+            </div>
+        </div>
+        <div id="history_sub"><div class="card border-0 shadow-sm" style="border-radius:16px;"><ul class="list-group list-group-flush" id="historyList" style="border-radius:16px;"><li class="list-group-item text-center text-muted py-4 border-0">লোড হচ্ছে...</li></ul></div></div>
+        <div id="history_wd" style="display:none;"><div class="card border-0 shadow-sm" style="border-radius:16px;"><ul class="list-group list-group-flush" id="withdrawHistoryList"><li class="list-group-item text-center text-muted py-4 border-0">লোড হচ্ছে...</li></ul></div></div>
+        <div id="history_trend" style="display:none;"><div id="trendingList"></div></div>
+    </div>
+
+    <div id="sellers" class="content-section">
+        <h5 class="mb-3 text-center fw-bold text-dark">🏆 Top Sellers</h5>
+        <div id="topSellersList"></div>
+    </div>
+
+    <div id="profile" class="content-section">
+        <div class="profile-header-v2">
+            <div class="ph-avatar-wrap">
+                <div class="ph-avatar" id="userAvatar" onclick="window.showEditProfileModal()">
+                    <span id="avatarInitial">U</span>
+                </div>
+                <div class="ph-avatar-badge"><i class="bi bi-patch-check-fill"></i></div>
+            </div>
+            <div class="ph-name-v2" id="userDisplayName">User</div>
+            <div class="ph-email-v2" id="userDisplayEmail">user@gmail.com</div>
+            <div class="ph-badges-row">
+                <div class="ph-badge-chip"><i class="bi bi-award-fill" style="color:#FFD700"></i><span id="levelNameDisplay">Level 1</span></div>
+                <div class="ph-badge-chip"><i class="bi bi-fire" style="color:#F97316"></i><span id="streakChipText">0 Day</span></div>
+                <div class="ph-badge-chip"><i class="bi bi-calendar-check" style="color:#10B981"></i><span id="memberSinceText">New</span></div>
+            </div>
+        </div>
+
+        <div class="balance-card-v2 container">
+            <div class="balance-row-v2">
+                <div class="bal-card-v2 main">
+                    <div class="bal-icon"><i class="bi bi-wallet2"></i></div>
+                    <div class="bal-label">Main Balance</div>
+                    <div class="bal-amount">৳ <span id="mainBalance">0.00</span></div>
+                </div>
+                <div class="bal-card-v2 hold">
+                    <div class="bal-icon"><i class="bi bi-hourglass-split"></i></div>
+                    <div class="bal-label">Hold Balance</div>
+                    <div class="bal-amount">৳ <span id="holdBalance">0.00</span></div>
+                </div>
+            </div>
+            <div class="quick-actions-v2">
+                <a class="qa-btn withdraw" onclick="window.openWithdrawPage()"><i class="bi bi-cash-stack"></i><span>Withdraw</span></a>
+                <a class="qa-btn history" onclick="switchTab('history');setTimeout(function(){var b=document.querySelector('.h-tab-btn[onclick*=wd]');if(b)b.click();},100)"><i class="bi bi-clock-history"></i><span>History</span></a>
+                <a class="qa-btn invite" onclick="window.copyRefLink()"><i class="bi bi-gift"></i><span>Invite</span></a>
+            </div>
+        </div>
+
+        <div class="streak-card" id="streakCard">
+            <div class="streak-top">
+                <div class="streak-title"><i class="bi bi-fire"></i> Daily Login Streak</div>
+                <div class="streak-count"><span id="streakCount">0</span><small> days</small></div>
+            </div>
+            <div class="streak-days" id="streakDays"></div>
+        </div>
+
+        <div class="stats-card-v2">
+            <div class="ach-title"><i class="bi bi-graph-up" style="color:var(--primary)"></i> Submission Stats</div>
+            <div class="stats-grid-v2">
+                <div class="stat-box-v2 total"><div class="stat-icon"><i class="bi bi-list-ul"></i></div><span class="stat-val" id="statTotal">0</span><span class="stat-label">Total</span></div>
+                <div class="stat-box-v2 app"><div class="stat-icon"><i class="bi bi-check-circle"></i></div><span class="stat-val" id="statApproved">0</span><span class="stat-label">Approved</span></div>
+                <div class="stat-box-v2 pend"><div class="stat-icon"><i class="bi bi-hourglass-split"></i></div><span class="stat-val" id="statPending">0</span><span class="stat-label">Pending</span></div>
+                <div class="stat-box-v2 rej"><div class="stat-icon"><i class="bi bi-x-circle"></i></div><span class="stat-val" id="statRejected">0</span><span class="stat-label">Rejected</span></div>
+            </div>
+        </div>
+
+        <div class="level-card-v2">
+            <div class="level-top-v2">
+                <div class="level-info-v2">
+                    <div class="level-icon-v2"><i class="bi bi-star-fill"></i></div>
+                    <div><div class="level-title-v2" id="levelTitleV2">Level 1</div><div class="level-sub-v2">Approved: <span id="levelTotalApproved">0</span></div></div>
+                </div>
+                <div class="level-rate-badge"><span id="levelCurrentRate">10</span> ৳/Gmail</div>
+            </div>
+            <div class="level-progress-bar-v2"><div class="level-progress-fill-v2" id="levelProgressBar" style="width:0%"></div></div>
+            <div class="level-footer-v2"><span>Current Level</span><span class="next" id="levelRemainCount">Next: 40 Left</span></div>
+        </div>
+
+        <!-- NEW Referral Card V3 with Tabs -->
+        <div class="referral-card-v3">
+            <div class="referral-header-v3">
+                <div class="ref-top-v3">
+                    <div class="ref-icon-v3">🎁</div>
+                    <div>
+                        <div class="ref-title-v3">Invite & Earn</div>
+                        <div class="ref-sub-v3">Commission: <span id="commRateDisplay">0</span>% per referral</div>
+                    </div>
+                </div>
+                <div class="ref-stats-v3">
+                    <div class="ref-stat-box-v3">
+                        <div class="ref-stat-val-v3" id="totalReferred">0</div>
+                        <div class="ref-stat-label-v3">Total Refers</div>
+                    </div>
+                    <div class="ref-stat-box-v3">
+                        <div class="ref-stat-val-v3">৳ <span id="referralEarnings">0.00</span></div>
+                        <div class="ref-stat-label-v3">Total Earned</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tabs -->
+            <div class="referral-tabs-v3">
+                <button class="ref-tab-v3 active" onclick="switchRefTab('overview', this)">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <span>Overview</span>
+                </button>
+                <button class="ref-tab-v3" onclick="switchRefTab('friends', this)">
+                    <i class="bi bi-people-fill"></i>
+                    <span>My Friends</span>
+                </button>
+            </div>
+            
+            <div class="referral-content-v3">
+                <!-- Overview Tab -->
+                <div id="ref-tab-overview" class="ref-tab-content active">
+                    <div class="ref-code-box-v3">
+                        <div style="flex:1;min-width:0;">
+                            <small style="font-size:9px;opacity:0.7;display:block;color:var(--text-mid);">YOUR CODE</small>
+                            <span class="ref-code-text-v3" id="myReferralCode">LOADING</span>
+                        </div>
+                        <button class="ref-copy-btn-v3" onclick="window.copyRefLink()">
+                            <i class="bi bi-clipboard-check"></i> Copy
+                        </button>
+                    </div>
+                    <input type="hidden" id="refLinkInput" value="Loading...">
+                    
+                    <div style="background:linear-gradient(135deg, #f8fafc, #f1f5f9);border-radius:12px;padding:14px;border:1px solid var(--border);">
+                        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                            <i class="bi bi-lightbulb-fill" style="color:var(--orange);"></i> How it works
+                        </div>
+                        <div style="font-size:11px;color:var(--text-mid);line-height:1.6;">
+                            <div style="margin-bottom:6px;">✅ আপনার রেফারেল লিংক শেয়ার করুন বন্ধুদের সাথে</div>
+                            <div style="margin-bottom:6px;">✅ তারা রেজিস্ট্রেশন করলে আপনি <b id="refBonusDisplay" style="color:var(--green);">0৳</b> বোনাস পাবেন</div>
+                            <div>✅ তারা Gmail সেল করলে আপনি <span id="refCommDisplay" style="color:var(--primary);font-weight:700;">0%</span> কমিশন পাবেন</div>
+                        </div>
+                    </div>
+                    
+                    <button class="ref-share-btn" onclick="window.shareRefLink()">
+                        <i class="bi bi-share-fill"></i> Share Referral Link
+                    </button>
+                </div>
+                
+                <!-- Friends Tab -->
+                <div id="ref-tab-friends" class="ref-tab-content">
+                    <div id="referralFriendList" class="ref-friend-list">
+                        <div class="ref-empty-state">
+                            <i class="bi bi-people-fill"></i>
+                            <h6>Loading...</h6>
+                            <p>Please wait</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-card-v2">
+            <div class="settings-section-title">Account</div>
+            <div class="settings-item-v2 si-edit" onclick="window.showEditProfileModal()"><div class="settings-icon-v2"><i class="bi bi-person-lines-fill"></i></div><div class="settings-text-v2"><h6>Edit Profile</h6><small>Update name, photo, phone & info</small></div><i class="bi bi-chevron-right text-muted"></i></div>
+            <div class="settings-item-v2 si-notif" onclick="window.toggleNotifPanel()"><div class="settings-icon-v2"><i class="bi bi-bell-fill"></i></div><div class="settings-text-v2"><h6>Notifications</h6><small>Manage push & in-app alerts</small></div><i class="bi bi-chevron-right text-muted"></i></div>
+            <div class="settings-item-v2 si-password" onclick="window.showChangePasswordModal()"><div class="settings-icon-v2"><i class="bi bi-key-fill"></i></div><div class="settings-text-v2"><h6>Change Password</h6><small>Update your account password</small></div><i class="bi bi-chevron-right text-muted"></i></div>
+            <div class="settings-item-v2 si-logout-all" onclick="window.logoutAllDevices()"><div class="settings-icon-v2"><i class="bi bi-shield-exclamation"></i></div><div class="settings-text-v2"><h6>Logout All Devices</h6><small>Secure your account remotely</small></div><i class="bi bi-chevron-right text-muted"></i></div>
+            <div class="settings-section-title">Support</div>
+            <div class="settings-item-v2 si-support" onclick="window.toggleChat()"><div class="settings-icon-v2"><i class="bi bi-headset"></i></div><div class="settings-text-v2"><h6>Live Chat Support</h6><small>Chat with admin in real-time</small></div><i class="bi bi-chevron-right text-muted"></i></div>
+            <div class="settings-item-v2 si-faq" onclick="window.showFAQ()"><div class="settings-icon-v2"><i class="bi bi-question-circle-fill"></i></div><div class="settings-text-v2"><h6>FAQ</h6><small>Frequently asked questions</small></div><i class="bi bi-chevron-right text-muted"></i></div>
+            <div class="settings-item-v2 si-support" onclick="window.showContactUs()"><div class="settings-icon-v2"><i class="bi bi-envelope-fill"></i></div><div class="settings-text-v2"><h6>Contact Us</h6><small>Get in touch with our team</small></div><i class="bi bi-chevron-right text-muted"></i></div>
+            <div class="settings-section-title">Info</div>
+            <div class="settings-item-v2 si-privacy" onclick="window.showPrivacyPolicy()"><div class="settings-icon-v2"><i class="bi bi-shield-lock-fill"></i></div><div class="settings-text-v2"><h6>Privacy Policy</h6><small>How we protect your data</small></div><i class="bi bi-chevron-right text-muted"></i></div>
+            <div class="settings-item-v2 si-about" onclick="window.showAbout()"><div class="settings-icon-v2"><i class="bi bi-info-circle-fill"></i></div><div class="settings-text-v2"><h6>About Mail Factory</h6><small>Version 3.0.0</small></div><i class="bi bi-chevron-right text-muted"></i></div>
+            <div class="settings-section-title">Danger Zone</div>
+            <div class="settings-item-v2 si-delete danger" onclick="window.handleDeleteAccount()"><div class="settings-icon-v2"><i class="bi bi-person-x-fill"></i></div><div class="settings-text-v2"><h6>Delete Account</h6><small>Permanently delete your data</small></div><i class="bi bi-chevron-right text-muted"></i></div>
+        </div>
+
+        <button id="installAppBtn" class="install-app-btn" onclick="window.handleInstallClick()"><i class="bi bi-box-arrow-in-down"></i> Download App</button>
+        <button class="btn btn-outline-danger w-100 btn-sm rounded-pill py-2 mb-5" onclick="window.handleLogout()" style="font-weight:600;"><i class="bi bi-box-arrow-right me-2"></i>Logout</button>
+    </div>
+</div>
+
+<div class="nav-bottom shadow">
+    <div class="nav-item active" id="home-btn" onclick="switchTab('home')"><i class="bi bi-house-door"></i><span>Home</span></div>
+    <div class="nav-item" id="history-btn" onclick="protectedAction('history')"><i class="bi bi-clock-history"></i><span>History</span></div>
+    <div class="nav-item" id="sellers-btn" onclick="switchTab('sellers')"><i class="bi bi-star"></i><span>Seller</span></div>
+    <div class="nav-item" id="profile-btn" onclick="protectedAction('profile')"><i class="bi bi-person"></i><span>Profile</span></div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, signInWithCredential, sendPasswordResetEmail, fetchSignInMethodsForEmail, EmailAuthProvider, GoogleAuthProvider, updatePassword, reauthenticateWithCredential, onAuthStateChanged, signOut, deleteUser, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getDatabase, ref, set, get, update, push, onValue, increment, query, orderByChild, equalTo, remove, onChildAdded } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAbsa0uvBYhkEYoLxuHwD4TQi5GDdAzQpg",
+    authDomain: "exchanger-pro.firebaseapp.com",
+    databaseURL: "https://exchanger-pro-default-rtdb.firebaseio.com",
+    projectId: "exchanger-pro",
+    storageBucket: "exchanger-pro.firebasestorage.app",
+    messagingSenderId: "889959520630",
+    appId: "1:889959520630:web:f4cbf82f236b616e1f8257"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+  const googleProvider = new GoogleAuthProvider();
+
+  const IMGBB_API_KEY = "a2815ef9a07ce4ef215e0673d3f659fd";
+
+  const DEFAULT_LOGO = "https://z-cdn-media.chatglm.cn/files/254f7f82-610d-4700-abc8-2e10435c149a.png?auth_key=1874890147-5ce8a86650d0488299a25b07660a73f8-0-b25e70b5ad3109adec869d78d8584440";
+  window.APP_LOGO_URL = DEFAULT_LOGO;
+
+  window.currentUser = null;
+  window.isAppReady = false;
+  window.isWithdrawDisabled = false;
+  const urlParams = new URLSearchParams(window.location.search);
+  const referrerCodeParam = urlParams.get('ref');
+  window.currentDynamicRate = 10;
+  window.baseOldRate = 8;
+  let currentUserApprovedCount = 0;
+  let levels = [{ level: 1, approved: 0, rate: 10, old_rate: 8 }];
+  let currentUserData = null;
+  let pendingPhotoData = null;
+  let chatListenerActive = false;
+  let allUsersCache = [];
+  let allSubmissionsCache = [];
+  let currentCommissionRate = 0;
+  let currentSignupBonus = 0;
+
+  const defaultReviewShifts = {
+      shift1: { title: "শুভ রাত্রি প্রথম সময়", time: "12:00 AM", active: true, order: 1 },
+      shift2: { title: "শুভ দিনের প্রথম সময়", time: "07:00 AM", active: true, order: 2 }
+  };
+  const defaultPaymentMethods = {
+      bkash: { name: "bKash", icon: "bi-wallet2", color: "#E2136E", active: true },
+      nagad: { name: "Nagad", icon: "bi-wallet2", color: "#F6921D", active: true },
+      binance: { name: "USDT", icon: "bi-app-indicator", color: "#F0B90B", active: true }
+  };
+  const defaultFAQs = [
+      { q: "How to sell Gmail?", a: "Go to Home, select Gmail type, enter email and password, then submit." },
+      { q: "When will I get paid?", a: "Payments are processed within 24-48 hours after approval." },
+      { q: "How to withdraw money?", a: "Go to Profile, click Withdraw, select payment method, enter amount." },
+      { q: "How does referral work?", a: "Share your referral code. When someone registers, you earn commission." },
+      { q: "Why was my submission rejected?", a: "Invalid Gmail, already used, or credentials don't work." }
+  ];
+
+  window.safeSetText = function(id, text) { var el = document.getElementById(id); if (el) el.innerText = text; };
+  window.safeSetHTML = function(id, html) { var el = document.getElementById(id); if (el) el.innerHTML = html; };
+  window.safeSetValue = function(id, value) { var el = document.getElementById(id); if (el) el.value = value; };
+
+  function updateAllLogos(url) {
+      window.APP_LOGO_URL = url;
+      ['navLogo', 'authLogo', 'installLogo', 'loaderLogo'].forEach(function(id) {
+          var el = document.getElementById(id);
+          if (el) el.src = url;
+      });
+  }
+
+  window.uploadToImgBB = function(file) {
+      return new Promise(function(resolve, reject) {
+          var reader = new FileReader();
+          reader.onload = function(e) {
+              var img = new Image();
+              img.onload = function() {
+                  var canvas = document.createElement('canvas');
+                  var width = img.width;
+                  var height = img.height;
+                  if (width > height) { if (width > 500) { height = Math.round(height * 500 / width); width = 500; } }
+                  else { if (height > 500) { width = Math.round(width * 500 / height); height = 500; } }
+                  canvas.width = width; canvas.height = height;
+                  var ctx = canvas.getContext('2d');
+                  ctx.drawImage(img, 0, 0, width, height);
+                  var base64Image = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+                  var formData = new FormData();
+                  formData.append('key', IMGBB_API_KEY);
+                  formData.append('image', base64Image);
+                  formData.append('name', 'profile_' + Date.now());
+                  fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData })
+                  .then(function(response) { if (!response.ok) throw new Error('Upload failed'); return response.json(); })
+                  .then(function(data) { if (data.success && data.data && data.data.url) resolve(data.data.url); else reject(new Error('Upload failed')); })
+                  .catch(function(err) { reject(err); });
+              };
+              img.onerror = function() { reject(new Error('Image load failed')); };
+              img.src = e.target.result;
+          };
+          reader.onerror = function() { reject(new Error('File read failed')); };
+          reader.readAsDataURL(file);
+      });
+  };
+
+  var deferredPrompt = null;
+
+  function setupPWA() {
+      var logoUrl = window.APP_LOGO_URL;
+      var fl = document.createElement('link'); fl.rel = 'icon'; fl.type = 'image/png'; fl.href = logoUrl; document.head.appendChild(fl);
+      var al = document.createElement('link'); al.rel = 'apple-touch-icon'; al.href = logoUrl; document.head.appendChild(al);
+      var manifest = { name: "Mail Factory", short_name: "Mail Factory", description: "Trusted Gmail Exchange Platform", start_url: "./", display: "standalone", background_color: "#F3F4F6", theme_color: "#4F46E5", orientation: "portrait-primary", icons: [{ src: logoUrl, sizes: "192x192", type: "image/png", purpose: "any" }, { src: logoUrl, sizes: "512x512", type: "image/png", purpose: "any" }] };
+      var blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+      var mLink = document.createElement('link'); mLink.rel = 'manifest'; mLink.href = URL.createObjectURL(blob); document.head.appendChild(mLink);
+      if ('serviceWorker' in navigator) {
+          var sw = 'self.addEventListener("install",function(e){self.skipWaiting();});self.addEventListener("activate",function(e){e.waitUntil(clients.claim());});self.addEventListener("fetch",function(e){e.respondWith(fetch(e.request).catch(function(){return new Response("Offline",{status:503});}));});';
+          var swBlob = new Blob([sw], { type: 'application/javascript' });
+          navigator.serviceWorker.register(URL.createObjectURL(swBlob), { scope: './' }).catch(function() {});
+      }
+      window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault(); deferredPrompt = e; });
+      window.addEventListener('appinstalled', function() { deferredPrompt = null; var b = document.getElementById('installBanner'); if (b) b.style.display = 'none'; var btn = document.getElementById('installAppBtn'); if (btn) btn.style.display = 'none'; });
+  }
+
+  window.handleInstallClick = function() {
+      if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then(function(r) { if (r.outcome === 'accepted') { var b = document.getElementById('installBanner'); if (b) b.style.display = 'none'; } deferredPrompt = null; }); }
+      else {
+          var ua = navigator.userAgent || ''; var html = '';
+          if (/iPad|iPhone|iPod/.test(ua)) html = '<div style="text-align:left;font-size:14px;line-height:1.8;"><div style="background:#f0f9ff;padding:15px;border-radius:14px;margin-bottom:15px;"><b>🍎 iPhone / iPad:</b></div><p>১️⃣ সাফারির Share বাটন ট্যাপ করুন</p><p>২️⃣ "Add to Home Screen" সিলেক্ট করুন</p><p>৩️⃣ "Add" ট্যাপ করুন</p></div>';
+          else if (/android/i.test(ua)) html = '<div style="text-align:left;font-size:14px;line-height:1.8;"><div style="background:#f0fdf4;padding:15px;border-radius:14px;margin-bottom:15px;"><b>🤖 Android:</b></div><p>১️⃣ ব্রাউজারের ⋮ মেনু ট্যাপ করুন</p><p>২️⃣ "Install App" সিলেক্ট করুন</p><p>৩️⃣ "Install" কনফার্ম করুন</p></div>';
+          else html = '<div style="text-align:left;font-size:14px;line-height:1.8;"><div style="background:#f5f3ff;padding:15px;border-radius:14px;margin-bottom:15px;"><b>💻 Desktop:</b></div><p>১️⃣ Chrome এর Install icon ক্লিক করুন</p><p>২️⃣ অথবা ⋮ মেনু থেকে "Install Mail Factory"</p></div>';
+          Swal.fire({ icon: 'info', title: '📱 App ইনস্টল করুন', html: html, confirmButtonColor: '#4F46E5', confirmButtonText: 'বুঝেছি' });
+      }
+  };
+  window.dismissInstallBanner = function() { var b = document.getElementById('installBanner'); if (b) { b.style.opacity = '0'; setTimeout(function() { b.style.display = 'none'; }, 300); } localStorage.setItem('mf_banner_dismissed', '1'); };
+
+  window.togglePass = function(id, btn) { var input = document.getElementById(id); var icon = btn.querySelector('i'); if (input.type === 'password') { input.type = 'text'; icon.className = 'bi bi-eye-slash'; } else { input.type = 'password'; icon.className = 'bi bi-eye'; } };
+
+  window.validateRegField = function(field) {
+      if (field === 'name') {
+          var v = document.getElementById('regName').value.trim(); var hint = document.getElementById('regNameHint'); var input = document.getElementById('regName');
+          if (!v) { hint.innerHTML = ''; input.classList.remove('is-valid','is-invalid'); return false; }
+          if (!/^[a-zA-Z\s]+$/.test(v)) { hint.innerHTML = '<i class="bi bi-x-circle-fill"></i> Only letters allowed'; hint.className = 'field-hint error'; input.classList.add('is-invalid'); input.classList.remove('is-valid'); return false; }
+          if (v.length < 2) { hint.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i> Too short'; hint.className = 'field-hint error'; input.classList.add('is-invalid'); input.classList.remove('is-valid'); return false; }
+          hint.innerHTML = '<i class="bi bi-check-circle-fill"></i> Looks good'; hint.className = 'field-hint success'; input.classList.add('is-valid'); input.classList.remove('is-invalid'); return true;
+      }
+      if (field === 'email') {
+          var v = document.getElementById('regEmail').value.trim(); var hint = document.getElementById('regEmailHint'); var input = document.getElementById('regEmail');
+          if (!v) { hint.innerHTML = ''; input.classList.remove('is-valid','is-invalid'); return false; }
+          if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(v)) { hint.innerHTML = '<i class="bi bi-x-circle-fill"></i> Valid Gmail required'; hint.className = 'field-hint error'; input.classList.add('is-invalid'); input.classList.remove('is-valid'); return false; }
+          hint.innerHTML = '<i class="bi bi-check-circle-fill"></i> Valid Gmail'; hint.className = 'field-hint success'; input.classList.add('is-valid'); input.classList.remove('is-invalid'); return true;
+      }
+      if (field === 'pass') {
+          var v = document.getElementById('regPass').value; var hint = document.getElementById('regPassHint'); var input = document.getElementById('regPass');
+          var bar = document.getElementById('passStrengthBar'); var fill = document.getElementById('passStrengthFill');
+          if (!v) { hint.innerHTML = ''; bar.style.display = 'none'; input.classList.remove('is-valid','is-invalid'); return false; }
+          bar.style.display = 'block'; var strength = 0;
+          if (v.length >= 6) strength++; if (v.length >= 10) strength++; if (/[A-Z]/.test(v)) strength++; if (/[0-9]/.test(v)) strength++; if (/[^A-Za-z0-9]/.test(v)) strength++;
+          var percent = Math.min(100, strength * 20); fill.style.width = percent + '%';
+          var color = '#EF4444', label = 'Weak';
+          if (strength >= 4) { color = '#10B981'; label = 'Strong'; } else if (strength >= 3) { color = '#22C55E'; label = 'Good'; } else if (strength >= 2) { color = '#F59E0B'; label = 'Fair'; }
+          fill.style.background = color;
+          if (v.length < 6) { hint.innerHTML = '<i class="bi bi-x-circle-fill"></i> Minimum 6 characters'; hint.className = 'field-hint error'; input.classList.add('is-invalid'); input.classList.remove('is-valid'); return false; }
+          hint.innerHTML = '<i class="bi bi-check-circle-fill"></i> Password strength: <b>' + label + '</b>'; hint.className = 'field-hint success'; input.classList.add('is-valid'); input.classList.remove('is-invalid');
+          var cv = document.getElementById('regConfirmPass').value; if (cv) window.validateRegField('confirm'); return true;
+      }
+      if (field === 'confirm') {
+          var p = document.getElementById('regPass').value; var c = document.getElementById('regConfirmPass').value;
+          var hint = document.getElementById('regConfirmHint'); var input = document.getElementById('regConfirmPass');
+          if (!c) { hint.innerHTML = ''; input.classList.remove('is-valid','is-invalid'); return false; }
+          if (p !== c) { hint.innerHTML = '<i class="bi bi-x-circle-fill"></i> Passwords do not match'; hint.className = 'field-hint error'; input.classList.add('is-invalid'); input.classList.remove('is-valid'); return false; }
+          hint.innerHTML = '<i class="bi bi-check-circle-fill"></i> Passwords match'; hint.className = 'field-hint success'; input.classList.add('is-valid'); input.classList.remove('is-invalid'); return true;
+      }
+  };
+
+  window.showTerms = function() { Swal.fire({ icon: 'info', title: 'Terms & Conditions', html: '<div style="text-align:left;font-size:13px;line-height:1.7;"><p>✅ Valid Gmail accounts required</p><p>✅ Duplicate submissions rejected</p><p>✅ Payments within 24-48 hours</p><p>✅ Fraud results in ban</p></div>', confirmButtonColor: '#4F46E5' }); };
+  window.showPrivacyPolicy = function() { Swal.fire({ icon: 'info', title: 'Privacy Policy', html: '<div style="text-align:left;font-size:13px;line-height:1.7;"><p>🔒 No data shared with third parties</p><p>🔒 Encrypted credential storage</p><p>🔒 Delete account anytime</p></div>', confirmButtonColor: '#4F46E5' }); };
+  window.showAbout = function() { Swal.fire({ icon: 'info', title: 'About Mail Factory', html: '<div style="text-align:center;"><b>Version 3.0.0</b><br><small>Trusted Gmail Exchange Platform</small><br><br>Bangladesh\'s #1 platform for Gmail exchange.<br><small style="color:#9CA3AF;">© 2026 Mail Factory Team</small></div>', confirmButtonColor: '#4F46E5' }); };
+
+  window.notifications = JSON.parse(localStorage.getItem('mf_notifications') || '[]');
+  window.renderNotifications = function() {
+      var list = document.getElementById('notifList'); if (!list) return;
+      if (window.notifications.length === 0) { list.innerHTML = '<div class="text-center text-muted py-4">No notifications yet</div>'; return; }
+      var html = '';
+      window.notifications.forEach(function(n) {
+          var iconClass = 'info'; var bgClass = '';
+          if (n.type === 'success') { iconClass = 'success'; bgClass = 'type-success'; }
+          else if (n.type === 'warning') { iconClass = 'warning'; bgClass = 'type-warning'; }
+          else if (n.type === 'danger') { iconClass = 'danger'; bgClass = 'type-danger'; }
+          html += '<div class="notif-item ' + bgClass + (n.read ? '' : ' unread') + '" onclick="window.readNotif(' + n.id + ')">' +
+              '<div class="notif-icon ' + iconClass + '"><i class="bi bi-' + (n.type === 'success' ? 'check-circle-fill' : n.type === 'warning' ? 'exclamation-triangle-fill' : n.type === 'danger' ? 'x-circle-fill' : 'info-circle-fill') + '"></i></div>' +
+              '<div class="notif-content"><div class="notif-title">' + n.title + '</div><div class="notif-desc">' + n.desc + '</div><div class="notif-time">' + n.time + '</div></div></div>';
+      });
+      list.innerHTML = html;
+      var hasUnread = window.notifications.some(function(n) { return !n.read; });
+      var bell = document.getElementById('notifFloatBtn'); var dot = document.getElementById('notifDot');
+      if (bell) { if (hasUnread) bell.classList.add('has-notif'); else bell.classList.remove('has-notif'); }
+      if (dot) { if (hasUnread) dot.style.display = 'block'; else dot.style.display = 'none'; }
+  };
+  window.addNotification = function(title, desc, type) {
+      var notif = { id: Date.now(), title: title, desc: desc, type: type || 'info', read: false, time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) };
+      window.notifications.unshift(notif);
+      if (window.notifications.length > 50) window.notifications = window.notifications.slice(0, 50);
+      localStorage.setItem('mf_notifications', JSON.stringify(window.notifications));
+      window.renderNotifications();
+      if ('Notification' in window && Notification.permission === 'granted') {
+          try { new Notification('Mail Factory', { body: title + ': ' + desc, icon: window.APP_LOGO_URL }); } catch(e) {}
+      }
+  };
+  window.readNotif = function(id) { for (var i = 0; i < window.notifications.length; i++) { if (window.notifications[i].id === id) { window.notifications[i].read = true; break; } } localStorage.setItem('mf_notifications', JSON.stringify(window.notifications)); window.renderNotifications(); };
+  window.markAllRead = function() { window.notifications.forEach(function(n) { n.read = true; }); localStorage.setItem('mf_notifications', JSON.stringify(window.notifications)); window.renderNotifications(); };
+  window.toggleNotifPanel = function() { var panel = document.getElementById('notifPanel'); var overlay = document.getElementById('notifOverlay'); if (panel) panel.classList.toggle('open'); if (overlay) overlay.classList.toggle('show'); window.renderNotifications(); };
+
+  window.enablePushNotif = function() {
+      if (!('Notification' in window)) { Swal.fire({ icon: 'error', title: 'Not Supported', text: 'Your browser does not support notifications.' }); return; }
+      Notification.requestPermission().then(function(permission) {
+          if (permission === 'granted') {
+              Swal.fire({ icon: 'success', title: '✅ Enabled!', text: 'You will receive push notifications from Mail Factory.', confirmButtonColor: '#4F46E5' });
+              window.addNotification('Push Enabled', 'You will now receive push notifications on your device.', 'success');
+          } else {
+              Swal.fire({ icon: 'warning', title: 'Permission Denied', text: 'Please enable notifications from browser settings.', confirmButtonColor: '#4F46E5' });
+          }
+      });
+  };
+
+  window.chatOpen = false;
+  window.toggleChat = function() {
+      var panel = document.getElementById('chatPanel');
+      window.chatOpen = !window.chatOpen;
+      if (panel) { if (window.chatOpen) panel.classList.add('open'); else panel.classList.remove('open'); }
+      if (window.chatOpen && window.currentUser && !chatListenerActive) {
+          chatListenerActive = true;
+          listenForAdminReplies();
+      }
+  };
+  window.sendChat = function() {
+      var input = document.getElementById('chatInput'); var msgs = document.getElementById('chatMessages');
+      if (!input || !msgs) return;
+      var text = input.value.trim(); if (!text) return;
+      var time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      msgs.innerHTML += '<div class="chat-msg user">' + text + '<span class="msg-time">' + time + '</span></div>';
+      input.value = ''; msgs.scrollTop = msgs.scrollHeight;
+      if (window.currentUser) {
+          push(ref(db, 'support_chats/' + window.currentUser.uid), {
+              uid: window.currentUser.uid,
+              username: currentUserData ? currentUserData.username : 'User',
+              message: text, timestamp: Date.now(), from: 'user', read: false
+          });
+      }
+      setTimeout(function() {
+          var reply = "Thanks for your message! Our admin will respond shortly.";
+          if (text.toLowerCase().includes('withdraw')) reply = "Withdrawals are processed within 24-48 hours.";
+          else if (text.toLowerCase().includes('rate') || text.toLowerCase().includes('price')) reply = "Current rates depend on your level.";
+          else if (text.toLowerCase().includes('payment') || text.toLowerCase().includes('pay')) reply = "We support bKash, Nagad, and USDT.";
+          msgs.innerHTML += '<div class="chat-msg bot">' + reply + '<span class="msg-time">' + time + '</span></div>';
+          msgs.scrollTop = msgs.scrollHeight;
+      }, 1000);
+  };
+
+  function listenForAdminReplies() {
+      if (!window.currentUser) return;
+      onChildAdded(ref(db, 'support_chats/' + window.currentUser.uid), function(snapshot) {
+          var msg = snapshot.val();
+          if (msg.from === 'admin' && msg.timestamp) {
+              var msgs = document.getElementById('chatMessages');
+              if (msgs) {
+                  var time = new Date(msg.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                  msgs.innerHTML += '<div class="chat-msg admin">👨‍💼 Admin: ' + msg.message + '<span class="msg-time">' + time + '</span></div>';
+                  msgs.scrollTop = msgs.scrollHeight;
+              }
+          }
+      });
+  }
+
+  window.showFAQ = function() {
+      var html = '<div style="text-align:left;">';
+      defaultFAQs.forEach(function(faq) { html += '<div class="faq-item" onclick="this.classList.toggle(\'open\')"><div class="faq-q">' + faq.q + ' <i class="bi bi-chevron-down"></i></div><div class="faq-a">' + faq.a + '</div></div>'; });
+      html += '</div>';
+      Swal.fire({ title: '❓ FAQ', html: html, confirmButtonColor: '#4F46E5', width: '400px' });
+  };
+  window.showContactUs = function() {
+      Swal.fire({ title: '📧 Contact Us', html: '<div style="text-align:left;"><div class="d-flex align-items-center gap-3 mb-3"><i class="bi bi-telegram fs-4" style="color:#0088cc"></i><div><b>Telegram</b><br><a href="https://t.me/gmail_marketing02" target="_blank">@gmail_marketing02</a></div></div><div class="d-flex align-items-center gap-3 mb-3"><i class="bi bi-whatsapp fs-4" style="color:#25D366"></i><div><b>WhatsApp</b><br><a href="https://wa.me/8801964182265" target="_blank">+8801964182265</a></div></div><div class="d-flex align-items-center gap-3"><i class="bi bi-envelope fs-4" style="color:var(--primary)"></i><div><b>Email</b><br>mailfactorybd@gmail.com</div></div></div>', confirmButtonColor: '#4F46E5' });
+  };
+
+  var globalTimerInterval = null;
+  var activeShifts = defaultReviewShifts;
+  function initTimerSystem() {
+      var container = document.getElementById('reviewTimeContainer'); if (!container) return;
+      var now = new Date(); var dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      container.innerHTML = '<div class="review-card type-left"><div class="review-icon"><i class="bi bi-moon-stars-fill"></i></div><div class="review-title" id="shift-title-1">Loading...</div><div class="review-date">(' + dateStr + ')</div><div class="review-time-box"><div class="review-sec" id="shift-timer-1">--:--:--</div><div class="review-label" id="shift-label-1">Waiting...</div></div></div><div class="review-card type-right"><div class="review-icon"><i class="bi bi-sun-fill"></i></div><div class="review-title" id="shift-title-2">Loading...</div><div class="review-date">(' + dateStr + ')</div><div class="review-time-box"><div class="review-sec" id="shift-timer-2">--:--:--</div><div class="review-label" id="shift-label-2">Waiting...</div></div></div>';
+      if (!globalTimerInterval) globalTimerInterval = setInterval(updateTimers, 1000);
+      updateTimers();
+  }
+  function updateTimers() {
+      var now = new Date();
+      var allShifts = Object.values(activeShifts).sort(function(a, b) { return (a.order || 0) - (b.order || 0); });
+      if (allShifts.length > 0) updateSingleTimer(1, allShifts[0], now);
+      if (allShifts.length > 1) updateSingleTimer(2, allShifts[1], now);
+  }
+  function updateSingleTimer(index, shiftData, now) {
+      var titleEl = document.getElementById('shift-title-' + index); var timerEl = document.getElementById('shift-timer-' + index); var labelEl = document.getElementById('shift-label-' + index);
+      if (!titleEl || !shiftData) return;
+      titleEl.innerText = shiftData.title || "Shift " + index;
+      if (shiftData.active === false) { timerEl.innerText = "00:00:00"; timerEl.classList.remove('countdown-active'); labelEl.innerText = "Disabled"; return; }
+      var parts = (shiftData.time || "12:00 AM").match(/(\d+):(\d+) (AM|PM)/i);
+      if (parts) {
+          var hours = parseInt(parts[1]); var mins = parseInt(parts[2]); var ampm = parts[3].toUpperCase();
+          if (ampm === 'PM' && hours !== 12) hours += 12; if (ampm === 'AM' && hours === 12) hours = 0;
+          var target = new Date(); target.setHours(hours, mins, 0, 0);
+          if (target <= now) target.setDate(target.getDate() + 1);
+          var diff = target - now;
+          if (diff > 0) {
+              var h = Math.floor((diff % 86400000) / 3600000); var m = Math.floor((diff % 3600000) / 60000); var s = Math.floor((diff % 60000) / 1000);
+              timerEl.innerText = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+              timerEl.classList.add('countdown-active'); labelEl.innerText = shiftData.time;
+          } else { timerEl.innerText = "00:00:00"; timerEl.classList.remove('countdown-active'); }
+      }
+  }
+
+  function renderPaymentMethods(methods) {
+      var container = document.getElementById('paymentMethodGrid'); if (!container) return;
+      var html = ''; var firstKey = null;
+      Object.keys(methods).forEach(function(key) {
+          var m = methods[key]; if (m.active) { if (!firstKey) firstKey = key; html += '<div class="pm-card method-' + key + '" onclick="window.selectPaymentMethod(this,\'' + key + '\',\'' + m.name + '\')"><i class="bi ' + m.icon + '" style="color:' + m.color + '"></i><span>' + m.name + '</span></div>'; }
+      });
+      container.innerHTML = html;
+      if (firstKey) { var fc = container.querySelector('.pm-card'); if (fc) fc.classList.add('active'); window.safeSetValue('selectedMethod', firstKey); window.safeSetValue('selectedMethodName', methods[firstKey].name); }
+  }
+  renderPaymentMethods(defaultPaymentMethods);
+
+  function getDeviceInfo() { var ua = navigator.userAgent; if (/android/i.test(ua)) return "Android Device"; if (/iPad|iPhone|iPod/.test(ua)) return "iOS Device"; if (/Win/.test(ua)) return "Windows PC"; if (/Mac/.test(ua)) return "Macintosh"; return "Unknown Device"; }
+  function getUserLevel(totalApproved) { var sorted = levels.slice().sort(function(a, b) { return a.approved - b.approved; }); var current = sorted[0]; var next = sorted[1] || null; for (var i = 0; i < sorted.length; i++) { if (totalApproved >= sorted[i].approved) { current = sorted[i]; next = sorted[i + 1] || null; } else break; } return { current: current, next: next }; }
+
+  function syncRatesAndTotal() {
+      var ld = getUserLevel(currentUserApprovedCount);
+      window.currentDynamicRate = ld.current.rate; window.baseOldRate = ld.current.old_rate;
+      window.safeSetText('currentRateDisplay', window.currentDynamicRate + " টাকা");
+      var ht = document.getElementById('homeLevelTitle'); var rn = document.getElementById('rateNew'); var ro = document.getElementById('rateOld');
+      if (window.currentUser) { if (ht) ht.innerText = 'Level ' + ld.current.level + ' Rate'; if (rn) rn.innerHTML = window.currentDynamicRate + ' <small>টাকা</small>'; if (ro) ro.innerHTML = window.baseOldRate + ' <small>টাকা</small>'; }
+      else { var dl = levels[0]; if (ht) ht.innerText = "Level 1 Rate"; if (rn) rn.innerHTML = dl.rate + ' <small>টাকা</small>'; if (ro) ro.innerHTML = dl.old_rate + ' <small>৳</small>'; }
+      if (typeof window.updateTotal === 'function') window.updateTotal();
+  }
+
+  function showToast(icon, title) { var Toast = Swal.mixin({ toast: true, position: 'bottom-start', showConfirmButton: false, timer: 3000, timerProgressBar: true }); Toast.fire({ icon: icon, title: title }); }
+  function showPopup(icon, title, text) { Swal.fire({ icon: icon, title: title, html: text, confirmButtonColor: '#4F46E5', background: '#fff' }); }
+  function showError(title, msg) { showPopup('error', title, msg); }
+  function getErrorReason(error) { if (!error) return "Unknown error."; switch (error.code) { case 'auth/email-already-in-use': return 'Email already in use.'; case 'auth/invalid-email': return 'Invalid email.'; case 'auth/weak-password': return 'Password too weak (min 6 chars).'; case 'auth/user-not-found': return 'No account found.'; case 'auth/wrong-password': return 'Wrong password.'; case 'auth/invalid-credential': return 'Invalid credentials.'; case 'auth/popup-closed-by-user': return 'Popup closed.'; default: return error.message || "Error occurred."; } }
+  function syncWithdrawUI(isDisabled) { window.isWithdrawDisabled = isDisabled; var btn = document.getElementById('withdrawSubmitBtn'); if (btn) btn.disabled = isDisabled; window.safeSetText('withdrawBtnText', isDisabled ? 'Withdraw Closed' : 'Submit Request'); }
+
+  onValue(ref(db, "settings"), function(snap) {
+      var data = snap.exists() ? snap.val() : {};
+      if (data.review_shifts) { activeShifts = data.review_shifts; var keys = Object.keys(activeShifts); var s1 = document.getElementById('shift-title-1'); var s2 = document.getElementById('shift-title-2'); if (keys.length > 0 && s1) s1.innerText = activeShifts[keys[0]].title; if (keys.length > 1 && s2) s2.innerText = activeShifts[keys[1]].title; }
+      renderPaymentMethods(data.payment_methods || defaultPaymentMethods);
+      var isM = data.maintenance_mode || false; var sb = document.getElementById('startTransBtn'); var sub = document.getElementById('submitBtn');
+      if (isM) { if (sb) { sb.disabled = true; sb.innerHTML = "⚠️ কাজটি সাময়িকভাবে স্থগিত ⏳"; } if (sub) { sub.disabled = true; window.safeSetText('btnText', "Maintenance Mode"); } }
+      else { if (sb) { sb.disabled = false; sb.innerHTML = 'Start Gmail Selling <i class="bi bi-arrow-right-circle ms-2"></i>'; } if (sub) { sub.disabled = false; window.safeSetText('btnText', "Confirm & Submit"); } }
+      syncWithdrawUI(data.withdraw_disabled || false);
+      if (data.levels) { levels = []; Object.keys(data.levels).forEach(function(k) { var l = data.levels[k]; levels.push({ level: Number(k), approved: l.req || 0, rate: l.new_rate || 10, old_rate: l.old_rate || 8 }); }); }
+      syncRatesAndTotal();
+      var cr = data.commission_percent || 0; 
+      currentCommissionRate = cr;
+      window.safeSetText('commRateDisplay', cr);
+      window.safeSetText('refCommDisplay', cr + '%');
+      currentSignupBonus = Number(data.signup_bonus_user) || 0;
+      window.safeSetText('refBonusDisplay', currentSignupBonus + '৳');
+      var minW = data.min_withdraw || 100; window.safeSetText('wdMinLabel', 'সর্বনিম্ন উত্তোলন: ' + minW + ' টাকা');
+      var wdAmt = document.getElementById('wdAmount'); if (wdAmt) wdAmt.setAttribute('min', minW);
+  });
+
+  onValue(ref(db, "admin_notifications"), function(snap) {
+      if (!snap.exists()) return;
+      var notifs = snap.val();
+      var lastSeen = parseInt(localStorage.getItem('mf_last_admin_notif') || '0');
+      Object.keys(notifs).forEach(function(key) {
+          var n = notifs[key];
+          if (n.timestamp && n.timestamp > lastSeen && n.userId && (n.userId === 'all' || n.userId === (window.currentUser ? window.currentUser.uid : null))) {
+              window.addNotification(n.title || 'Notification', n.message || n.desc || '', n.type || 'info');
+              localStorage.setItem('mf_last_admin_notif', n.timestamp.toString());
+          }
+      });
+  });
+
+  function renderSellers(snap, cid) { var list = document.getElementById(cid); if (!list) return; var h = ''; var users = []; snap.forEach(function(c) { var u = c.val(); if (u.isTopSeller === true) users.push(u); }); users.sort(function(a, b) { return (Number(b.balance) || 0) - (Number(a.balance) || 0); }); 
+  users = users.slice(0, 5);
+  users.forEach(function(u, i) { var badge = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : '')); var rc = i === 0 ? 'gold' : (i === 1 ? 'silver' : ''); h += '<div class="seller-card"><div class="seller-rank ' + rc + '">' + (badge || (i + 1)) + '</div><div class="seller-info"><div class="seller-name">' + u.username + '</div></div><div class="text-end"><div class="seller-amount">' + (Number(u.balance) || 0).toFixed(0) + ' <small>BDT</small></div></div></div>'; }); if (!users.length) h = '<div class="text-center text-muted p-4">No sellers found</div>'; list.innerHTML = h; }
+  onValue(ref(db, "users"), function(snap) { 
+      allUsersCache = [];
+      snap.forEach(function(c) { 
+          var u = c.val(); 
+          u.uid = c.key;
+          allUsersCache.push(u);
+      });
+      renderSellers(snap, 'topSellersList'); 
+      renderSellers(snap, 'trendingList');
+      // Update referral friend list if user is logged in
+      if (window.currentUser) {
+          renderReferralFriendList();
+      }
+  });
+
+  // Cache submissions for referral earnings calculation
+  onValue(ref(db, "submissions"), function(snap) {
+      allSubmissionsCache = [];
+      snap.forEach(function(c) {
+          var s = c.val();
+          s.key = c.key;
+          allSubmissionsCache.push(s);
+      });
+      if (window.currentUser) {
+          renderReferralFriendList();
+      }
+  });
+
+  // Calculate earnings from a specific referral
+  function calculateFriendEarnings(friendUid) {
+      let earnings = 0;
+      let approvedEmails = 0;
+      let totalEmails = 0;
+      
+      allSubmissionsCache.forEach(sub => {
+          if (sub.userId === friendUid && sub.gmails && Array.isArray(sub.gmails)) {
+              sub.gmails.forEach(g => {
+                  totalEmails++;
+                  if (g.status === 'approved') {
+                      approvedEmails++;
+                      const rate = sub.rate || 10;
+                      const commission = (rate * currentCommissionRate) / 100;
+                      earnings += commission;
+                  }
+              });
+          }
+      });
+      
+      return { earnings, approvedEmails, totalEmails };
+  }
+
+  // Render referral friend list
+  function renderReferralFriendList() {
+      const container = document.getElementById('referralFriendList');
+      if (!container || !window.currentUser) return;
+      
+      const referrals = allUsersCache.filter(u => u.referredBy === window.currentUser.uid);
+      
+      if (referrals.length === 0) {
+          container.innerHTML = `
+              <div class="ref-empty-state">
+                  <i class="bi bi-people-fill"></i>
+                  <h6>No Referrals Yet</h6>
+                  <p>Share your referral link to invite friends and start earning!</p>
+              </div>
+          `;
+          return;
+      }
+      
+      // Sort by earnings (highest first)
+      const referralData = referrals.map(ref => {
+          const earningsData = calculateFriendEarnings(ref.uid);
+          return {
+              uid: ref.uid,
+              username: ref.username || 'Unknown',
+              email: ref.email || 'N/A',
+              joinDate: ref.createdAt ? new Date(ref.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A',
+              isBlocked: ref.is_blocked || false,
+              earnings: earningsData.earnings,
+              approvedEmails: earningsData.approvedEmails,
+              totalEmails: earningsData.totalEmails
+          };
+      }).sort((a, b) => b.earnings - a.earnings);
+      
+      let html = '';
+      referralData.forEach((ref, idx) => {
+          const statusBadge = ref.isBlocked 
+              ? '<span class="ref-friend-status blocked">Blocked</span>'
+              : '<span class="ref-friend-status active">Active</span>';
+          
+          html += `
+              <div class="ref-friend-item">
+                  <div class="ref-friend-top">
+                      <div class="ref-friend-info">
+                          <div class="ref-friend-name">
+                              <span>${idx + 1}. ${ref.username}</span>
+                              ${statusBadge}
+                          </div>
+                          <div class="ref-friend-email">${ref.email}</div>
+                      </div>
+                      <div class="ref-friend-earn-badge">+${ref.earnings.toFixed(2)}৳</div>
+                  </div>
+                  <div class="ref-friend-stats-row">
+                      <div class="ref-friend-stat">
+                          <span class="ref-friend-stat-val">${ref.approvedEmails}</span>
+                          <span class="ref-friend-stat-lbl">Approved</span>
+                      </div>
+                      <div class="ref-friend-stat">
+                          <span class="ref-friend-stat-val">${ref.totalEmails}</span>
+                          <span class="ref-friend-stat-lbl">Emails</span>
+                      </div>
+                      <div class="ref-friend-stat">
+                          <span class="ref-friend-stat-val" style="font-size:10px;">${ref.joinDate}</span>
+                          <span class="ref-friend-stat-lbl">Joined</span>
+                      </div>
+                  </div>
+              </div>
+          `;
+      });
+      
+      container.innerHTML = html;
+  }
+
+  // Switch referral tabs
+  window.switchRefTab = function(tabName, btn) {
+      document.querySelectorAll('.ref-tab-v3').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.ref-tab-content').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('ref-tab-' + tabName).classList.add('active');
+  };
+
+  // Share referral link using Web Share API
+  window.shareRefLink = function() {
+      const link = document.getElementById('refLinkInput').value;
+      if (!link || link === 'Loading...') {
+          showError("Wait", "Loading...");
+          return;
+      }
+      
+      const shareData = {
+          title: 'Mail Factory - Earn Money Selling Gmail',
+          text: `Join Mail Factory and earn money! Use my referral code to get bonus.`,
+          url: link
+      };
+      
+      if (navigator.share) {
+          navigator.share(shareData).catch(() => {
+              window.copyRefLink();
+          });
+      } else {
+          window.copyRefLink();
+      }
+  };
+
+  async function updateLoginStreak(uid) { try { var snap = await get(ref(db, 'users/' + uid)); if (!snap.exists()) return; var d = snap.val(); var today = new Date().toDateString(); var lastLogin = d.last_login_date || ''; var streak = d.login_streak || 0; if (lastLogin !== today) { var yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1); streak = (lastLogin === yesterday.toDateString()) ? streak + 1 : 1; await update(ref(db, 'users/' + uid), { login_streak: streak, last_login_date: today }); } } catch(e) { console.log('Streak error:', e); } }
+
+  function renderStreak(count) { var container = document.getElementById('streakDays'); if (!container) return; var days = ['S', 'M', 'T', 'W', 'T', 'F', 'S']; var today = new Date().getDay(); var html = ''; for (var i = 0; i < 7; i++) { var active = i < (count % 7 === 0 && count > 0 ? 7 : count % 7); var isToday = i === today; html += '<div class="streak-day ' + (active ? 'active' : '') + (isToday ? ' today' : '') + '">' + days[i] + '</div>'; } container.innerHTML = html; window.safeSetText('streakCount', count || 0); window.safeSetText('streakChipText', (count || 0) + ' Day'); }
+
+  onAuthStateChanged(auth, async function(user) {
+      window.currentUser = user;
+      if (user) {
+          onValue(ref(db, 'users/' + user.uid + '/forceLogout'), function(s) { if (s.exists() && s.val() === true) { update(ref(db, 'users/' + user.uid), { forceLogout: false }); signOut(auth); showPopup('info', 'Session Expired', 'Logged out from all devices.'); } });
+          onValue(ref(db, 'users/' + user.uid), async function(snap) {
+              if (snap.exists()) {
+                  var d = snap.val(); currentUserData = d;
+                  if (!window.isAppReady) { var loader = document.getElementById('app-loader'); if (loader) loader.classList.add('hidden'); window.isAppReady = true; }
+                  if (d.admin_message) { showPopup('info', 'ব্যক্তিগত বার্তা', d.admin_message); update(ref(db, 'users/' + user.uid), { admin_message: null }); }
+                  if (d.is_blocked) { showPopup('error', 'Account Blocked', 'আপনার একাউন্ট ব্লক করা হয়েছে।'); signOut(auth); return; }
+
+                  window.safeSetText('userDisplayName', d.username || "User");
+                  window.safeSetText('userDisplayEmail', d.email || "");
+
+                  var avatarEl = document.getElementById('userAvatar'); var initialEl = document.getElementById('avatarInitial');
+                  if (avatarEl) {
+                      if (d.photoURL) { avatarEl.innerHTML = '<img src="' + d.photoURL + '" alt="avatar">'; }
+                      else { var initial = (d.username || 'U').charAt(0).toUpperCase(); if (initialEl) initialEl.innerText = initial; }
+                  }
+
+                  if (d.createdAt) { var dt = new Date(d.createdAt); var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']; window.safeSetText('memberSinceText', months[dt.getMonth()] + ' ' + dt.getFullYear()); }
+                  window.safeSetText('mainBalance', (Number(d.balance) || 0).toFixed(2));
+                  window.safeSetText('holdBalance', (Number(d.hold) || 0).toFixed(2));
+                  window.safeSetText('wdMainBalance', (Number(d.balance) || 0).toFixed(2));
+                  window.safeSetText('wdHoldBalance', (Number(d.hold) || 0).toFixed(2));
+                  var rc = d.referralCode || "N/A"; window.safeSetText('myReferralCode', rc);
+                  var host = window.location.origin; if (!host || host === 'null') host = 'https://exchanger-pro.web.app';
+                  window.safeSetValue('refLinkInput', host + window.location.pathname + "?ref=" + rc);
+                  window.safeSetText('referralEarnings', (Number(d.referralEarnings) || 0).toFixed(2));
+                  if (d.paymentNumber) window.safeSetValue('wdAccNumber', d.paymentNumber);
+                  currentUserApprovedCount = d.manual_approved_count || 0;
+                  syncRatesAndTotal();
+                  var ld = getUserLevel(currentUserApprovedCount);
+                  window.safeSetText('levelNameDisplay', 'Level ' + ld.current.level);
+                  window.safeSetText('levelTitleV2', 'Level ' + ld.current.level);
+                  window.safeSetText('levelCurrentRate', ld.current.rate);
+                  window.safeSetText('levelTotalApproved', currentUserApprovedCount);
+                  if (ld.next) { window.safeSetText('levelRemainCount', (ld.next.approved - currentUserApprovedCount) + ' Left'); var p = ((currentUserApprovedCount - ld.current.approved) / (ld.next.approved - ld.current.approved)) * 100; if (p < 0) p = 0; if (p > 100) p = 100; var pb = document.getElementById('levelProgressBar'); if (pb) pb.style.width = p + '%'; }
+                  else { window.safeSetText('levelRemainCount', "MAX LEVEL"); var pb = document.getElementById('levelProgressBar'); if (pb) pb.style.width = '100%'; }
+                  renderStreak(d.login_streak || 0);
+              }
+          });
+          onValue(ref(db, 'users'), function(snap) { 
+              var c = 0; 
+              snap.forEach(function(ch) { 
+                  if (ch.val().referredBy === user.uid) c++; 
+              }); 
+              window.safeSetText('totalReferred', c); 
+          });
+          onValue(ref(db, 'submissions'), function(snap) {
+              var list = document.getElementById('historyList'); if (!list) return; list.innerHTML = '';
+              var te = 0, pe = 0, ap = 0, re = 0; var subs = [];
+              snap.forEach(function(ch) { var it = ch.val(); if (it.userId === user.uid) { it.key = ch.key; subs.push(it); } });
+              subs.sort(function(a, b) { return b.submittedAt - a.submittedAt; });
+              subs.forEach(function(item) {
+                  var date = new Date(item.submittedAt).toLocaleString(); te += Number(item.count || 0); var dh = '';
+                  if (item.gmails && Array.isArray(item.gmails)) { item.gmails.forEach(function(g) { var st = g.status || item.status || 'pending'; if (st === 'completed') st = 'approved'; if (st === 'pending' || st === 'checking') pe++; if (st === 'approved') ap++; if (st === 'rejected') re++; var bc = st === 'approved' ? 'bg-success' : (st === 'rejected' ? 'bg-danger' : 'bg-warning text-dark'); var stx = st.charAt(0).toUpperCase() + st.slice(1); dh += '<div class="d-flex justify-content-between mt-1 p-1 rounded bg-light small mb-1" style="font-size:11px;"><span class="text-truncate" style="max-width:120px;">' + g.email + '</span><span class="badge ' + bc + '">' + stx + '</span></div>'; }); }
+                  list.innerHTML += '<li class="list-group-item history-list-item border-0 bg-white mb-2 shadow-sm" style="border-radius:14px;"><div class="d-flex justify-content-between"><div class="fw-bold" style="color:var(--primary)">৳ ' + item.totalAmount + '</div><small class="text-muted">' + item.count + ' Emails</small></div>' + dh + '<div class="text-muted small mt-1"><i class="bi bi-clock"></i> ' + date + '</div></li>';
+              });
+              if (!subs.length) list.innerHTML = '<li class="list-group-item text-center text-muted py-4 border-0">কোনো সাবমিশন নেই</li>';
+              window.safeSetText('statTotal', te); window.safeSetText('statPending', pe); window.safeSetText('statApproved', ap); window.safeSetText('statRejected', re);
+          });
+          onValue(ref(db, 'withdraw_requests'), function(snap) {
+              var list = document.getElementById('withdrawHistoryList'); if (!list) return; list.innerHTML = '';
+              if (!snap.exists()) { list.innerHTML = '<li class="list-group-item text-center text-muted py-4 border-0">কোনো রিকোয়েস্ট নেই</li>'; return; }
+              var reqs = []; snap.forEach(function(c) { var v = c.val(); if (v.userId === user.uid) reqs.push(v); });
+              reqs.sort(function(a, b) { return b.requestedAt - a.requestedAt; });
+              if (!reqs.length) { list.innerHTML = '<li class="list-group-item text-center text-muted py-4 border-0">কোনো রিকোয়েস্ট নেই</li>'; return; }
+              reqs.forEach(function(r) { var sb = r.status === 'approved' ? '<span class="badge bg-success rounded-pill">Approved</span>' : (r.status === 'rejected' ? '<span class="badge bg-danger rounded-pill">Rejected</span>' : '<span class="badge bg-warning text-dark rounded-pill">Pending</span>'); var mn = r.paymentMethod || r.method || 'Unknown'; list.innerHTML += '<li class="list-group-item history-list-item border-0 bg-white mb-2 shadow-sm" style="border-radius:14px;"><div class="d-flex justify-content-between align-items-center"><div><b style="color:var(--primary)">' + r.amount + ' BDT</b> <small class="text-muted d-block">' + new Date(r.requestedAt).toLocaleDateString() + '</small></div><div class="text-end">' + sb + '<br><small class="text-muted">' + mn + '</small></div></div></li>'; });
+          });
+          var authPage = document.getElementById('auth-page'); if (authPage) authPage.style.display = 'none';
+          updateLoginStreak(user.uid);
+      } else {
+          window.currentUser = null; currentUserApprovedCount = 0; currentUserData = null;
+          if (!window.isAppReady) { var loader = document.getElementById('app-loader'); if (loader) loader.classList.add('hidden'); window.isAppReady = true; }
+          var authPage = document.getElementById('auth-page'); if (authPage) authPage.style.display = 'block';
+          window.safeSetText('userDisplayName', "Guest"); window.safeSetText('mainBalance', "0.00"); window.safeSetText('holdBalance', "0.00");
+          syncRatesAndTotal();
+      }
+  });
+
+  window.handleGoogleSignIn = async function() {
+      if (!navigator.onLine) return showError("Network Error", "ইন্টারনেট সংযোগ নেই।");
+      var btn = document.getElementById('loginBtn'); var bt = document.getElementById('loginBtnText'); var bs = document.getElementById('loginBtnSpinner');
+      btn.disabled = true; bt.innerText = "Connecting..."; bs.classList.remove('d-none');
+      try {
+          var result = await signInWithPopup(auth, googleProvider); var googleUser = result.user;
+          var userSnap = await get(ref(db, 'users/' + googleUser.uid));
+          if (userSnap.exists()) { await update(ref(db, 'users/' + googleUser.uid), { last_login: Date.now(), device: getDeviceInfo(), forceLogout: false }); showPopup('success', 'Login Successful', 'Welcome back!'); document.getElementById('auth-page').style.display = 'none'; switchTab('home'); }
+          else {
+              var email = googleUser.email; var usersSnap = await get(ref(db, 'users')); var existingUid = null;
+              usersSnap.forEach(function(child) { if (child.val().email === email) existingUid = child.key; });
+              if (existingUid && existingUid !== googleUser.uid) { var existingData = usersSnap.child(existingUid).val(); await set(ref(db, 'users/' + googleUser.uid), { ...existingData, email: googleUser.email, photoURL: googleUser.photoURL || "", auth_provider: "google", last_login: Date.now(), device: getDeviceInfo(), forceLogout: false }); await remove(ref(db, 'users/' + existingUid)); showPopup('success', 'Account Linked', 'Google linked!'); document.getElementById('auth-page').style.display = 'none'; switchTab('home'); }
+              else { await createGoogleUserAccount(googleUser); showPopup('success', 'Account Created', 'Welcome!'); document.getElementById('auth-page').style.display = 'none'; switchTab('home'); }
+          }
+      } catch(err) { if (err.code === 'auth/account-exists-with-different-credential') { var email = err.customData.email; var methods = await fetchSignInMethodsForEmail(auth, email); if (methods.includes('password')) { var cred = GoogleAuthProvider.credentialFromError(err); var res = await Swal.fire({ title: 'Link Accounts', html: '<p>Account with <b>' + email + '</b> exists. Enter password to link.</p>', input: 'password', inputPlaceholder: 'Password', confirmButtonText: 'Link & Login', confirmButtonColor: '#4F46E5', showCancelButton: true }); if (res.value) { try { var emailCred = EmailAuthProvider.credential(email, res.value); var loginResult = await signInWithCredential(auth, emailCred); await loginResult.user.linkWithCredential(cred); await update(ref(db, 'users/' + loginResult.user.uid), { auth_provider: 'google' }); showPopup('success', 'Linked!', 'Success!'); document.getElementById('auth-page').style.display = 'none'; switchTab('home'); } catch(e) { showError("Link Failed", getErrorReason(e)); } } } } else if (err.code !== 'auth/popup-closed-by-user') { showError("Login Failed", getErrorReason(err)); } }
+      finally { btn.disabled = false; bt.innerText = "Login"; bs.classList.add('d-none'); }
+  };
+
+  window.handleGoogleSignUp = async function() {
+      if (!navigator.onLine) return showError("Network Error", "ইন্টারনেট সংযোগ নেই।");
+      var btn = document.getElementById('regBtn'); var bt = document.getElementById('regBtnText'); var bs = document.getElementById('regBtnSpinner');
+      btn.disabled = true; bt.innerText = "Connecting..."; bs.classList.remove('d-none');
+      try {
+          var result = await signInWithPopup(auth, googleProvider); var googleUser = result.user;
+          var userSnap = await get(ref(db, 'users/' + googleUser.uid));
+          if (userSnap.exists()) { showError("Account Exists", "Already registered. Login instead."); return; }
+          var email = googleUser.email; var usersSnap = await get(ref(db, 'users')); var existingUid = null;
+          usersSnap.forEach(function(child) { if (child.val().email === email) existingUid = child.key; });
+          if (existingUid && existingUid !== googleUser.uid) { var existingData = usersSnap.child(existingUid).val(); await set(ref(db, 'users/' + googleUser.uid), { ...existingData, email: googleUser.email, photoURL: googleUser.photoURL || "", auth_provider: "google", last_login: Date.now(), device: getDeviceInfo(), forceLogout: false }); await remove(ref(db, 'users/' + existingUid)); showPopup('success', 'Linked!', 'Google linked!'); document.getElementById('auth-page').style.display = 'none'; switchTab('home'); }
+          else { await createGoogleUserAccount(googleUser); showPopup('success', '🎉 Success!', 'Account created!'); document.getElementById('auth-page').style.display = 'none'; switchTab('home'); }
+      } catch(err) { if (err.code !== 'auth/popup-closed-by-user') showError("Sign Up Failed", getErrorReason(err)); }
+      finally { btn.disabled = false; bt.innerText = "Create Account"; bs.classList.add('d-none'); }
+  };
+
+  async function createGoogleUserAccount(user) {
+      var ss = await get(ref(db, 'settings')); var st = ss.exists() ? ss.val() : {};
+      var bu = Number(st.signup_bonus_user) || 0; var br = Number(st.signup_bonus_referrer) || 0;
+      var mrc = Math.random().toString(36).substring(2, 8).toUpperCase(); var refId = null;
+      if (referrerCodeParam) { try { var q = query(ref(db, 'users'), orderByChild('referralCode'), equalTo(referrerCodeParam)); var sn = await get(q); if (sn.exists()) sn.forEach(function(c) { refId = c.key; }); } catch(e) {} }
+      await set(ref(db, 'users/' + user.uid), { username: user.displayName || "Google User", email: user.email, photoURL: user.photoURL || "", phone: "", balance: bu, hold: 0, paymentNumber: "", paymentMethod: "", createdAt: Date.now(), referralCode: mrc, referredBy: refId || "", referralEarnings: 0, last_login: Date.now(), last_login_date: new Date().toDateString(), login_streak: 1, device: getDeviceInfo(), forceLogout: false, total_submitted: 0, total_withdrawn: 0, auth_provider: "google" });
+      if (refId && br > 0) await update(ref(db, 'users/' + refId), { balance: increment(br), referralEarnings: increment(br) });
+  }
+
+  window.handleLogin = async function() {
+      if (!navigator.onLine) return showError("Network Error", "ইন্টারনেট সংযোগ নেই।");
+      var email = document.getElementById('loginEmail').value.trim(); var pass = document.getElementById('loginPass').value;
+      var btn = document.getElementById('loginBtn'); var bt = document.getElementById('loginBtnText'); var bs = document.getElementById('loginBtnSpinner');
+      if (!email) { showError("Input Error", "Enter your email."); return; } if (!pass) { showError("Input Error", "Enter your password."); return; }
+      btn.disabled = true; bt.innerText = "Checking..."; bs.classList.remove('d-none');
+      try { await signInWithEmailAndPassword(auth, email, pass); if (auth.currentUser) await update(ref(db, 'users/' + auth.currentUser.uid), { last_login: Date.now(), device: getDeviceInfo(), forceLogout: false }); showPopup('success', 'Login Successful', 'Welcome!'); document.getElementById('auth-page').style.display = 'none'; switchTab('home'); } catch(err) { showError("Login Failed", getErrorReason(err)); }
+      finally { btn.disabled = false; bt.innerText = "Login"; bs.classList.add('d-none'); }
+  };
+
+  window.handleRegister = async function() {
+      if (!navigator.onLine) return showError("Network Error", "ইন্টারনেট সংযোগ নেই।");
+      var name = document.getElementById('regName').value.trim(); var email = document.getElementById('regEmail').value.trim(); var pass = document.getElementById('regPass').value; var cpass = document.getElementById('regConfirmPass').value; var agree = document.getElementById('agreeTerms').checked;
+      var btn = document.getElementById('regBtn'); var bt = document.getElementById('regBtnText'); var bs = document.getElementById('regBtnSpinner');
+      var vName = window.validateRegField('name'); var vEmail = window.validateRegField('email'); var vPass = window.validateRegField('pass'); var vConfirm = window.validateRegField('confirm');
+      if (!vName || !vEmail || !vPass || !vConfirm) { showError("Validation Error", "Fix all errors."); return; } if (!agree) { showError("Terms Required", "Agree to Terms."); return; }
+      btn.disabled = true; bt.innerText = "Creating..."; bs.classList.remove('d-none');
+      try {
+          var ss = await get(ref(db, 'settings')); var st = ss.exists() ? ss.val() : {}; var bu = Number(st.signup_bonus_user) || 0; var br = Number(st.signup_bonus_referrer) || 0;
+          var res = await createUserWithEmailAndPassword(auth, email, pass); var mrc = Math.random().toString(36).substring(2, 8).toUpperCase(); var refId = null;
+          if (referrerCodeParam) { try { var q = query(ref(db, 'users'), orderByChild('referralCode'), equalTo(referrerCodeParam)); var sn = await get(q); if (sn.exists()) sn.forEach(function(c) { refId = c.key; }); } catch(e) {} }
+          await set(ref(db, 'users/' + res.user.uid), { username: name, email, phone: "", photoURL: "", balance: bu, hold: 0, paymentNumber: "", paymentMethod: "", createdAt: Date.now(), referralCode: mrc, referredBy: refId || "", referralEarnings: 0, last_login: Date.now(), last_login_date: new Date().toDateString(), login_streak: 1, device: getDeviceInfo(), forceLogout: false, total_submitted: 0, total_withdrawn: 0, auth_provider: "email" });
+          if (refId && br > 0) await update(ref(db, 'users/' + refId), { balance: increment(br), referralEarnings: increment(br) });
+          Swal.fire({ icon: 'success', title: '🎉 Success!', html: 'Account created! Bonus: <b>' + bu + '৳</b>', confirmButtonColor: '#4F46E5' });
+          document.getElementById('auth-page').style.display = 'none'; switchTab('home');
+      } catch(err) { showError("Registration Failed", getErrorReason(err)); }
+      finally { btn.disabled = false; bt.innerText = "Create Account"; bs.classList.add('d-none'); }
+  };
+
+  window.showForgotPassword = async function() { var res = await Swal.fire({ title: '🔑 Forgot Password', html: '<p>Enter email for reset link.</p>', input: 'email', inputPlaceholder: 'your@gmail.com', confirmButtonText: 'Send Reset Link', confirmButtonColor: '#4F46E5', showCancelButton: true, inputValidator: function(value) { if (!value) return 'Enter email!'; if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Invalid email!'; } }); if (res.value) { try { Swal.fire({ title: 'Sending...', didOpen: function() { Swal.showLoading(); } }); await sendPasswordResetEmail(auth, res.value); Swal.fire({ icon: 'success', title: 'Email Sent! 📧', html: 'Check inbox for <b>' + res.value + '</b>', confirmButtonColor: '#4F46E5' }); window.addNotification('Password Reset', 'Reset link sent to ' + res.value, 'info'); } catch(err) { showError("Error", getErrorReason(err)); } } };
+
+  window.showEditProfileModal = function() {
+      if (!currentUserData) return;
+      var d = currentUserData; 
+      pendingPhotoData = d.photoURL || null;
+      var photoHtml = d.photoURL ? '<img src="' + d.photoURL + '" alt="photo" id="edit-photo-preview-img">' : '<i class="bi bi-camera-fill placeholder-icon" id="edit-photo-preview-img"></i>';
+      Swal.fire({
+          title: '✏️ Edit Profile',
+          html: '<div style="text-align:left;">' +
+              '<div class="photo-upload-wrap">' +
+                  '<div class="photo-preview" onclick="document.getElementById(\'edit-photo-input\').click()">' + photoHtml + '</div>' +
+                  '<br><button type="button" class="photo-upload-btn" onclick="document.getElementById(\'edit-photo-input\').click()"><i class="bi bi-camera-fill"></i> Change Photo</button>' +
+                  '<button type="button" class="photo-remove-btn ' + (d.photoURL ? 'show' : '') + '" id="edit-photo-remove" onclick="window.removeEditPhoto()"><i class="bi bi-x"></i></button>' +
+                  '<input type="file" id="edit-photo-input" accept="image/*" style="display:none" onchange="window.handlePhotoSelect(event)">' +
+                  '<div style="font-size:10px;color:#9CA3AF;margin-top:6px;">Max 5MB • Auto-compressed • imgbb hosting</div>' +
+              '</div>' +
+              '<label class="small fw-bold text-muted mb-1 d-block">👤 Full Name</label>' +
+              '<input id="edit-name" class="swal2-input" style="width:100%;margin:0 0 12px;border-radius:10px;" value="' + (d.username || '') + '" placeholder="Your name">' +
+              '<label class="small fw-bold text-muted mb-1 d-block">📱 Phone Number</label>' +
+              '<input id="edit-phone" class="swal2-input" style="width:100%;margin:0 0 12px;border-radius:10px;" value="' + (d.phone || '') + '" placeholder="01XXXXXXXXX">' +
+              '<label class="small fw-bold text-muted mb-1 d-block">💳 Payment Number</label>' +
+              '<input id="edit-payment" class="swal2-input" style="width:100%;margin:0 0 12px;border-radius:10px;" value="' + (d.paymentNumber || '') + '" placeholder="bKash/Nagad number">' +
+              '<label class="small fw-bold text-muted mb-1 d-block">📧 Email (Read-only)</label>' +
+              '<input class="swal2-input" style="width:100%;margin:0;border-radius:10px;background:#f3f4f6;" value="' + (d.email || '') + '" disabled>' +
+          '</div>',
+          confirmButtonText: 'Save Changes', confirmButtonColor: '#4F46E5', showCancelButton: true, width: '400px',
+          didOpen: function() { var preview = document.getElementById('edit-photo-preview-img'); if (preview && d.photoURL) preview.src = d.photoURL; },
+          preConfirm: function() {
+              var name = document.getElementById('edit-name').value.trim(); 
+              var phone = document.getElementById('edit-phone').value.trim(); 
+              var payment = document.getElementById('edit-payment').value.trim();
+              if (!name) { Swal.showValidationMessage('Name required'); return false; }
+              if (!/^[a-zA-Z\s]+$/.test(name)) { Swal.showValidationMessage('Only letters'); return false; }
+              if (phone && !/^(\+?88)?0?1[3-9]\d{8}$/.test(phone)) { Swal.showValidationMessage('Invalid phone'); return false; }
+              return { name: name, phone: phone, payment: payment, photoURL: pendingPhotoData };
+          }
+      }).then(async function(result) {
+          if (result.isConfirmed && window.currentUser) {
+              try {
+                  Swal.fire({ title: 'Saving...', html: '<small>Please wait</small>', didOpen: function() { Swal.showLoading(); }, allowOutsideClick: false });
+                  var updateData = { username: result.value.name, phone: result.value.phone, paymentNumber: result.value.payment };
+                  if (result.value.photoURL !== currentUserData.photoURL) updateData.photoURL = result.value.photoURL;
+                  await update(ref(db, 'users/' + window.currentUser.uid), updateData);
+                  try { if (result.value.photoURL && !result.value.photoURL.startsWith('data:')) await updateProfile(window.currentUser, { photoURL: result.value.photoURL, displayName: result.value.name }); } catch(e) {}
+                  var avatarEl = document.getElementById('userAvatar');
+                  if (avatarEl) {
+                      if (result.value.photoURL) avatarEl.innerHTML = '<img src="' + result.value.photoURL + '" alt="avatar" style="animation: avatarEntry 0.6s ease-out;">';
+                      else { var initialEl = document.getElementById('avatarInitial'); avatarEl.innerHTML = '<span id="avatarInitial">' + result.value.name.charAt(0).toUpperCase() + '</span>'; }
+                  }
+                  window.safeSetText('userDisplayName', result.value.name);
+                  Swal.close();
+                  showToast('success', 'Profile updated successfully!');
+              } catch(err) { Swal.close(); showError("Error", "Could not update profile: " + err.message); }
+          }
+          pendingPhotoData = null;
+      });
+  };
+
+  window.handlePhotoSelect = async function(event) {
+      var file = event.target.files[0]; if (!file) return;
+      if (file.size > 5 * 1024 * 1024) { showError("File Too Large", "Max 5MB allowed."); return; }
+      if (!file.type.startsWith('image/')) { showError("Invalid File", "Please select an image file."); return; }
+      Swal.fire({ title: 'Uploading Photo...', html: '<small>Compressing...</small>', didOpen: function() { Swal.showLoading(); }, allowOutsideClick: false, showConfirmButton: false });
+      try {
+          var photoURL = await window.uploadToImgBB(file);
+          pendingPhotoData = photoURL;
+          var preview = document.getElementById('edit-photo-preview-img');
+          if (preview) {
+              if (preview.tagName === 'IMG') preview.src = photoURL;
+              else preview.parentElement.innerHTML = '<img src="' + photoURL + '" alt="photo" id="edit-photo-preview-img">';
+          }
+          var removeBtn = document.getElementById('edit-photo-remove');
+          if (removeBtn) removeBtn.classList.add('show');
+          Swal.close();
+          showToast('success', 'Photo uploaded successfully!');
+      } catch (err) { Swal.close(); showError("Upload Failed", err.message || "Please try again"); }
+  };
+  
+  window.removeEditPhoto = function() { 
+      pendingPhotoData = null; 
+      var preview = document.getElementById('edit-photo-preview-img'); 
+      if (preview) preview.parentElement.innerHTML = '<i class="bi bi-camera-fill placeholder-icon" id="edit-photo-preview-img"></i>'; 
+      var removeBtn = document.getElementById('edit-photo-remove'); 
+      if (removeBtn) removeBtn.classList.remove('show'); 
+      var input = document.getElementById('edit-photo-input'); 
+      if (input) input.value = ''; 
+  };
+
+  window.handleLogout = function() { signOut(auth).then(function() { showPopup('success', 'Logged Out', 'Successfully logged out.'); switchTab('home'); }); };
+  window.openSupport = function() { window.open('http://t.me/gmail_marketing02', '_blank'); };
+  window.logoutAllDevices = async function() { if (!window.currentUser) return; var res = await Swal.fire({ title: 'Logout All Devices?', text: "You will be logged out too.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Yes' }); if (res.isConfirmed) { await update(ref(db, 'users/' + window.currentUser.uid), { forceLogout: true }); signOut(auth); } };
+  window.showChangePasswordModal = function() { if (currentUserData && currentUserData.auth_provider === 'google') { showError("Google Account", "Password managed by Google."); return; } Swal.fire({ title: 'Change Password', html: '<input id="swal-curr-pass" type="password" class="swal2-input" placeholder="Current Password"><input id="swal-new-pass" type="password" class="swal2-input" placeholder="New Password (min 6 chars)">', confirmButtonText: 'Update', focusConfirm: false, preConfirm: function() { var cp = document.getElementById('swal-curr-pass').value; var np = document.getElementById('swal-new-pass').value; if (!cp || !np) { Swal.showValidationMessage('Enter both'); return false; } if (np.length < 6) { Swal.showValidationMessage('Min 6 chars'); return false; } return { cp: cp, np: np }; } }).then(async function(r) { if (r.isConfirmed) { try { var u = auth.currentUser; var cred = EmailAuthProvider.credential(u.email, r.value.cp); Swal.fire({ title: 'Updating...', didOpen: function() { Swal.showLoading(); } }); await reauthenticateWithCredential(u, cred); await updatePassword(u, r.value.np); showPopup('success', 'Success', 'Password updated!'); } catch(e) { showError("Error", getErrorReason(e)); } } }); };
+  window.handleDeleteAccount = async function() { if (!window.currentUser) return; var isGoogle = currentUserData && currentUserData.auth_provider === 'google'; var inputConfig = {}; if (!isGoogle) { inputConfig = { input: 'password', inputPlaceholder: 'Enter password' }; } var res = await Swal.fire({ title: 'Delete Account?', text: "Irreversible!", icon: 'warning', ...inputConfig, showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Delete' }); if (res.isConfirmed) { try { Swal.fire({ title: 'Deleting...', didOpen: function() { Swal.showLoading(); } }); if (!isGoogle) { var cred = EmailAuthProvider.credential(auth.currentUser.email, res.value); await reauthenticateWithCredential(auth.currentUser, cred); } await remove(ref(db, 'users/' + window.currentUser.uid)); await deleteUser(auth.currentUser); showPopup('success', 'Deleted', 'Account deleted.'); } catch(e) { showError("Error", getErrorReason(e)); } } };
+  window.copyRefLink = function() { var link = document.getElementById('refLinkInput').value; if (!link || link === 'Loading...') { showError("Wait", "Loading..."); return; } if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(link).then(function() { showToast('success', 'Link Copied!'); }).catch(function() { fallbackCopy(link); }); } else { fallbackCopy(link); } };
+  function fallbackCopy(text) { var t = document.createElement('textarea'); t.style.position = 'fixed'; t.style.left = '-9999px'; t.value = text; document.body.appendChild(t); t.select(); t.setSelectionRange(0, 99999); try { document.execCommand('copy'); showToast('success', 'Link Copied!'); } catch(e) { showError("Copy Failed", "Manual copy."); } document.body.removeChild(t); }
+
+  window.submitGmails = async function(sd) {
+      if (!navigator.onLine) return showError("Network Error", "ইন্টারনেট সংযোগ নেই।");
+      var btn = document.getElementById('submitBtn'); var bt = document.getElementById('btnText'); var bl = document.getElementById('btnLoad');
+      btn.disabled = true; bt.innerText = "Processing..."; bl.classList.remove('d-none');
+      try {
+          for (var i = 0; i < sd.gmails.length; i++) { var item = sd.gmails[i]; var q = query(ref(db, 'used_emails'), orderByChild('email'), equalTo(item.email)); var sn = await get(q); if (sn.exists()) { btn.disabled = false; bt.innerText = "Confirm & Submit"; bl.classList.add('d-none'); return showError("Duplicate", item.email + " already submitted."); } }
+          var nr = push(ref(db, 'submissions')); await set(nr, { userId: currentUser.uid, username: document.getElementById('userDisplayName').innerText, submittedAt: Date.now(), status: "pending", gmails: sd.gmails, totalAmount: sd.totalAmount, rate: sd.rate, count: sd.count, commission_percent: currentCommissionRate });
+          for (var j = 0; j < sd.gmails.length; j++) { await push(ref(db, 'used_emails'), { email: sd.gmails[j].email }); }
+          var ur = ref(db, 'users/' + currentUser.uid); var us = await get(ur); var ud = us.val();
+          await update(ur, { hold: (Number(ud.hold) || 0) + sd.totalAmount, total_submitted: increment(sd.count) });
+          showPopup('success', 'Success', 'Submission recorded.');
+          document.getElementById('gmailRows').innerHTML = ''; window.addMoreRow(); window.addMoreRow(); switchTab('history');
+      } catch(err) { showError("Server Error", err.message); }
+      finally { btn.disabled = false; bt.innerText = "Confirm & Submit"; bl.classList.add('d-none'); }
+  };
+
+  window.processWithdraw = async function() {
+      if (!navigator.onLine) return showError("Network Error", "ইন্টারনেট সংযোগ নেই।");
+      if (window.isWithdrawDisabled) { showError("Withdraw Closed", "Withdraw closed."); return; }
+      var mk = document.getElementById('selectedMethod').value; var mn = document.getElementById('selectedMethodName').value;
+      var amt = Number(document.getElementById('wdAmount').value); var bal = Number(document.getElementById('wdMainBalance').innerText);
+      var pn = document.getElementById('wdAccNumber').value.trim(); var minW = Number(document.getElementById('wdAmount').getAttribute('min'));
+      if (!mk) return showError("Method Missing", "Select payment method."); if (!pn) return showError("Missing Number", "Account number required.");
+      if (!amt || amt < minW) return showError("Invalid Amount", "Min: " + minW + " BDT."); if (amt > bal) return showError("Insufficient", "Balance: " + bal + " BDT.");
+      var btn = document.getElementById('withdrawSubmitBtn'); var bt = document.getElementById('withdrawBtnText'); var bs = document.getElementById('withdrawBtnSpinner');
+      btn.disabled = true; bt.innerText = "Processing..."; bs.classList.remove('d-none');
+      try {
+          await push(ref(db, 'withdraw_requests'), { userId: currentUser.uid, username: document.getElementById('userDisplayName').innerText, amount: amt, method: mk, paymentMethod: mn, paymentNumber: pn, status: "pending", requestedAt: Date.now() });
+          await update(ref(db, 'users/' + currentUser.uid), { balance: bal - amt, paymentNumber: pn, paymentMethod: mk, total_withdrawn: increment(amt) });
+          window.addNotification('Withdrawal Requested', amt + ' BDT via ' + mn + ' (Pending)', 'warning');
+          showPopup('success', 'Success', 'Request submitted.');
+          window.closeWithdrawPage(); document.getElementById('wdAmount').value = ''; switchTab('history');
+      } catch(e) { showError("Error", "Could not connect."); btn.disabled = false; bt.innerText = "Submit Request"; bs.classList.add('d-none'); }
+  };
+
+  window.openWithdrawPage = function(pushState) {
+      if (pushState === undefined) pushState = true;
+      if (window.isWithdrawDisabled) { showError("Closed", "Withdraw closed."); return; }
+      document.getElementById('withdraw-page').style.display = 'block';
+      document.querySelector('.page-container').style.display = 'none';
+      document.querySelector('.nav-bottom').style.display = 'none';
+      var btn = document.getElementById('withdrawSubmitBtn');
+      btn.disabled = false;
+      window.safeSetText('withdrawBtnText', "Submit Request");
+      document.getElementById('withdrawBtnSpinner').classList.add('d-none');
+      if (pushState) history.pushState({ type: 'withdraw' }, "", window.getRouteUrl('withdraw'));
+  };
+  
+  window.closeWithdrawPage = function() {
+      document.getElementById('withdraw-page').style.display = 'none';
+      document.querySelector('.page-container').style.display = 'block';
+      document.querySelector('.nav-bottom').style.display = 'flex';
+      if (history.state && history.state.type === 'withdraw') history.back();
+  };
+  
+  window.selectPaymentMethod = function(el, mk, mn) { document.querySelectorAll('.pm-card').forEach(function(c) { c.classList.remove('active'); }); el.classList.add('active'); document.getElementById('selectedMethod').value = mk; document.getElementById('selectedMethodName').value = mn; };
+
+  setupPWA();
+  if (localStorage.getItem('mf_banner_dismissed') === '1') { var b = document.getElementById('installBanner'); if (b) b.style.display = 'none'; }
+  initAppRoute();
+  window.addMoreRow(); window.addMoreRow();
+  window.renderNotifications();
+  initTimerSystem();
+  updateAllLogos(window.APP_LOGO_URL);
+</script>
+
+<script>
+    var validTabs = ['home', 'history', 'sellers', 'profile', 'exchange_step'];
+    var basePath = (function() {
+        var path = window.location.pathname;
+        if (path.endsWith('/')) path = path.slice(0, -1);
+        var lastSlash = path.lastIndexOf('/');
+        if (lastSlash > 0) return path.substring(0, lastSlash);
+        return '';
+    })();
+    window.getRouteUrl = function(tabId) {
+        if (tabId === 'home') return basePath + '/';
+        return basePath + '/' + tabId;
+    };
+    function switchTab(tabId, pushState) {
+        if (pushState === undefined) pushState = true;
+        if (validTabs.indexOf(tabId) === -1) tabId = 'home';
+        document.querySelectorAll('.content-section').forEach(function(s) { s.classList.remove('active'); });
+        document.querySelectorAll('.nav-item').forEach(function(i) { i.classList.remove('active'); });
+        var t = document.getElementById(tabId);
+        if (t) t.classList.add('active');
+        var btn = document.getElementById(tabId + '-btn');
+        if (btn) btn.classList.add('active');
+        if (pushState) history.pushState({ type: 'tab', tab: tabId }, "", window.getRouteUrl(tabId));
+        window.scrollTo(0, 0);
+    }
+    window.addEventListener('popstate', function(e) {
+        if (e.state) {
+            if (e.state.type === 'tab') switchTab(e.state.tab, false);
+            else if (e.state.type === 'withdraw') window.openWithdrawPage(false);
+        } else switchTab('home', false);
+    });
+    function initAppRoute() {
+        var path = window.location.pathname;
+        if (basePath && path.startsWith(basePath)) path = path.substring(basePath.length);
+        if (path.startsWith('/')) path = path.substring(1);
+        if (path.endsWith('/')) path = path.slice(0, -1);
+        if (path && validTabs.indexOf(path) !== -1) switchTab(path, false);
+        else switchTab('home', false);
+    }
+    function showHistoryTab(tab, e) { document.querySelectorAll('.h-tab-btn').forEach(function(b) { b.classList.remove('active'); }); if (e && e.target) e.target.closest('.h-tab-btn').classList.add('active'); document.getElementById('history_sub').style.display = tab === 'sub' ? 'block' : 'none'; document.getElementById('history_wd').style.display = tab === 'wd' ? 'block' : 'none'; document.getElementById('history_trend').style.display = tab === 'trend' ? 'block' : 'none'; }
+    function protectedAction(tabId) { if (!window.currentUser) document.getElementById('auth-page').style.display = 'block'; else if (tabId === 'exchange_step') switchTab('exchange_step'); else switchTab(tabId); }
+    function toggleAuth(type) { var title = document.getElementById('authTitle'); var sub = document.getElementById('authSubtitle'); document.getElementById('login-form').style.display = type === 'login' ? 'block' : 'none'; document.getElementById('reg-form').style.display = type === 'reg' ? 'block' : 'none'; if (type === 'login') { title.innerText = "Welcome Back"; sub.innerText = "আপনার একাউন্টে লগইন করুন।"; } else { title.innerText = "Create Account"; sub.innerText = "রেজিস্ট্রেশন করুন।"; } }
+    window.updateTotal = function() { var count = document.querySelectorAll('.gmail-row').length; var type = document.getElementById('dollarType').value; var rate = (type === 'new') ? (window.currentDynamicRate || 10) : (window.baseOldRate || 8); document.getElementById('tempTotal').innerText = count * rate; };
+    window.addMoreRow = function(email, pass) { email = email || ''; pass = pass || ''; var row = document.createElement('div'); row.className = 'gmail-row position-relative'; row.innerHTML = '<button type="button" class="remove-btn" onclick="window.removeRow(this)"><i class="bi bi-x"></i></button><input type="email" class="g-input" value="' + email + '" placeholder="Enter Gmail Address" required><input type="text" class="p-input" value="' + pass + '" placeholder="Enter Password" required>'; document.getElementById('gmailRows').appendChild(row); window.updateTotal(); };
+    window.removeRow = function(el) { var rows = document.querySelectorAll('.gmail-row'); if (rows.length <= 2) { showError("Warning", "Minimum 2 emails."); return; } el.parentElement.remove(); window.updateTotal(); };
+    window.validateAndSubmit = function() {
+        var rows = document.querySelectorAll('.gmail-row');
+        if (rows.length < 2) { showError("Validation Error", "Minimum 2 emails."); return; }
+        var gmails = []; var hasError = false; var ls = new Set(); var rx = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+        rows.forEach(function(row, idx) {
+            var email = row.querySelector('.g-input').value.trim().toLowerCase();
+            var pass = row.querySelector('.p-input').value.trim();
+            if (!email || !pass) { hasError = true; showError("Input Error", "Row " + (idx + 1) + " empty."); }
+            else if (!rx.test(email)) { hasError = true; showError("Invalid Email", "Row " + (idx + 1) + " not Gmail."); }
+            else if (pass.length < 6) { hasError = true; showError("Weak Password", "Row " + (idx + 1) + " too short."); }
+            else if (ls.has(email)) { hasError = true; showError("Duplicate", email + " twice."); }
+            if (!hasError) { ls.add(email); gmails.push({ email: email, password: pass }); }
+        });
+        if (!hasError) {
+            var type = document.getElementById('dollarType').value;
+            var rate = (type === 'new') ? (window.currentDynamicRate || 10) : (window.baseOldRate || 8);
+            window.submitGmails({ gmails: gmails, totalAmount: gmails.length * rate, rate: rate, count: gmails.length });
+        }
+    };
+    function showError(title, msg) { Swal.fire({ icon: 'error', title: title, text: msg, confirmButtonColor: '#4F46E5' }); }
+</script>
+
+</body>
+</html>
