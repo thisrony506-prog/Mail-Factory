@@ -4,7 +4,7 @@ import { AppProvider, useApp } from './AppContext';
 import { Navbar } from './Navbar';
 import { ViewSkeleton } from './ViewSkeleton';
 import { usePWAInstall } from './usePWAInstall';
-import { LoadingScreen } from './LoadingScreen';
+
 import { HomeView } from './HomeView';
 import { GuestLandingView } from './GuestLandingView';
 
@@ -99,14 +99,6 @@ const MainLayout: React.FC = () => {
     }
   }, []);
 
-  // Determine if we should show the loading screen
-  // If we have a cached profile or an active user, and we are still loading, show LoadingScreen
-  // This prevents the "flash of guest view" for returning logged-in users,
-  // while allowing new guests (and PageSpeed Insights) to see the GuestLandingView instantly.
-  const hasCachedProfile = !!localStorage.getItem('mf_last_user_profile');
-  if (loading && (user || hasCachedProfile)) {
-    return <LoadingScreen />;
-  }
 
   // If user is not logged in, support public routes or render the Guest Landing / Welcome Page
   if (!user) {
