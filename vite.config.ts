@@ -99,7 +99,7 @@ export default defineConfig(() => {
     build: {
       target: 'es2020',
       cssCodeSplit: true,
-      minify: 'esbuild',
+      minify: 'esbuild' as const,
       sourcemap: false,
       chunkSizeWarningLimit: 1000
     },

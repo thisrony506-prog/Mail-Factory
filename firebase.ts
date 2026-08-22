@@ -1,9 +1,13 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import {
-  getAuth,
+  initializeAuth,
+  browserPopupRedirectResolver,
+  browserLocalPersistence,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   signOut,
   updateProfile,
@@ -45,7 +49,10 @@ export const firebaseConfig = {
 };
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-export const auth = getAuth(app);
+export const auth = initializeAuth(app, {
+  persistence: browserLocalPersistence,
+  popupRedirectResolver: browserPopupRedirectResolver,
+});
 export const db: Database = getDatabase(app);
 export const googleProvider = new GoogleAuthProvider();
 
@@ -53,6 +60,8 @@ export {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut,
   updateProfile,
   updatePassword,

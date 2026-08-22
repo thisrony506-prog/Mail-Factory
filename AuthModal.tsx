@@ -8,6 +8,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
   googleProvider,
   sendPasswordResetEmail,
   ref,
@@ -146,8 +147,19 @@ export const AuthModal: React.FC = () => {
       setAuthModalOpen(false);
     } catch (err: any) {
       if (err.code !== 'auth/popup-closed-by-user') {
-        hapticFeedback.error();
-        setErrorMessage(err.message || 'Google authentication failed.');
+        const errorString = err.message?.toLowerCase() || '';
+        // If it's a mobile browser or indexedDB error, fallback to redirect
+        if (errorString.includes('closing') || errorString.includes('hidden') || err.code === 'auth/popup-blocked') {
+          try {
+            await signInWithRedirect(auth, googleProvider);
+            return; // Exit early as page will redirect
+          } catch (redirectErr: any) {
+             setErrorMessage(redirectErr.message || 'Google redirect authentication failed.');
+          }
+        } else {
+          hapticFeedback.error();
+          setErrorMessage(err.message || 'Google authentication failed.');
+        }
       }
     } finally {
       setIsLoading(false);

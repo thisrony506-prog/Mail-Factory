@@ -3,6 +3,7 @@ import {
   auth,
   db,
   onAuthStateChanged,
+  getRedirectResult,
   ref,
   set,
   get,
@@ -522,7 +523,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if ('Notification' in window && Notification.permission === 'granted') {
       try {
-        new Notification('Mail Factory', { body: `${title}: ${desc}`, icon: appLogo });
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.ready.then((registration) => {
+            registration.showNotification('Mail Factory', { body: `${title}: ${desc}`, icon: appLogo });
+          }).catch(console.error);
+        }
       } catch {
         // Safe ignore
       }
@@ -765,13 +770,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => clearTimeout(globalUnlockTimer);
   }, []);
 
-  // Auth & Profile Listener
+  // Persistent Auth State Listener properly scoped
   useEffect(() => {
     let unsubNotifs: (() => void) | null = null;
     let unsubUserRef: (() => void) | null = null;
     let unsubSubRef: (() => void) | null = null;
     let unsubWdRef: (() => void) | null = null;
     let unsubChatRef: (() => void) | null = null;
+    let unsubAuth: (() => void) | null = null;
 
     const cleanupInnerListeners = () => {
       if (unsubNotifs) { try { unsubNotifs(); } catch {} unsubNotifs = null; }
@@ -781,11 +787,62 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (unsubChatRef) { try { unsubChatRef(); } catch {} unsubChatRef = null; }
     };
 
-    const unsubAuth = onAuthStateChanged(auth, async (currUser) => {
-      cleanupInnerListeners();
-      setUser(currUser);
+    const initializeAuth = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result && result.user) {
+          const googleUser = result.user;
+          const userSnap = await get(ref(db, `users/${googleUser.uid}`));
+          if (!userSnap.exists()) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const refParam = urlParams.get('ref');
+            let refId: string | null = null;
+            if (refParam) {
+              try {
+                const q = query(ref(db, 'users'), orderByChild('referralCode'), equalTo(refParam));
+                const sn = await get(q);
+                if (sn.exists()) {
+                  sn.forEach((c) => { refId = c.key; });
+                }
+              } catch { }
+            }
+            const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+            await set(ref(db, `users/${googleUser.uid}`), {
+              username: googleUser.displayName || 'Google User',
+              email: googleUser.email,
+              photoURL: googleUser.photoURL || '',
+              balance: 100, // Fallback default signupBonusUser
+              hold: 0,
+              paymentNumber: '',
+              paymentMethod: '',
+              createdAt: Date.now(),
+              referralCode,
+              referredBy: refId || '',
+              referralEarnings: 0,
+              last_login: Date.now(),
+              login_streak: 1,
+              total_submitted: 0,
+              total_withdrawn: 0,
+              auth_provider: 'google',
+            });
+            if (refId) {
+              try {
+                await update(ref(db, `users/${refId}`), {
+                  referralEarnings: increment(50), // Fallback default signupBonusReferrer
+                });
+              } catch { }
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Redirect result error', err);
+      }
 
-      if (currUser) {
+      unsubAuth = onAuthStateChanged(auth, async (currUser) => {
+        cleanupInnerListeners();
+        setUser(currUser);
+
+        if (currUser) {
         let isResolved = false;
         const markLoaded = () => {
           if (!isResolved) {
@@ -929,10 +986,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setLoading(false);
       }
     });
+    }; // Close initializeAuth
+
+    initializeAuth();
 
     return () => {
       cleanupInnerListeners();
-      unsubAuth();
+      if (unsubAuth) unsubAuth();
     };
   }, []);
 

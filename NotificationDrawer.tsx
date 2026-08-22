@@ -31,12 +31,19 @@ export const NotificationDrawer: React.FC = () => {
       alert('Notifications are not supported in this browser.');
       return;
     }
-    Notification.requestPermission().then((permission) => {
+    Notification.requestPermission().then(async (permission) => {
       if (permission === 'granted') {
-        new Notification('Mail Factory', {
-          body: 'Push notifications successfully enabled!',
-          icon: appLogo,
-        });
+        try {
+          if ('serviceWorker' in navigator) {
+            const registration = await navigator.serviceWorker.ready;
+            await registration.showNotification('Mail Factory', {
+              body: 'Push notifications successfully enabled!',
+              icon: appLogo,
+            });
+          }
+        } catch (e) {
+          console.error("Failed to show notification:", e);
+        }
       }
     });
   };
