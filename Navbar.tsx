@@ -544,7 +544,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     },
                     {
                       id: 'referral_leaderboard' as ActiveTab,
-                      label: language === 'bn' ? 'রেফারেল বোনাস প্রোগ্রাম' : 'Referral Leaderboard',
+                      label: language === 'bn' ? 'রেফারেল বোনাস প্রোগ্রাম' : 'Referral Program',
                       sub: language === 'bn' ? 'বন্ধু রেফার করে বাড়তি ইনকাম' : 'Invite friends & earn extra',
                       icon: <Gift className="w-4 h-4" />,
                       requiresAuth: false,

@@ -324,7 +324,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           <button
             onClick={() => {
               hapticFeedback.light();
-              setActiveTab('referral_leaderboard');
+              setActiveTab('sellers');
             }}
             className="col-span-2 sm:col-span-1 py-3 px-3 rounded-2xl bg-amber-50 hover:bg-amber-100 active:scale-95 text-amber-900 text-xs font-extrabold border border-amber-200 transition-all flex items-center justify-center gap-2"
           >

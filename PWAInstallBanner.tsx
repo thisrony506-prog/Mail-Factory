@@ -123,7 +123,7 @@ export const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({
                 <span>100% Secure</span>
               </span>
               <span>•</span>
-              <span>15k+ Users</span>
+              <span>50k+ user's</span>
               <span>•</span>
               <span>Fast & Verified</span>
             </div>

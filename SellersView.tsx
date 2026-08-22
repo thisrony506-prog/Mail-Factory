@@ -179,14 +179,6 @@ export const SellersView: React.FC = () => {
             <Trophy className="w-3.5 h-3.5 text-amber-600" />
             <span>{language === 'bn' ? 'টপ ১০ সেলার লিডারবোর্ড' : 'Top 10 Sellers Leaderboard'}</span>
           </div>
-
-          <button
-            onClick={() => setActiveTab('referral_leaderboard')}
-            className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-purple-100 hover:bg-purple-200 text-purple-900 text-xs font-black transition-all cursor-pointer shadow-2xs"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-purple-600" />
-            <span>{language === 'bn' ? 'রেফারেল লিডারবোর্ড 🎁' : 'Referral Leaderboard 🎁'}</span>
-          </button>
         </div>
         <h2 className="text-xl font-black text-slate-800 tracking-tight">
           {language === 'bn' ? 'সেরা ১০ এক্সচেঞ্জ পার্টনারগণ 🏆' : 'Top 10 Exchange Champions 🏆'}

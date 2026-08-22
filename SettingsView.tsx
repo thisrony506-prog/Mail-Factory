@@ -381,28 +381,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <ChevronRight className="w-4 h-4 text-slate-400" />
           </button>
 
-          <button
-            onClick={() => {
-              hapticFeedback.light();
-              setActiveTab('referral_leaderboard');
-            }}
-            className="w-full flex items-center justify-between py-3 px-2 text-left hover:bg-slate-50 rounded-2xl transition-all cursor-pointer"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
-                <Award className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-xs font-extrabold text-slate-800">
-                  {language === 'bn' ? 'টপ ১০ রেফারেল লিডারবোর্ড' : 'Top Referral Leaderboard'}
-                </h3>
-                <p className="text-[10px] text-slate-400 font-medium">
-                  {language === 'bn' ? 'বন্ধুদের ইনভাইট করে সেরা ১০ আয়কারী সেলারের তালিকা' : 'Top 10 users with highest referral earnings'}
-                </p>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-slate-400" />
-          </button>
         </div>
       </div>
 
