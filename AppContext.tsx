@@ -33,7 +33,7 @@ import {
   isExcludedSeller,
 } from './types';
 
-export const DEFAULT_LOGO = "/app-logo.png";
+export const DEFAULT_LOGO = "https://z-cdn-media.chatglm.cn/files/254f7f82-610d-4700-abc8-2e10435c149a.png?auth_key=1874890147-5ce8a86650d0488299a25b07660a73f8-0-b25e70b5ad3109adec869d78d8584440";
 
 export const DEFAULT_LEVELS: LevelConfig[] = [
   { level: 1, approved: 0, rate: 10, old_rate: 8, title: 'Bronze Member', perkDescription: 'Standard exchange rate' },

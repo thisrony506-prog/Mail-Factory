@@ -1,37 +1,22 @@
 @import "tailwindcss";
 
 @layer base {
-  *, ::before, ::after {
-    box-sizing: border-box;
-  }
-
   html {
     -webkit-tap-highlight-color: transparent;
     scroll-behavior: smooth;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    -webkit-text-size-adjust: 100%;
-    touch-action: manipulation;
   }
 
   body {
-    font-family: 'Plus Jakarta Sans', 'Hind Siliguri', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Hind Siliguri', system-ui, -apple-system, sans-serif;
     overscroll-behavior-y: none;
     -webkit-overflow-scrolling: touch;
-    text-size-adjust: 100%;
   }
 
-  /* Responsive image rendering & auto layout containment */
-  img, video {
-    max-width: 100%;
-    height: auto;
+  img {
     content-visibility: auto;
-  }
-
-  /* Eliminate 300ms click delay on mobile web */
-  a, button, input, select, textarea {
-    touch-action: manipulation;
   }
 }
 
@@ -43,7 +28,7 @@
   will-change: transform, opacity;
 }
 
-/* Custom sleek scrollbars for webkit and standard browsers */
+/* Custom sleek scrollbars */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -59,15 +44,9 @@
   background: #94a3b8;
 }
 
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 transparent;
-}
-
-/* GPU Accelerated Smooth Keyframe Animations */
 @keyframes floatAnim {
-  0%, 100% { transform: translate3d(0, 0px, 0); }
-  50% { transform: translate3d(0, -4px, 0); }
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
 }
 
 .animate-float {
@@ -85,16 +64,15 @@
 }
 
 @keyframes loadingBar {
-  0% { transform: translate3d(-100%, 0, 0); }
-  50% { transform: translate3d(50%, 0, 0); }
-  100% { transform: translate3d(200%, 0, 0); }
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(50%); }
+  100% { transform: translateX(200%); }
 }
 
 .animate-loading-bar {
   animation: loadingBar 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   will-change: transform;
 }
-
 
 
 
