@@ -101,7 +101,16 @@ export default defineConfig(() => {
       cssCodeSplit: true,
       minify: 'esbuild' as const,
       sourcemap: false,
-      chunkSizeWarningLimit: 1000
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom'],
+            firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
+            ui: ['lucide-react', 'framer-motion']
+          }
+        }
+      }
     },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.

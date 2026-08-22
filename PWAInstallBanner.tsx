@@ -75,6 +75,7 @@ export const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({
               onClick={handleDismiss}
               className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
               title="Close"
+              aria-label="Close install banner"
             >
               <X className="w-4 h-4" />
             </button>
@@ -144,6 +145,7 @@ export const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({
             onClick={handleDismiss}
             className="p-3 rounded-2xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 text-slate-400 hover:text-white transition-colors cursor-pointer"
             title="Dismiss"
+            aria-label="Dismiss install banner"
           >
             <X className="w-4 h-4" />
           </button>

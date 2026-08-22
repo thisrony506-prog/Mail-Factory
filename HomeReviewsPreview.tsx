@@ -87,7 +87,7 @@ export const HomeReviewsPreview: React.FC = () => {
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
                   {r.userPhoto ? (
-                    <img src={r.userPhoto} alt={r.userName} className="w-full h-full object-cover" />
+                    <img src={r.userPhoto} alt={r.userName} width={28} height={28} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                   ) : (
                     <User className="w-3.5 h-3.5 text-slate-400" />
                   )}

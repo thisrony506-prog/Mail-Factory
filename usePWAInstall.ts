@@ -98,6 +98,11 @@ export function usePWAInstall() {
     }
 
     if (!deferredPrompt) {
+      alert(
+        "To install the app manually / ম্যানুয়ালি ইনস্টল করতে:\n\n" +
+        "1. Tap the browser menu (⋮) / ব্রাউজারের মেনুতে ক্লিক করুন\n" +
+        "2. Select 'Install app' or 'Add to Home screen' / 'Install app' বা 'Add to Home screen' নির্বাচন করুন"
+      );
       return;
     }
 

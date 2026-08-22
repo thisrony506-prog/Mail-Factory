@@ -71,7 +71,11 @@ export const AppLogo3D: React.FC<AppLogo3DProps> = ({
       ) : (
         <img
           src={logoUrl}
-          alt="Mail Factory"
+          alt="Mail Factory Logo"
+          width={dimension}
+          height={dimension}
+          loading="eager"
+          decoding="async"
           className="w-full h-full object-contain select-none relative z-10 transition-transform drop-shadow-[0_2px_6px_rgba(0,0,0,0.2)]"
           onError={() => setImgError(true)}
         />

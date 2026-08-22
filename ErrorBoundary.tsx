@@ -50,39 +50,21 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 text-center select-none font-sans">
-          <div className="w-16 h-16 rounded-2xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center mb-5 text-rose-400">
-            <AlertTriangle className="w-8 h-8 animate-bounce" />
-          </div>
-
-          <h1 className="text-xl font-black text-white mb-2">
-            পেজ লোড করতে সাময়িক সমস্যা হয়েছে
-          </h1>
-          <p className="text-xs text-slate-400 max-w-sm mb-6 leading-relaxed">
-            একটি অপ্রত্যাশিত সমস্যা হয়েছে। অনুগ্রহ করে রিফ্রেশ করুন অথবা ক্যাশ ক্লিয়ার করে পুনরায় চেষ্টা করুন।
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-[260px] text-center shadow-2xl">
+            <h1 className="text-[13px] font-bold text-white mb-1.5">Network Error</h1>
+            <p className="text-[11px] text-slate-400 mb-4 leading-relaxed">A connection problem occurred.<br/>Please refresh the page.</p>
             <button
               onClick={this.handleReload}
-              className="flex-1 py-3 px-5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-black flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 transition-all cursor-pointer active:scale-95"
+              className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2"
             >
-              <RefreshCw className="w-4 h-4" />
-              <span>Reload App</span>
-            </button>
-
-            <button
-              onClick={this.handleGoHome}
-              className="py-3 px-5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
-            >
-              <Home className="w-4 h-4" />
-              <span>হোম পেজে যান</span>
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Refresh Page</span>
             </button>
           </div>
         </div>
       );
     }
-
     // @ts-ignore
     return this.props.children;
   }

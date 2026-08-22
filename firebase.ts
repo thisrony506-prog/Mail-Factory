@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import {
   initializeAuth,
+  getAuth,
   browserPopupRedirectResolver,
   browserLocalPersistence,
   createUserWithEmailAndPassword,
@@ -49,10 +50,16 @@ export const firebaseConfig = {
 };
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-export const auth = initializeAuth(app, {
-  persistence: browserLocalPersistence,
-  popupRedirectResolver: browserPopupRedirectResolver,
-});
+let authInstance;
+try {
+  authInstance = initializeAuth(app, {
+    persistence: browserLocalPersistence,
+    popupRedirectResolver: browserPopupRedirectResolver,
+  });
+} catch (e: any) {
+  authInstance = getAuth(app);
+}
+export const auth = authInstance;
 export const db: Database = getDatabase(app);
 export const googleProvider = new GoogleAuthProvider();
 

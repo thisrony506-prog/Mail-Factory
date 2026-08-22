@@ -817,7 +817,7 @@ export const GuestLandingView: React.FC = () => {
                       <div className="flex items-center gap-2.5">
                         <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-black flex items-center justify-center text-xs overflow-hidden border border-slate-700 shadow-sm shrink-0">
                           {rev.userPhoto ? (
-                            <img src={rev.userPhoto} alt={rev.userName} className="w-full h-full object-cover" />
+                            <img src={rev.userPhoto} alt={rev.userName} width={32} height={32} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                           ) : (
                             rev.userName?.charAt(0).toUpperCase() || 'U'
                           )}
@@ -934,7 +934,7 @@ export const GuestLandingView: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center overflow-hidden">
                         {rev.userPhoto ? (
-                          <img src={rev.userPhoto} alt={rev.userName} className="w-full h-full object-cover" />
+                          <img src={rev.userPhoto} alt={rev.userName} width={28} height={28} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                         ) : (
                           rev.userName?.charAt(0).toUpperCase() || 'U'
                         )}

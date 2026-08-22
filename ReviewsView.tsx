@@ -306,7 +306,7 @@ export const ReviewsView: React.FC = () => {
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden">
                       {r.userPhoto ? (
-                        <img src={r.userPhoto} alt={r.userName} className="w-full h-full object-cover" />
+                        <img src={r.userPhoto} alt={r.userName} width={40} height={40} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                       ) : (
                         <User className="w-5 h-5 text-slate-400" />
                       )}

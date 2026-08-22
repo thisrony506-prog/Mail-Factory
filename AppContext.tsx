@@ -521,16 +521,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return updated;
     });
 
-    if ('Notification' in window && Notification.permission === 'granted') {
-      try {
+    try {
+      if ('Notification' in window && (window as any).Notification.permission === 'granted') {
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.ready.then((registration) => {
-            registration.showNotification('Mail Factory', { body: `${title}: ${desc}`, icon: appLogo });
+            if (registration && registration.showNotification) {
+              registration.showNotification('Mail Factory', { body: `${title}: ${desc}`, icon: appLogo }).catch(console.error);
+            }
           }).catch(console.error);
         }
-      } catch {
-        // Safe ignore
       }
+    } catch (err) {
+      // Safely ignore Notification Illegal constructor or permission errors on mobile
     }
   }, [appLogo]);
 

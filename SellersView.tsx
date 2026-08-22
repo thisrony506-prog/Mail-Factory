@@ -246,7 +246,7 @@ export const SellersView: React.FC = () => {
                 🥈 2
               </div>
               {topThree[1].photoURL ? (
-                <img src={topThree[1].photoURL} alt={topThree[1].username} className="w-10 h-10 rounded-full object-cover mx-auto mb-1.5 shadow" />
+                <img src={topThree[1].photoURL} alt={topThree[1].username} width={40} height={40} loading="lazy" decoding="async" className="w-10 h-10 rounded-full object-cover mx-auto mb-1.5 shadow" />
               ) : (
                 <div className="w-10 h-10 rounded-full bg-slate-400 text-white font-black text-sm flex items-center justify-center mx-auto mb-1.5 shadow">
                   {(topThree[1].username || topThree[1].email || 'U').charAt(0).toUpperCase()}
@@ -278,7 +278,7 @@ export const SellersView: React.FC = () => {
                 👑 1
               </div>
               {topThree[0].photoURL ? (
-                <img src={topThree[0].photoURL} alt={topThree[0].username} className="w-12 h-12 rounded-full object-cover mx-auto mb-1.5 shadow-md ring-2 ring-amber-300" />
+                <img src={topThree[0].photoURL} alt={topThree[0].username} width={48} height={48} loading="lazy" decoding="async" className="w-12 h-12 rounded-full object-cover mx-auto mb-1.5 shadow-md ring-2 ring-amber-300" />
               ) : (
                 <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-400 text-white font-black text-base flex items-center justify-center mx-auto mb-1.5 shadow-md ring-2 ring-amber-300">
                   {(topThree[0].username || topThree[0].email || 'U').charAt(0).toUpperCase()}
@@ -306,7 +306,7 @@ export const SellersView: React.FC = () => {
                 🥉 3
               </div>
               {topThree[2].photoURL ? (
-                <img src={topThree[2].photoURL} alt={topThree[2].username} className="w-10 h-10 rounded-full object-cover mx-auto mb-1.5 shadow" />
+                <img src={topThree[2].photoURL} alt={topThree[2].username} width={40} height={40} loading="lazy" decoding="async" className="w-10 h-10 rounded-full object-cover mx-auto mb-1.5 shadow" />
               ) : (
                 <div className="w-10 h-10 rounded-full bg-orange-400 text-white font-black text-sm flex items-center justify-center mx-auto mb-1.5 shadow">
                   {(topThree[2].username || topThree[2].email || 'U').charAt(0).toUpperCase()}
@@ -360,7 +360,7 @@ export const SellersView: React.FC = () => {
                     #{rank}
                   </span>
                   {seller.photoURL ? (
-                    <img src={seller.photoURL} alt={seller.username} className="w-9 h-9 rounded-full object-cover shadow-xs" />
+                    <img src={seller.photoURL} alt={seller.username} width={36} height={36} loading="lazy" decoding="async" className="w-9 h-9 rounded-full object-cover shadow-xs" />
                   ) : (
                     <div className="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shadow-xs">
                       {(seller.username || seller.email || 'U').charAt(0).toUpperCase()}

@@ -199,6 +199,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }}
                 className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-bold flex items-center gap-1 sm:gap-1.5 transition-all shrink-0"
                 title="Select Language"
+                aria-label="Select Language"
+                aria-expanded={isLangMenuOpen}
+                aria-haspopup="true"
               >
                 <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-200" />
                 <span className="text-xs">{currentLangObj.flag}</span>
@@ -211,7 +214,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">
                       {t.selectLanguage}
                     </span>
-                    <button onClick={() => setIsLangMenuOpen(false)} className="text-slate-400 hover:text-slate-600">
+                    <button aria-label="Close language menu" onClick={() => setIsLangMenuOpen(false)} className="text-slate-400 hover:text-slate-600">
                       <X className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -247,6 +250,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setChatDrawerOpen(true)}
               className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 relative transition-all cursor-pointer shrink-0"
               title="Live Support Chat"
+              aria-label="Open live support chat"
             >
               <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-100" />
               <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-400"></span>
@@ -257,6 +261,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setNotifDrawerOpen(true)}
               className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 relative transition-all cursor-pointer shrink-0"
               title="Notifications"
+              aria-label="View notifications"
             >
               <Bell className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-100" />
               {unreadNotifsCount > 0 && (
