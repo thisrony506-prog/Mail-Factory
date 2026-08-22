@@ -1,12 +1,34 @@
 @import "tailwindcss";
 
 @layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
   body {
     font-family: 'Plus Jakarta Sans', 'Hind Siliguri', system-ui, -apple-system, sans-serif;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  img {
+    content-visibility: auto;
   }
 }
 
-/* Custom scrollbars */
+/* Hardware-accelerated smooth animations */
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  will-change: transform, opacity;
+}
+
+/* Custom sleek scrollbars */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -29,6 +51,7 @@
 
 .animate-float {
   animation: floatAnim 3s ease-in-out infinite;
+  will-change: transform;
 }
 
 @keyframes pulseGlow {
@@ -48,6 +71,8 @@
 
 .animate-loading-bar {
   animation: loadingBar 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform;
 }
+
 
 

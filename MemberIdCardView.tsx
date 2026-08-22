@@ -1393,7 +1393,7 @@ export const MemberIdCardView: React.FC<MemberIdCardViewProps> = ({ onBack }) =>
               {/* Mail Factory Official Logo Box */}
               <div className="relative shrink-0">
                 <div
-                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl border-2 shadow-md flex items-center justify-center p-0.5 overflow-hidden transition-colors"
+                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl border-2 shadow-md flex items-center justify-center p-1 overflow-hidden transition-colors"
                   style={{
                     backgroundColor: activeTheme.idBoxBgHex,
                     borderColor: '#f59e0b',
@@ -1403,7 +1403,7 @@ export const MemberIdCardView: React.FC<MemberIdCardViewProps> = ({ onBack }) =>
                     <img
                       src={effectiveAppLogo}
                       alt="Mail Factory"
-                      className="w-full h-full object-cover rounded-xl"
+                      className="w-full h-full object-contain"
                       crossOrigin="anonymous"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = '/app-logo.png';
@@ -1413,7 +1413,7 @@ export const MemberIdCardView: React.FC<MemberIdCardViewProps> = ({ onBack }) =>
                     <img
                       src="/app-logo.png"
                       alt="Mail Factory"
-                      className="w-full h-full object-cover rounded-xl"
+                      className="w-full h-full object-contain"
                     />
                   )}
                 </div>
@@ -1681,7 +1681,7 @@ export const MemberIdCardView: React.FC<MemberIdCardViewProps> = ({ onBack }) =>
                         <img
                           src={effectiveAppLogo}
                           alt="Mail Factory"
-                          className="w-full h-full object-cover rounded-full"
+                          className="w-full h-full object-contain rounded-full"
                           crossOrigin="anonymous"
                           onError={(e) => {
                             (e.target as HTMLImageElement).src = '/app-logo.png';
@@ -1691,7 +1691,7 @@ export const MemberIdCardView: React.FC<MemberIdCardViewProps> = ({ onBack }) =>
                         <img
                           src="/app-logo.png"
                           alt="Mail Factory"
-                          className="w-full h-full object-cover rounded-full"
+                          className="w-full h-full object-contain rounded-full"
                         />
                       )}
                     </div>

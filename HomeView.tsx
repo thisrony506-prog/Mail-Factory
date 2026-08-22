@@ -21,7 +21,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
-import { GmailType, TopSellerItem } from './types';
+import { GmailType, TopSellerItem, isExcludedSeller } from './types';
 import { DEFAULT_BENCHMARK_SELLERS } from './SellersView';
 
 export const HomeView: React.FC = () => {
@@ -301,29 +301,11 @@ export const HomeView: React.FC = () => {
 
         <div className="pt-1">
           {(() => {
-            const isExcluded = (username?: string, uid?: string) => {
-              if (!username) return true;
-              const lower = username.toLowerCase();
-              if (uid && uid.startsWith('seller_')) return true;
-              if (lower.startsWith('seller ')) return true;
-              if (
-                lower.includes('rifat') ||
-                lower.includes('fftt') ||
-                lower.includes('ffty') ||
-                lower.startsWith('fft') ||
-                lower.includes('tanvir hossain') ||
-                lower.includes('shakil ahmed')
-              ) {
-                return true;
-              }
-              return false;
-            };
-
             const validConfigured = (topSellers || []).filter(
-              (s) => s && s.username && !isExcluded(s.username, s.uid)
+              (s) => s && !isExcludedSeller(s.username, s.email, s.uid)
             );
             const realUsersMapped: TopSellerItem[] = (allUsers || [])
-              .filter((u) => u && u.username && !isExcluded(u.username, u.uid))
+              .filter((u) => u && !isExcludedSeller(u.username, u.email, u.uid))
               .map((u, idx) => ({
                 uid: u.uid || `real_user_${idx}`,
                 username: u.username || (u.email ? u.email.split('@')[0] : 'Seller'),
@@ -341,7 +323,7 @@ export const HomeView: React.FC = () => {
 
             // 1. Seed with benchmark default top sellers
             DEFAULT_BENCHMARK_SELLERS.forEach((item) => {
-              if (!isExcluded(item.username, item.uid)) {
+              if (!isExcludedSeller(item.username, item.email, item.uid)) {
                 listMap.set(item.username.toLowerCase(), item);
               }
             });

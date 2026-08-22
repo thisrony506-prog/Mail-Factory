@@ -40,11 +40,11 @@ export const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({
       <div className={`fixed bottom-20 left-4 right-4 z-40 max-w-md mx-auto animate-in slide-in-from-bottom-5 duration-300 ${className}`}>
         <div className="rounded-2xl bg-slate-900/95 border border-indigo-500/40 p-3.5 shadow-2xl backdrop-blur-md flex items-center justify-between gap-3 text-white">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 p-0.5 shadow-md shrink-0">
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0">
               <img
                 src={appLogo || '/app-logo.png'}
                 alt="Mail Factory"
-                className="w-full h-full object-cover rounded-[10px] bg-slate-950"
+                className="w-full h-full object-contain drop-shadow-md"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = '/app-logo.png';
                 }}
@@ -94,11 +94,11 @@ export const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({
       <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         {/* Left: App Logo & Details */}
         <div className="flex items-center gap-3.5">
-          <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 p-0.5 shadow-lg shadow-indigo-500/30 shrink-0">
+          <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
             <img
               src={appLogo || '/app-logo.png'}
               alt="Mail Factory"
-              className="w-full h-full object-cover rounded-[14px] bg-slate-950"
+              className="w-full h-full object-contain drop-shadow-md"
               onError={(e) => {
                 (e.target as HTMLImageElement).src = '/app-logo.png';
               }}

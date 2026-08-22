@@ -5,7 +5,7 @@ import { hapticFeedback } from './haptics';
 import { AuthPageView } from './AuthPageView';
 import { db } from './firebase';
 import { ref, onValue } from 'firebase/database';
-import { Review, TopSellerItem } from './types';
+import { Review, TopSellerItem, isExcludedSeller } from './types';
 import { PWAInstallBanner } from './PWAInstallBanner';
 import { AppLogo3D } from './AppLogo3D';
 import { DEFAULT_BENCHMARK_SELLERS } from './SellersView';
@@ -149,32 +149,14 @@ export const GuestLandingView: React.FC = () => {
 
   // Combine real Firebase users, admin configured topSellers & benchmark performers in real-time
   const sellersList = React.useMemo(() => {
-    const isExcluded = (username?: string, uid?: string) => {
-      if (!username) return true;
-      const lower = username.toLowerCase();
-      if (uid && uid.startsWith('seller_')) return true;
-      if (lower.startsWith('seller ')) return true;
-      if (
-        lower.includes('rifat') ||
-        lower.includes('fftt') ||
-        lower.includes('ffty') ||
-        lower.startsWith('fft') ||
-        lower.includes('tanvir hossain') ||
-        lower.includes('shakil ahmed')
-      ) {
-        return true;
-      }
-      return false;
-    };
-
     // 1. Valid sellers configured in topSellers
     const validConfigured = (topSellers || []).filter(
-      (s) => s && s.username && !isExcluded(s.username, s.uid)
+      (s) => s && !isExcludedSeller(s.username, s.email, s.uid)
     );
 
     // 2. Real registered users from Firebase
     const realUsersMapped: TopSellerItem[] = (allUsers || [])
-      .filter((u) => u && !isExcluded(u.username, u.uid))
+      .filter((u) => u && !isExcludedSeller(u.username, u.email, u.uid))
       .map((u, idx) => {
         const approved = Number(u.manual_approved_count) || Number(u.total_submitted) || 0;
         const earnings = Number(u.totalEarnings) || (Number(u.balance || 0) + Number(u.total_withdrawn || 0)) || Number(u.balance || 0);
@@ -196,7 +178,7 @@ export const GuestLandingView: React.FC = () => {
 
     // Seed default top benchmark performers
     DEFAULT_BENCHMARK_SELLERS.forEach((item) => {
-      if (!isExcluded(item.username, item.uid)) {
+      if (!isExcludedSeller(item.username, item.email, item.uid)) {
         listMap.set(item.username.toLowerCase(), item);
       }
     });

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import {
   auth,
   db,
@@ -30,6 +30,7 @@ import {
   ActiveTab,
   Language,
   TopSellerItem,
+  isExcludedSeller,
 } from './types';
 
 export const DEFAULT_LOGO = "https://z-cdn-media.chatglm.cn/files/254f7f82-610d-4700-abc8-2e10435c149a.png?auth_key=1874890147-5ce8a86650d0488299a25b07660a73f8-0-b25e70b5ad3109adec869d78d8584440";
@@ -679,9 +680,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               list = Object.keys(val).map((k) => ({ ...val[k], uid: val[k].uid || k }));
             }
 
-            // Filter out any fake demo sellers (such as seller_1, seller_2, etc.)
+            // Filter out any fake demo sellers (such as seller_1, seller_2, etc.) or unwanted test names
             const realList: TopSellerItem[] = list
-              .filter((s) => s && !s.uid?.startsWith('seller_') && s.username !== 'Tanvir Hossain' && s.username !== 'Shakil Ahmed')
+              .filter((s) => s && !isExcludedSeller(s.username, s.email, s.uid))
               .map((s, idx) => ({
                 uid: s.uid || `user_${idx + 1}`,
                 username: s.username || (s.email ? s.email.split('@')[0] : `Seller ${idx + 1}`),
@@ -1213,9 +1214,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       }
 
-      // Filter out demo placeholders and sort by real earnings/balance
+      // Filter out demo placeholders / unwanted test accounts and sort by real earnings/balance
       const realFiltered = [...sourceUsers]
-        .filter((u) => u && !u.uid?.startsWith('seller_'))
+        .filter((u) => u && !isExcludedSeller(u.username, u.email, u.uid))
         .sort((a, b) => {
           const earnA = Number(a.totalEarnings) || (Number(a.balance || 0) + Number(a.total_withdrawn || 0)) || Number(a.balance || 0);
           const earnB = Number(b.totalEarnings) || (Number(b.balance || 0) + Number(b.total_withdrawn || 0)) || Number(b.balance || 0);
@@ -1249,66 +1250,120 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const contextValue = useMemo<AppContextType>(() => ({
+    user,
+    profile,
+    loading,
+    language,
+    setLanguage: handleLanguageChange,
+    emailNotifWithdrawal,
+    setEmailNotifWithdrawal,
+    emailNotifExchange,
+    setEmailNotifExchange,
+    activeTab,
+    setActiveTab,
+    levels,
+    currentLevel,
+    nextLevel,
+    reviewShifts,
+    paymentMethods,
+    maintenanceMode,
+    isWithdrawDisabled,
+    minWithdraw,
+    commissionPercent,
+    signupBonusUser,
+    signupBonusReferrer,
+    submissions,
+    withdrawRequests,
+    notifications,
+    unreadNotifsCount,
+    addNotification,
+    markNotificationRead,
+    markAllNotificationsRead,
+    allUsers,
+    topSellers,
+    setTopSellers,
+    syncRealUsersToTopSellers,
+    chatMessages,
+    sendChatMessage,
+    submitGmails,
+    requestWithdraw,
+    updateProfileData,
+    isAuthModalOpen,
+    authModalMode,
+    setAuthModalOpen,
+    setAuthModalMode,
+    isWithdrawModalOpen,
+    setWithdrawModalOpen,
+    isChatDrawerOpen,
+    setChatDrawerOpen,
+    isNotifDrawerOpen,
+    setNotifDrawerOpen,
+    isSettingsDrawerOpen,
+    setSettingsDrawerOpen,
+    isRateModalOpen,
+    setRateModalOpen,
+    claimDailyStreak,
+    appLogo,
+    copyText,
+  }), [
+    user,
+    profile,
+    loading,
+    language,
+    handleLanguageChange,
+    emailNotifWithdrawal,
+    emailNotifExchange,
+    activeTab,
+    setActiveTab,
+    levels,
+    currentLevel,
+    nextLevel,
+    reviewShifts,
+    paymentMethods,
+    maintenanceMode,
+    isWithdrawDisabled,
+    minWithdraw,
+    commissionPercent,
+    signupBonusUser,
+    signupBonusReferrer,
+    submissions,
+    withdrawRequests,
+    notifications,
+    unreadNotifsCount,
+    addNotification,
+    markNotificationRead,
+    markAllNotificationsRead,
+    allUsers,
+    topSellers,
+    setTopSellers,
+    syncRealUsersToTopSellers,
+    chatMessages,
+    sendChatMessage,
+    submitGmails,
+    requestWithdraw,
+    updateProfileData,
+    isAuthModalOpen,
+    authModalMode,
+    setAuthModalOpen,
+    setAuthModalMode,
+    isWithdrawModalOpen,
+    setWithdrawModalOpen,
+    isChatDrawerOpen,
+    setChatDrawerOpen,
+    isNotifDrawerOpen,
+    setNotifDrawerOpen,
+    isSettingsDrawerOpen,
+    setSettingsDrawerOpen,
+    isRateModalOpen,
+    setRateModalOpen,
+    claimDailyStreak,
+    appLogo,
+    copyText,
+  ]);
+
   return (
-    <AppContext.Provider
-      value={{
-        user,
-        profile,
-        loading,
-        language,
-        setLanguage: handleLanguageChange,
-        emailNotifWithdrawal,
-        setEmailNotifWithdrawal,
-        emailNotifExchange,
-        setEmailNotifExchange,
-        activeTab,
-        setActiveTab,
-        levels,
-        currentLevel,
-        nextLevel,
-        reviewShifts,
-        paymentMethods,
-        maintenanceMode,
-        isWithdrawDisabled,
-        minWithdraw,
-        commissionPercent,
-        signupBonusUser,
-        signupBonusReferrer,
-        submissions,
-        withdrawRequests,
-        notifications,
-        unreadNotifsCount,
-        addNotification,
-        markNotificationRead,
-        markAllNotificationsRead,
-        allUsers,
-        topSellers,
-        setTopSellers,
-        syncRealUsersToTopSellers,
-        chatMessages,
-        sendChatMessage,
-        submitGmails,
-        requestWithdraw,
-        updateProfileData,
-        isAuthModalOpen,
-        authModalMode,
-        setAuthModalOpen,
-        setAuthModalMode,
-        isWithdrawModalOpen,
-        setWithdrawModalOpen,
-        isChatDrawerOpen,
-        setChatDrawerOpen,
-        isNotifDrawerOpen,
-        setNotifDrawerOpen,
-        isSettingsDrawerOpen,
-        setSettingsDrawerOpen,
-        isRateModalOpen,
-        setRateModalOpen,
-        claimDailyStreak,
-        appLogo,
-        copyText,
-      }}
-    >
+    <AppContext.Provider value={contextValue}>
       {children}
     </AppContext.Provider>
   );

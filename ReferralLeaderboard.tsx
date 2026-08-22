@@ -5,6 +5,7 @@ import { translations } from './i18n';
 import { hapticFeedback } from './haptics';
 import { SEO } from './SEO';
 import QRCode from 'react-qr-code';
+import { isExcludedSeller } from './types';
 import {
   Trophy,
   Gift,
@@ -120,7 +121,7 @@ export const ReferralLeaderboard: React.FC = () => {
   // Process & Compute Top 10 Referral Earners
   const leaderboardData: ReferralLeaderboardItem[] = useMemo(() => {
     const realUsers = (allUsers || []).filter(
-      (u) => u && !u.uid?.startsWith('seller_') && u.username !== 'Tanvir Hossain'
+      (u) => u && !isExcludedSeller(u.username, u.email, u.uid)
     );
 
     let list: ReferralLeaderboardItem[] = realUsers.map((u) => {
@@ -157,7 +158,7 @@ export const ReferralLeaderboard: React.FC = () => {
         { name: 'Sabbir Ahmed', baseEarn: 3920, count: 48, badge: 'Platinum Recruiter' },
         { name: 'Anika Rahman', baseEarn: 3100, count: 41, badge: 'Gold Promoter' },
         { name: 'Hasan Mahmud', baseEarn: 2650, count: 35, badge: 'Silver Partner' },
-        { name: 'Tanvir Hossain', baseEarn: 2180, count: 29, badge: 'Silver Partner' },
+        { name: 'Tareq Rahman', baseEarn: 2180, count: 29, badge: 'Silver Partner' },
         { name: 'Mahfuz Alam', baseEarn: 1840, count: 24, badge: 'Rising Star' },
         { name: 'Nusrat Jahan', baseEarn: 1520, count: 19, badge: 'Rising Star' },
         { name: 'Kamrul Islam', baseEarn: 1290, count: 16, badge: 'Affiliate Pro' },

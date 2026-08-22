@@ -559,11 +559,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               className="w-full flex items-center justify-between p-3 text-left bg-gradient-to-r from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 rounded-2xl transition-all cursor-pointer border border-indigo-200 shadow-xs mt-1"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 p-0.5 shadow-sm shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-transparent flex items-center justify-center shrink-0">
                   <img
                     src={appLogo || '/app-logo.png'}
                     alt="Mail Factory"
-                    className="w-full h-full object-cover rounded-[10px]"
+                    className="w-full h-full object-contain drop-shadow-sm"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = '/app-logo.png';
                     }}

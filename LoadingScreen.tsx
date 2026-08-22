@@ -73,20 +73,18 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ message }) => {
 
       {/* Center Animated Logo & Loading Progress */}
       <div className="flex flex-col items-center justify-center space-y-7 relative z-10 w-full max-w-xs text-center">
-        {/* Glowing Website Logo Container */}
-        <div className="relative">
-          {/* Outer rotating/pulsing ring */}
-          <div className="absolute -inset-3 rounded-3xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-40 blur-lg animate-pulse" />
+        {/* Glowing Website Logo */}
+        <div className="relative flex items-center justify-center">
+          {/* Outer glowing ambient ring */}
+          <div className="absolute -inset-3 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-40 blur-xl animate-pulse pointer-events-none" />
           
-          <div className="relative w-20 h-20 rounded-2xl bg-slate-900 border border-indigo-500/30 p-1 shadow-2xl flex items-center justify-center overflow-hidden">
-            <div className="w-full h-full rounded-xl overflow-hidden flex items-center justify-center bg-slate-800">
-              <img
-                src={!imgError ? (appLogo || '/app-logo.png') : '/app-logo.png'}
-                alt="Mail Factory Logo"
-                onError={() => setImgError(true)}
-                className="w-full h-full object-cover object-center"
-              />
-            </div>
+          <div className="relative w-24 h-24 flex items-center justify-center">
+            <img
+              src={!imgError ? (appLogo || '/app-logo.png') : '/app-logo.png'}
+              alt="Mail Factory Logo"
+              onError={() => setImgError(true)}
+              className="w-full h-full object-contain drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
+            />
           </div>
         </div>
 

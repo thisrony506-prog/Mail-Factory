@@ -12,7 +12,7 @@ interface AppLogo3DProps {
 export const AppLogo3D: React.FC<AppLogo3DProps> = ({
   className = '',
   size = 'md',
-  glow = true,
+  glow = false,
   animated = false,
   src,
 }) => {
@@ -40,35 +40,29 @@ export const AppLogo3D: React.FC<AppLogo3DProps> = ({
   }
 
   const [imgError, setImgError] = useState<boolean>(false);
-  const logoUrl = src || DEFAULT_LOGO;
+  const logoUrl = src || '/app-logo.png';
 
   return (
     <div
-      className={`relative inline-flex items-center justify-center select-none shrink-0 ${
+      className={`relative inline-flex items-center justify-center select-none shrink-0 bg-transparent ${
         animated ? 'transition-transform duration-300 hover:scale-105 active:scale-95' : ''
       } ${className}`}
       style={{ width: dimension, height: dimension }}
     >
-      {/* Subtle Ambient Glow */}
+      {/* Subtle Glow only if explicitly requested */}
       {glow && (
         <div
-          className="absolute -inset-0.5 rounded-2xl bg-gradient-to-tr from-indigo-500/40 to-blue-500/30 opacity-70 blur-[4px] pointer-events-none"
-          style={{ borderRadius: dimension * 0.32 }}
+          className="absolute -inset-1 rounded-full bg-indigo-500/20 opacity-70 blur-md pointer-events-none"
         />
       )}
 
-      {/* Modern Sleek Container */}
-      <div
-        className="w-full h-full rounded-xl bg-slate-800/90 border border-indigo-500/30 shadow-md relative z-10 flex items-center justify-center overflow-hidden backdrop-blur-sm"
-        style={{ borderRadius: dimension * 0.26 }}
-      >
-        <img
-          src={imgError ? '/app-logo.png' : logoUrl}
-          alt="Mail Factory"
-          className="w-full h-full object-cover object-center rounded-[inherit] transition-transform"
-          onError={() => setImgError(true)}
-        />
-      </div>
+      {/* Clean Transparent Logo Image - No black background */}
+      <img
+        src={imgError ? '/app-logo.png' : logoUrl}
+        alt="Mail Factory"
+        className="w-full h-full object-contain select-none relative z-10 transition-transform drop-shadow-[0_2px_6px_rgba(0,0,0,0.2)]"
+        onError={() => setImgError(true)}
+      />
     </div>
   );
 };

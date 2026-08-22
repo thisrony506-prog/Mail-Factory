@@ -11,7 +11,7 @@ import {
   Edit3,
   Shield,
 } from 'lucide-react';
-import { TopSellerItem } from './types';
+import { TopSellerItem, isExcludedSeller } from './types';
 
 const ADMIN_EMAILS = ['gmrony135@gmail.com', 'mailfactorybd@gmail.com'];
 
@@ -31,41 +31,21 @@ export const DEFAULT_BENCHMARK_SELLERS: TopSellerItem[] = [
 export const SellersView: React.FC = () => {
   const { language, topSellers, allUsers, user, setActiveTab, syncRealUsersToTopSellers, addNotification } = useApp();
   const t = translations[language];
-  const [timeFilter, setTimeFilter] = useState<'all' | 'today' | 'week'>('all');
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
   const isAdmin = user && user.email && ADMIN_EMAILS.includes(user.email);
 
-  // Helper to filter out test/unwanted usernames
-  const isExcluded = (username?: string, uid?: string) => {
-    if (!username) return true;
-    const lower = username.toLowerCase();
-    if (uid && uid.startsWith('seller_')) return true;
-    if (lower.startsWith('seller ')) return true;
-    if (
-      lower.includes('rifat') ||
-      lower.includes('fftt') ||
-      lower.includes('ffty') ||
-      lower.startsWith('fft') ||
-      lower.includes('tanvir hossain') ||
-      lower.includes('shakil ahmed')
-    ) {
-      return true;
-    }
-    return false;
-  };
-
   // Compute display sellers merging benchmark defaults, admin configured topSellers, and real users
   const displaySellers: TopSellerItem[] = React.useMemo(() => {
     // 1. Valid sellers configured by Admin in topSellers
     const validConfigured = (topSellers || []).filter(
-      (s) => s && s.username && !isExcluded(s.username, s.uid)
+      (s) => s && !isExcludedSeller(s.username, s.email, s.uid)
     );
 
     // 2. Real registered users
     const realUsersMapped: TopSellerItem[] = (allUsers || [])
-      .filter((u) => u && u.username && !isExcluded(u.username, u.uid))
+      .filter((u) => u && !isExcludedSeller(u.username, u.email, u.uid))
       .map((u, idx) => ({
         uid: u.uid || `real_user_${idx}`,
         username: u.username || (u.email ? u.email.split('@')[0] : 'Seller'),
@@ -83,7 +63,7 @@ export const SellersView: React.FC = () => {
 
     // Seed benchmark sellers as default
     DEFAULT_BENCHMARK_SELLERS.forEach((item) => {
-      if (!isExcluded(item.username, item.uid)) {
+      if (!isExcludedSeller(item.username, item.email, item.uid)) {
         listMap.set(item.username.toLowerCase(), item);
       }
     });
@@ -114,19 +94,13 @@ export const SellersView: React.FC = () => {
     }));
   }, [topSellers, allUsers]);
 
-  // Helper to compute payout/earnings from seller item with time filter
+  // Helper to compute payout/earnings from seller item
   const getEarning = (seller: TopSellerItem): number => {
-    const base = Number(seller.totalEarnings) || Number(seller.balance || 0) || 0;
-    if (timeFilter === 'today') return Math.round(base * 0.08);
-    if (timeFilter === 'week') return Math.round(base * 0.35);
-    return base;
+    return Number(seller.totalEarnings) || Number(seller.balance || 0) || 0;
   };
 
   const getApprovedCount = (seller: TopSellerItem): number => {
-    const base = Number(seller.manual_approved_count) || Number(seller.total_submitted) || 0;
-    if (timeFilter === 'today') return Math.round(base * 0.08);
-    if (timeFilter === 'week') return Math.round(base * 0.35);
-    return base;
+    return Number(seller.manual_approved_count) || Number(seller.total_submitted) || 0;
   };
 
   const isSellerVerified = (seller: TopSellerItem): boolean => {
@@ -217,50 +191,18 @@ export const SellersView: React.FC = () => {
         <h2 className="text-xl font-black text-slate-800 tracking-tight">
           {language === 'bn' ? 'সেরা ১০ এক্সচেঞ্জ পার্টনারগণ 🏆' : 'Top 10 Exchange Champions 🏆'}
         </h2>
-        <p className="text-xs text-slate-500 max-w-sm mx-auto mt-0.5">
-          {language === 'bn'
-            ? 'এডমিন ভেরিফাইড সর্বোচ্চ আয়কারী সেরা ১০ সেলারের তালিকা'
-            : 'Official verified leaderboard of top 10 earning sellers'}
-        </p>
-
-        {/* Time Period Filter Pills & Refresh */}
-        <div className="flex items-center justify-center gap-1.5 mt-3">
-          <button
-            onClick={() => setTimeFilter('all')}
-            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
-              timeFilter === 'all'
-                ? 'bg-indigo-600 text-white shadow-sm'
-                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-            }`}
-          >
-            {language === 'bn' ? 'সব সময়' : 'All Time'}
-          </button>
-          <button
-            onClick={() => setTimeFilter('week')}
-            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
-              timeFilter === 'week'
-                ? 'bg-indigo-600 text-white shadow-sm'
-                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-            }`}
-          >
-            {language === 'bn' ? 'এই সপ্তাহ' : 'This Week'}
-          </button>
-          <button
-            onClick={() => setTimeFilter('today')}
-            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
-              timeFilter === 'today'
-                ? 'bg-indigo-600 text-white shadow-sm'
-                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-            }`}
-          >
-            {language === 'bn' ? 'আজকের সেরা' : 'Today'}
-          </button>
+        <div className="flex items-center justify-center gap-2 mt-1">
+          <p className="text-xs text-slate-500">
+            {language === 'bn'
+              ? 'এডমিন ভেরিফাইড সর্বোচ্চ আয়কারী সেরা ১০ সেলারের তালিকা'
+              : 'Official verified leaderboard of top 10 earning sellers'}
+          </p>
           <button
             onClick={handleRefresh}
-            className="p-1.5 rounded-full bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all ml-1"
+            className="p-1 rounded-full bg-white text-slate-500 border border-slate-200 hover:bg-slate-50 transition-all"
             title="Refresh List"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-indigo-600' : ''}`} />
+            <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin text-indigo-600' : ''}`} />
           </button>
         </div>
       </div>

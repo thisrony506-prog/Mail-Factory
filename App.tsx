@@ -1,34 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import { AppProvider, useApp } from './AppContext';
 import { Navbar } from './Navbar';
-import { BottomNav } from './BottomNav';
 import { HomeView } from './HomeView';
-import { ExchangeView } from './ExchangeView';
-import { HistoryView } from './HistoryView';
-import { SellersView } from './SellersView';
-import { ProfileView } from './ProfileView';
-import { WithdrawView } from './WithdrawView';
-import { PrivacyView } from './PrivacyView';
-import { AboutView } from './AboutView';
-import { ReviewsView } from './ReviewsView';
-import { SettingsView } from './SettingsView';
-import { ChangePasswordView } from './ChangePasswordView';
-import { EditProfileView } from './EditProfileView';
-import { MemberIdCardView } from './MemberIdCardView';
-import { ReferralLeaderboard } from './ReferralLeaderboard';
-import { LiveChatDrawer } from './LiveChatDrawer';
-import { NotificationDrawer } from './NotificationDrawer';
-import { AuthModal } from './AuthModal';
-import { GuestLandingView } from './GuestLandingView';
-import {
-  FAQModal,
-  ContactModal,
-  RateAppModal,
-} from './Modals';
-import { IOSInstallGuideModal } from './IOSInstallGuideModal';
+import { ViewSkeleton } from './ViewSkeleton';
 import { usePWAInstall } from './usePWAInstall';
 import { LoadingScreen } from './LoadingScreen';
 import { MessageSquare, Bell } from 'lucide-react';
+
+// Code-split / Lazy load non-critical views and heavy modules for instant page load
+const ExchangeView = lazy(() => import('./ExchangeView').then(m => ({ default: m.ExchangeView })));
+const HistoryView = lazy(() => import('./HistoryView').then(m => ({ default: m.HistoryView })));
+const SellersView = lazy(() => import('./SellersView').then(m => ({ default: m.SellersView })));
+const ProfileView = lazy(() => import('./ProfileView').then(m => ({ default: m.ProfileView })));
+const WithdrawView = lazy(() => import('./WithdrawView').then(m => ({ default: m.WithdrawView })));
+const PrivacyView = lazy(() => import('./PrivacyView').then(m => ({ default: m.PrivacyView })));
+const AboutView = lazy(() => import('./AboutView').then(m => ({ default: m.AboutView })));
+const ReviewsView = lazy(() => import('./ReviewsView').then(m => ({ default: m.ReviewsView })));
+const SettingsView = lazy(() => import('./SettingsView').then(m => ({ default: m.SettingsView })));
+const ChangePasswordView = lazy(() => import('./ChangePasswordView').then(m => ({ default: m.ChangePasswordView })));
+const EditProfileView = lazy(() => import('./EditProfileView').then(m => ({ default: m.EditProfileView })));
+const MemberIdCardView = lazy(() => import('./MemberIdCardView').then(m => ({ default: m.MemberIdCardView })));
+const ReferralLeaderboard = lazy(() => import('./ReferralLeaderboard').then(m => ({ default: m.ReferralLeaderboard })));
+const LiveChatDrawer = lazy(() => import('./LiveChatDrawer').then(m => ({ default: m.LiveChatDrawer })));
+const NotificationDrawer = lazy(() => import('./NotificationDrawer').then(m => ({ default: m.NotificationDrawer })));
+const AuthModal = lazy(() => import('./AuthModal').then(m => ({ default: m.AuthModal })));
+const GuestLandingView = lazy(() => import('./GuestLandingView').then(m => ({ default: m.GuestLandingView })));
+const IOSInstallGuideModal = lazy(() => import('./IOSInstallGuideModal').then(m => ({ default: m.IOSInstallGuideModal })));
+
+const FAQModal = lazy(() => import('./Modals').then(m => ({ default: m.FAQModal })));
+const ContactModal = lazy(() => import('./Modals').then(m => ({ default: m.ContactModal })));
+const RateAppModal = lazy(() => import('./Modals').then(m => ({ default: m.RateAppModal })));
 
 const MainLayout: React.FC = () => {
   const {
@@ -102,32 +103,38 @@ const MainLayout: React.FC = () => {
             </header>
 
             <main className="flex-1 max-w-4xl w-full mx-auto p-4">
-              {activeTab === 'reviews' && <ReviewsView />}
-              {activeTab === 'sellers' && <SellersView />}
-              {activeTab === 'about' && <AboutView />}
-              {activeTab === 'privacy' && <PrivacyView />}
-              {activeTab === 'id_card' && <MemberIdCardView onBack={() => setActiveTab('home')} />}
+              <Suspense fallback={<ViewSkeleton />}>
+                {activeTab === 'reviews' && <ReviewsView />}
+                {activeTab === 'sellers' && <SellersView />}
+                {activeTab === 'about' && <AboutView />}
+                {activeTab === 'privacy' && <PrivacyView />}
+                {activeTab === 'id_card' && <MemberIdCardView onBack={() => setActiveTab('home')} />}
+              </Suspense>
             </main>
           </div>
         ) : (
-          <GuestLandingView />
+          <Suspense fallback={<ViewSkeleton type="full" />}>
+            <GuestLandingView />
+          </Suspense>
         )}
-        <AuthModal />
-        <LiveChatDrawer />
-        <FAQModal
-          isOpen={isFAQOpen || activeTab === 'faq'}
-          onClose={() => {
-            setIsFAQOpen(false);
-            if (activeTab === 'faq') setActiveTab('home');
-          }}
-        />
-        <ContactModal
-          isOpen={isContactOpen || activeTab === 'contact'}
-          onClose={() => {
-            setIsContactOpen(false);
-            if (activeTab === 'contact') setActiveTab('home');
-          }}
-        />
+        <Suspense fallback={null}>
+          <AuthModal />
+          <LiveChatDrawer />
+          <FAQModal
+            isOpen={isFAQOpen || activeTab === 'faq'}
+            onClose={() => {
+              setIsFAQOpen(false);
+              if (activeTab === 'faq') setActiveTab('home');
+            }}
+          />
+          <ContactModal
+            isOpen={isContactOpen || activeTab === 'contact'}
+            onClose={() => {
+              setIsContactOpen(false);
+              if (activeTab === 'contact') setActiveTab('home');
+            }}
+          />
+        </Suspense>
       </div>
     );
   }
@@ -144,34 +151,36 @@ const MainLayout: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 w-full pb-6">
-        {activeTab === 'home' && <HomeView />}
-        {activeTab === 'exchange' && <ExchangeView />}
-        {activeTab === 'history' && <HistoryView />}
-        {activeTab === 'sellers' && <SellersView />}
-        {activeTab === 'privacy' && <PrivacyView />}
-        {activeTab === 'about' && <AboutView />}
-        {activeTab === 'profile' && (
-          <ProfileView
-            onOpenEditProfile={() => setActiveTab('edit_profile')}
-            onOpenChangePass={() => setActiveTab('change_password')}
-            onOpenFAQ={() => setActiveTab('faq')}
-            onOpenContact={() => setActiveTab('contact')}
-          />
-        )}
-        {activeTab === 'withdraw' && <WithdrawView />}
-        {activeTab === 'reviews' && <ReviewsView />}
-        {activeTab === 'referral_leaderboard' && <ReferralLeaderboard />}
-        {activeTab === 'change_password' && <ChangePasswordView />}
-        {activeTab === 'edit_profile' && <EditProfileView />}
-        {activeTab === 'id_card' && <MemberIdCardView onBack={() => setActiveTab('profile')} />}
-        {activeTab === 'settings' && (
-          <SettingsView
-            onOpenEditProfile={() => setActiveTab('edit_profile')}
-            onOpenChangePass={() => setActiveTab('change_password')}
-            onOpenFAQ={() => setActiveTab('faq')}
-            onOpenContact={() => setActiveTab('contact')}
-          />
-        )}
+        <Suspense fallback={<ViewSkeleton />}>
+          {activeTab === 'home' && <HomeView />}
+          {activeTab === 'exchange' && <ExchangeView />}
+          {activeTab === 'history' && <HistoryView />}
+          {activeTab === 'sellers' && <SellersView />}
+          {activeTab === 'privacy' && <PrivacyView />}
+          {activeTab === 'about' && <AboutView />}
+          {activeTab === 'profile' && (
+            <ProfileView
+              onOpenEditProfile={() => setActiveTab('edit_profile')}
+              onOpenChangePass={() => setActiveTab('change_password')}
+              onOpenFAQ={() => setActiveTab('faq')}
+              onOpenContact={() => setActiveTab('contact')}
+            />
+          )}
+          {activeTab === 'withdraw' && <WithdrawView />}
+          {activeTab === 'reviews' && <ReviewsView />}
+          {activeTab === 'referral_leaderboard' && <ReferralLeaderboard />}
+          {activeTab === 'change_password' && <ChangePasswordView />}
+          {activeTab === 'edit_profile' && <EditProfileView />}
+          {activeTab === 'id_card' && <MemberIdCardView onBack={() => setActiveTab('profile')} />}
+          {activeTab === 'settings' && (
+            <SettingsView
+              onOpenEditProfile={() => setActiveTab('edit_profile')}
+              onOpenChangePass={() => setActiveTab('change_password')}
+              onOpenFAQ={() => setActiveTab('faq')}
+              onOpenContact={() => setActiveTab('contact')}
+            />
+          )}
+        </Suspense>
       </main>
 
       {/* Floating Action Buttons */}
@@ -195,27 +204,29 @@ const MainLayout: React.FC = () => {
         </button>
       </div>
 
-      {/* Global Modals and Drawers */}
-      <AuthModal />
-      <LiveChatDrawer />
-      <NotificationDrawer />
-      <IOSInstallGuideModal isOpen={showIOSGuide} onClose={closeIOSGuide} />
+      {/* Global Modals and Drawers - lazy loaded to prevent rendering overhead */}
+      <Suspense fallback={null}>
+        <AuthModal />
+        <LiveChatDrawer />
+        <NotificationDrawer />
+        <IOSInstallGuideModal isOpen={showIOSGuide} onClose={closeIOSGuide} />
 
-      <FAQModal
-        isOpen={isFAQOpen || activeTab === 'faq'}
-        onClose={() => {
-          setIsFAQOpen(false);
-          if (activeTab === 'faq') setActiveTab('home');
-        }}
-      />
-      <ContactModal
-        isOpen={isContactOpen || activeTab === 'contact'}
-        onClose={() => {
-          setIsContactOpen(false);
-          if (activeTab === 'contact') setActiveTab('home');
-        }}
-      />
-      <RateAppModal isOpen={isRateModalOpen} onClose={() => setRateModalOpen(false)} />
+        <FAQModal
+          isOpen={isFAQOpen || activeTab === 'faq'}
+          onClose={() => {
+            setIsFAQOpen(false);
+            if (activeTab === 'faq') setActiveTab('home');
+          }}
+        />
+        <ContactModal
+          isOpen={isContactOpen || activeTab === 'contact'}
+          onClose={() => {
+            setIsContactOpen(false);
+            if (activeTab === 'contact') setActiveTab('home');
+          }}
+        />
+        <RateAppModal isOpen={isRateModalOpen} onClose={() => setRateModalOpen(false)} />
+      </Suspense>
     </div>
   );
 };

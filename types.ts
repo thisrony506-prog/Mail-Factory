@@ -173,3 +173,38 @@ export interface Review {
   isVerified?: boolean;
 }
 
+export const isExcludedSeller = (username?: string, email?: string, uid?: string): boolean => {
+  if (uid && (uid.startsWith('seller_') || uid.startsWith('test_'))) return true;
+  const name = (username || '').toLowerCase().trim();
+  const mail = (email || '').toLowerCase().trim();
+
+  if (!name && !mail) return true;
+  if (name.startsWith('seller ')) return true;
+
+  // Filter out unwanted / test names requested by user
+  const excludedPatterns = [
+    'rony',
+    'gm rony',
+    'gmrony',
+    'gmrony135',
+    'fftt',
+    'ffty',
+    'fft',
+    'rifat',
+    'rifat xx',
+    'tanvir hossain',
+    'shakil ahmed',
+    'test',
+    'demo',
+    'admin',
+  ];
+
+  return excludedPatterns.some(
+    (pattern) =>
+      name === pattern ||
+      name.includes(pattern) ||
+      mail.startsWith(pattern) ||
+      mail.includes(pattern)
+  );
+};
+

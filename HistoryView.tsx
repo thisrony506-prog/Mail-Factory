@@ -3,8 +3,6 @@ import { useApp } from './AppContext';
 import { translations } from './i18n';
 import {
   ListCheck,
-  Banknote,
-  Flame,
   Search,
   CheckCircle,
   Clock,
@@ -12,15 +10,14 @@ import {
   Wallet,
   Calendar,
   Layers,
-  Sparkles,
 } from 'lucide-react';
 import { Submission, WithdrawRequest } from './types';
 
 export const HistoryView: React.FC = () => {
-  const { language, submissions, withdrawRequests, allUsers, setWithdrawModalOpen, setActiveTab } = useApp();
+  const { language, submissions, withdrawRequests, setWithdrawModalOpen, setActiveTab } = useApp();
   const t = translations[language];
 
-  const [activeSubTab, setActiveSubTab] = useState<'sub' | 'wd' | 'trend'>('sub');
+  const [activeSubTab, setActiveSubTab] = useState<'sub' | 'wd'>('sub');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
@@ -72,7 +69,7 @@ export const HistoryView: React.FC = () => {
   return (
     <div className="max-w-2xl mx-auto px-4 py-4 pb-24 space-y-4">
       {/* History Tabs Switcher */}
-      <div className="bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-3 gap-1">
+      <div className="bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-2 gap-1.5">
         <button
           onClick={() => setActiveSubTab('sub')}
           className={`py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
@@ -95,18 +92,6 @@ export const HistoryView: React.FC = () => {
         >
           <Wallet className="w-4 h-4" />
           <span>{t.withdraws}</span>
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab('trend')}
-          className={`py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-            activeSubTab === 'trend'
-              ? 'bg-gradient-to-r from-indigo-600 to-purple-700 text-white shadow-md'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          <Flame className="w-4 h-4 text-amber-300" />
-          <span>{t.trending}</span>
         </button>
       </div>
 
@@ -277,59 +262,6 @@ export const HistoryView: React.FC = () => {
               );
             })
           )}
-        </div>
-      )}
-
-      {/* TRENDING TAB */}
-      {activeSubTab === 'trend' && (
-        <div className="space-y-3 animate-fade-in">
-          <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-3.5 rounded-2xl shadow-sm flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-amber-200" />
-            <div>
-              <h4 className="text-xs font-black">
-                {t.liveTrendingTitle}
-              </h4>
-              <p className="text-[10px] text-amber-100">
-                {t.liveTrendingSub}
-              </p>
-            </div>
-          </div>
-
-          {allUsers.filter(u => u && !u.uid?.startsWith('seller_')).slice(0, 10).map((u, idx) => {
-            const displayName = u.username || (u.email ? u.email.split('@')[0] : `Seller ${idx + 1}`);
-            const earn = Number(u.totalEarnings) || (Number(u.balance || 0) + Number(u.total_withdrawn || 0)) || Number(u.balance || 0);
-            return (
-              <div
-                key={u.uid || idx}
-                className="bg-white rounded-2xl border border-slate-200 p-3.5 shadow-sm flex items-center justify-between"
-              >
-                <div className="flex items-center gap-2.5">
-                  {u.photoURL ? (
-                    <img src={u.photoURL} alt={displayName} className="w-8 h-8 rounded-full object-cover shadow-xs" />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 text-xs font-black flex items-center justify-center shadow-xs">
-                      {displayName.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <div>
-                    <span className="text-xs font-extrabold text-slate-800 block">
-                      {displayName}
-                    </span>
-                    <span className="text-[10px] text-emerald-600 font-bold">
-                      ● Verified Seller • {u.manual_approved_count || u.total_submitted || 0} Gmails
-                    </span>
-                  </div>
-                </div>
-
-                <div className="text-right">
-                  <span className="text-sm font-black text-indigo-700 block font-mono">
-                    ৳{earn.toLocaleString('en-US')}
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-medium">{t.totalEarned}</span>
-                </div>
-              </div>
-            );
-          })}
         </div>
       )}
     </div>

@@ -27,11 +27,11 @@ export const IOSInstallGuideModal: React.FC<IOSInstallGuideModalProps> = ({ isOp
         {/* Header with App Logo & Name */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 p-0.5 shadow-md shrink-0">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0">
               <img 
                 src={appLogo || '/app-logo.png'} 
                 alt="Mail Factory" 
-                className="w-full h-full rounded-[14px] object-cover bg-slate-900" 
+                className="w-full h-full object-contain drop-shadow-md" 
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = '/app-logo.png';
                 }}
