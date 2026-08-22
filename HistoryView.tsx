@@ -3,8 +3,6 @@ import { useApp } from './AppContext';
 import { translations } from './i18n';
 import {
   ListCheck,
-  Banknote,
-  Flame,
   Search,
   CheckCircle,
   Clock,
@@ -12,70 +10,16 @@ import {
   Wallet,
   Calendar,
   Layers,
-  Sparkles,
 } from 'lucide-react';
-import { Submission, WithdrawRequest, TopSellerItem, isExcludedSeller } from './types';
-import { DEFAULT_BENCHMARK_SELLERS } from './SellersView';
+import { Submission, WithdrawRequest } from './types';
 
 export const HistoryView: React.FC = () => {
-  const { language, submissions, withdrawRequests, allUsers, setWithdrawModalOpen, setActiveTab } = useApp();
+  const { language, submissions, withdrawRequests, setWithdrawModalOpen, setActiveTab } = useApp();
   const t = translations[language];
 
-  const [activeSubTab, setActiveSubTab] = useState<'sub' | 'wd' | 'trend'>('sub');
+  const [activeSubTab, setActiveSubTab] = useState<'sub' | 'wd'>('sub');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-
-  // Compute verified trending sellers (excluding unwanted/test accounts and accounts with 0 submissions)
-  const trendingSellers: TopSellerItem[] = React.useMemo(() => {
-    const validRealUsers: TopSellerItem[] = (allUsers || [])
-      .filter((u) => u && !isExcludedSeller(u.username, u.email, u.uid))
-      .filter((u) => {
-        const approvedCount = Number(u.manual_approved_count) || Number(u.total_submitted) || 0;
-        const totalEarn =
-          Number(u.totalEarnings) ||
-          Number(u.balance || 0) + Number(u.total_withdrawn || 0) ||
-          Number(u.balance || 0);
-        return approvedCount > 0 && totalEarn > 0;
-      })
-      .map((u, idx) => ({
-        uid: u.uid || `real_user_${idx}`,
-        username: u.username || (u.email ? u.email.split('@')[0] : 'Seller'),
-        email: u.email || '',
-        photoURL: u.photoURL || '',
-        totalEarnings:
-          Number(u.totalEarnings) ||
-          Number(u.balance || 0) + Number(u.total_withdrawn || 0) ||
-          Number(u.balance || 0),
-        balance: Number(u.balance) || 0,
-        manual_approved_count: Number(u.manual_approved_count) || Number(u.total_submitted) || 0,
-        total_submitted: Number(u.total_submitted) || 0,
-        badge: 'Gold Partner',
-        rank: 0,
-      }));
-
-    const listMap = new Map<string, TopSellerItem>();
-
-    // 1. Seed benchmark verified sellers
-    DEFAULT_BENCHMARK_SELLERS.forEach((item) => {
-      if (!isExcludedSeller(item.username, item.email, item.uid)) {
-        listMap.set(item.username.toLowerCase(), item);
-      }
-    });
-
-    // 2. Real users with actual approved/submitted Gmails
-    validRealUsers.forEach((item) => {
-      listMap.set(item.username.toLowerCase(), item);
-    });
-
-    const list = Array.from(listMap.values());
-    list.sort((a, b) => (Number(b.totalEarnings) || 0) - (Number(a.totalEarnings) || 0));
-
-    return list.slice(0, 10).map((seller, idx) => ({
-      ...seller,
-      rank: idx + 1,
-      badge: idx === 0 ? 'VIP Champion' : idx < 3 ? 'Diamond VIP' : idx < 6 ? 'Gold Partner' : 'Silver Member',
-    }));
-  }, [allUsers]);
 
   // Filter Submissions
   const filteredSubmissions = submissions.filter((sub) => {
@@ -125,7 +69,7 @@ export const HistoryView: React.FC = () => {
   return (
     <div className="max-w-2xl mx-auto px-4 py-4 pb-24 space-y-4">
       {/* History Tabs Switcher */}
-      <div className="bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-3 gap-1">
+      <div className="bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-2 gap-1.5">
         <button
           onClick={() => setActiveSubTab('sub')}
           className={`py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
@@ -148,18 +92,6 @@ export const HistoryView: React.FC = () => {
         >
           <Wallet className="w-4 h-4" />
           <span>{t.withdraws}</span>
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab('trend')}
-          className={`py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-            activeSubTab === 'trend'
-              ? 'bg-gradient-to-r from-indigo-600 to-purple-700 text-white shadow-md'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          <Flame className="w-4 h-4 text-amber-300" />
-          <span>{t.trending}</span>
         </button>
       </div>
 
@@ -330,65 +262,6 @@ export const HistoryView: React.FC = () => {
               );
             })
           )}
-        </div>
-      )}
-
-      {/* TRENDING TAB */}
-      {activeSubTab === 'trend' && (
-        <div className="space-y-3 animate-fade-in">
-          <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-3.5 rounded-2xl shadow-sm flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-amber-200" />
-            <div>
-              <h4 className="text-xs font-black">
-                {t.liveTrendingTitle}
-              </h4>
-              <p className="text-[10px] text-amber-100">
-                {t.liveTrendingSub}
-              </p>
-            </div>
-          </div>
-
-          {trendingSellers.map((seller, idx) => {
-            const displayName = seller.username;
-            const earn = Number(seller.totalEarnings) || 0;
-            const gmailsCount = Number(seller.manual_approved_count) || Number(seller.total_submitted) || 0;
-            return (
-              <div
-                key={seller.uid || idx}
-                className="bg-white rounded-2xl border border-slate-200 p-3.5 shadow-sm flex items-center justify-between transition-all hover:border-slate-300"
-              >
-                <div className="flex items-center gap-2.5">
-                  {seller.photoURL ? (
-                    <img src={seller.photoURL} alt={displayName} className="w-8 h-8 rounded-full object-cover shadow-xs" />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 text-xs font-black flex items-center justify-center shadow-xs">
-                      {displayName.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-extrabold text-slate-800 block">
-                        {displayName}
-                      </span>
-                      <span className="text-[9px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.2 rounded-full">
-                        #{idx + 1}
-                      </span>
-                    </div>
-                    <span className="text-[10px] text-emerald-600 font-bold">
-                      ● Verified Seller • {gmailsCount} Gmails
-                    </span>
-                  </div>
-                </div>
-
-                <div className="text-right">
-                  <span className="text-sm font-black text-indigo-700 block font-mono">
-                    ৳{earn.toLocaleString('en-US')}
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-medium">{t.totalEarned}</span>
-                </div>
-              </div>
-            );
-          })}
         </div>
       )}
     </div>

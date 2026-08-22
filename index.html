@@ -2,7 +2,8 @@
 <html lang="bn">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
     <title>Mail Factory - #1 Trusted Gmail Exchange Platform</title>
     <link rel="canonical" href="https://mailfactory.top/" />
     <meta name="description" content="Bangladesh's #1 Trusted Gmail Exchange Platform. Fast payments via bKash, Nagad, Rocket, multi-tier reward levels, and high referral commissions." />
@@ -26,7 +27,7 @@
     <meta name="twitter:description" content="Exchange verified Gmail accounts securely and receive instant bKash, Nagad, or Rocket payouts." />
     <meta name="twitter:image" content="https://mailfactory.top/app-logo.png" />
     
-    <!-- PWA & Mobile Web App Meta Tags -->
+    <!-- PWA & Mobile Web App Meta Tags for All Browsers -->
     <link rel="manifest" href="/manifest.json" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
@@ -38,15 +39,32 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Mail Factory" />
     <meta name="application-name" content="Mail Factory" />
-    <meta name="theme-color" content="#4F46E5" />
     <meta name="format-detection" content="telephone=no" />
 
-    <!-- Performance Resource Hints -->
+    <!-- Critical Performance Preconnects & Resource Hints -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
     <link rel="dns-prefetch" href="https://mail-factory-298a0-default-rtdb.asia-southeast1.firebasedatabase.app">
-    <link rel="preload" href="/app-logo.png" as="image" type="image/png">
+    <link rel="preload" href="/app-logo.png" as="image" type="image/png" fetchpriority="high">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Zero Layout Shift Root Styling -->
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+        background-color: #0b0f19;
+        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      }
+      #root {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+    </style>
 
     <!-- Schema.org Structured Data -->
     <script type="application/ld+json">
