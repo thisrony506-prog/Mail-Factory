@@ -24,6 +24,8 @@
     "noEmit": true
   },
   "exclude": [
-    "functions"
+    "functions",
+    "sw.js",
+    "vercel.json"
   ]
 }
