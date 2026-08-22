@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { DEFAULT_LOGO } from './AppContext';
-import { Mail, Sparkles } from 'lucide-react';
+import bundledLogo from './src/assets/app-logo.png';
 
 interface AppLogo3DProps {
   className?: string;
@@ -40,8 +40,24 @@ export const AppLogo3D: React.FC<AppLogo3DProps> = ({
     }
   }
 
-  const [imgError, setImgError] = useState<boolean>(false);
-  const logoUrl = src || DEFAULT_LOGO || '/app-logo.png';
+  const [currentSrcIndex, setCurrentSrcIndex] = useState<number>(0);
+  
+  // Try bundled logo first, then props/default, then static paths
+  const sources = [
+    src,
+    bundledLogo,
+    DEFAULT_LOGO,
+    '/app-logo.png',
+    '/new-logo.png',
+  ].filter(Boolean) as string[];
+
+  const currentSrc = sources[currentSrcIndex] || bundledLogo || '/app-logo.png';
+
+  const handleImgError = () => {
+    if (currentSrcIndex < sources.length - 1) {
+      setCurrentSrcIndex((prev) => prev + 1);
+    }
+  };
 
   return (
     <div
@@ -53,34 +69,22 @@ export const AppLogo3D: React.FC<AppLogo3DProps> = ({
       {/* Subtle Glow only if explicitly requested */}
       {glow && (
         <div
-          className="absolute -inset-1 rounded-full bg-indigo-500/20 opacity-70 blur-md pointer-events-none"
+          className="absolute -inset-1 rounded-full bg-indigo-500/30 opacity-70 blur-md pointer-events-none"
         />
       )}
 
-      {imgError ? (
-        <div 
-          className="w-full h-full rounded-xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 text-white flex items-center justify-center shadow-md border border-white/20 relative overflow-hidden"
-          style={{ width: dimension, height: dimension }}
-        >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(251,191,36,0.3),transparent_50%)]" />
-          <Mail className="w-1/2 h-1/2 text-white relative z-10 drop-shadow" />
-          <div className="absolute bottom-0.5 right-0.5 bg-amber-400 text-amber-950 rounded-full p-0.5 shadow">
-            <Sparkles className="w-2.5 h-2.5" />
-          </div>
-        </div>
-      ) : (
-        <img
-          src={logoUrl}
-          alt="Mail Factory Logo"
-          width={dimension}
-          height={dimension}
-          loading="eager"
-          decoding="async"
-          className="w-full h-full object-contain select-none relative z-10 transition-transform drop-shadow-[0_2px_6px_rgba(0,0,0,0.2)]"
-          onError={() => setImgError(true)}
-        />
-      )}
+      <img
+        src={currentSrc}
+        alt="Mail Factory Logo"
+        width={dimension}
+        height={dimension}
+        loading="eager"
+        decoding="async"
+        className="w-full h-full object-contain select-none relative z-10 transition-transform drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)]"
+        onError={handleImgError}
+      />
     </div>
   );
 };
+
 
