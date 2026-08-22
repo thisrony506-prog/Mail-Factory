@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from './AppContext';
 import { usePWAInstall } from './usePWAInstall';
+import { AppLogo3D } from './AppLogo3D';
 import { hapticFeedback } from './haptics';
 import { Download, X, Sparkles, CheckCircle2, Smartphone, ShieldCheck } from 'lucide-react';
 
@@ -13,7 +14,7 @@ export const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({
   variant = 'card',
   className = '',
 }) => {
-  const { language, appLogo } = useApp();
+  const { language } = useApp();
   const { isInstallable, isInstalled, isStandalone, promptInstall } = usePWAInstall();
   const [isDismissed, setIsDismissed] = useState<boolean>(() => {
     return localStorage.getItem('mf_pwa_dismissed') === '1';
@@ -40,16 +41,7 @@ export const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({
       <div className={`fixed bottom-20 left-4 right-4 z-40 max-w-md mx-auto animate-in slide-in-from-bottom-5 duration-300 ${className}`}>
         <div className="rounded-2xl bg-slate-900/95 border border-indigo-500/40 p-3.5 shadow-2xl backdrop-blur-md flex items-center justify-between gap-3 text-white">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0">
-              <img
-                src={appLogo || '/app-logo.png'}
-                alt="Mail Factory"
-                className="w-full h-full object-contain drop-shadow-md"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/app-logo.png';
-                }}
-              />
-            </div>
+            <AppLogo3D size={44} glow animated className="shrink-0" />
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-black text-white truncate">Mail Factory</span>
@@ -95,16 +87,9 @@ export const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({
       <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         {/* Left: App Logo & Details */}
         <div className="flex items-center gap-3.5">
-          <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
-            <img
-              src={appLogo || '/app-logo.png'}
-              alt="Mail Factory"
-              className="w-full h-full object-contain drop-shadow-md"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = '/app-logo.png';
-              }}
-            />
-            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-slate-900 flex items-center justify-center shadow-xs">
+          <div className="relative shrink-0">
+            <AppLogo3D size={56} glow animated />
+            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-slate-900 flex items-center justify-center shadow-xs z-20">
               <CheckCircle2 className="w-3 h-3 text-slate-950" />
             </div>
           </div>

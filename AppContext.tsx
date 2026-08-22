@@ -124,7 +124,7 @@ interface AppContextType {
   setSettingsDrawerOpen: (open: boolean) => void;
   isRateModalOpen: boolean;
   setRateModalOpen: (open: boolean) => void;
-  claimDailyStreak: () => Promise<{ success: boolean; streakCount: number }>;
+  claimDailyStreak: () => Promise<{ success: boolean; streakCount: number; bonusAmount?: number }>;
   appLogo: string;
   copyText: (text: string, label?: string) => Promise<boolean>;
 }
@@ -1024,8 +1024,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Claim Daily Streak
-  const claimDailyStreak = async (): Promise<{ success: boolean; streakCount: number }> => {
+  // Claim Daily Streak & Bonus
+  const claimDailyStreak = async (): Promise<{ success: boolean; streakCount: number; bonusAmount?: number }> => {
     if (!user || !profile) return { success: false, streakCount: 0 };
     const today = new Date().toDateString();
     const lastLogin = profile.last_login_date || '';
@@ -1035,19 +1035,61 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const newStreak = lastLogin === yesterday.toDateString() ? (profile.login_streak || 0) + 1 : 1;
-    const streakBonus = Math.min(newStreak * 0.5, 5); // 0.5৳ to 5৳ streak bonus
+
+    // Weighted random bonus between 0.50৳ and 4.00৳
+    // Mostly 1.00, 2.00, 1.50, 2.50, 0.50
+    const rand = Math.random() * 100;
+    let bonusAmount = 1.0;
+    if (rand < 25) {
+      bonusAmount = 1.0; // 25% chance -> ৳1.00
+    } else if (rand < 45) {
+      bonusAmount = 0.5; // 20% chance -> ৳0.50
+    } else if (rand < 65) {
+      bonusAmount = 1.5; // 20% chance -> ৳1.50
+    } else if (rand < 80) {
+      bonusAmount = 2.0; // 15% chance -> ৳2.00
+    } else if (rand < 92) {
+      bonusAmount = 2.5; // 12% chance -> ৳2.50
+    } else if (rand < 97) {
+      bonusAmount = 3.0; // 5% chance -> ৳3.00
+    } else if (rand < 99) {
+      bonusAmount = 3.5; // 2% chance -> ৳3.50
+    } else {
+      bonusAmount = 4.0; // 1% chance -> ৳4.00
+    }
 
     try {
       await update(ref(db, `users/${user.uid}`), {
         login_streak: newStreak,
         last_login_date: today,
+        balance: increment(bonusAmount),
+        totalEarnings: increment(bonusAmount),
       });
-    } catch {
-      // safe fallback
+
+      // Optimistic state update
+      setProfile((prev) =>
+        prev
+          ? {
+              ...prev,
+              login_streak: newStreak,
+              last_login_date: today,
+              balance: (Number(prev.balance) || 0) + bonusAmount,
+              totalEarnings: (Number(prev.totalEarnings) || 0) + bonusAmount,
+            }
+          : null
+      );
+    } catch (e) {
+      console.error('Failed to claim daily streak:', e);
     }
 
-    addNotification('Daily Streak Bonus 🔥', `Streak Day ${newStreak}! Streak recorded successfully.`, 'success');
-    return { success: true, streakCount: newStreak };
+    addNotification(
+      'Daily Check-in Bonus 🔥',
+      language === 'bn'
+        ? `অভিনন্দন! আপনি আজকের ডেইলি চেক-ইন বোনাস ৳${bonusAmount.toFixed(2)} পেয়েছেন! ব্যালেন্সে যোগ হয়েছে। (Streak Day ${newStreak})`
+        : `Congratulations! You received ৳${bonusAmount.toFixed(2)} daily check-in bonus! Added to balance. (Streak Day ${newStreak})`,
+      'success'
+    );
+    return { success: true, streakCount: newStreak, bonusAmount };
   };
 
   // Submit Gmail Exchange

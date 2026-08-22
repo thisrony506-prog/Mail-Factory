@@ -1,5 +1,6 @@
 import React from 'react';
 import { useApp } from './AppContext';
+import { AppLogo3D } from './AppLogo3D';
 import { Share, PlusSquare, X, Check, Smartphone, Sparkles } from 'lucide-react';
 import { hapticFeedback } from './haptics';
 
@@ -9,7 +10,7 @@ interface IOSInstallGuideModalProps {
 }
 
 export const IOSInstallGuideModal: React.FC<IOSInstallGuideModalProps> = ({ isOpen, onClose }) => {
-  const { language, appLogo } = useApp();
+  const { language } = useApp();
 
   if (!isOpen) return null;
 
@@ -27,16 +28,7 @@ export const IOSInstallGuideModal: React.FC<IOSInstallGuideModalProps> = ({ isOp
         {/* Header with App Logo & Name */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0">
-              <img 
-                src={appLogo || '/app-logo.png'} 
-                alt="Mail Factory" 
-                className="w-full h-full object-contain drop-shadow-md" 
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/app-logo.png';
-                }}
-              />
-            </div>
+            <AppLogo3D size={46} glow animated className="shrink-0" />
             <div>
               <div className="flex items-center gap-1.5">
                 <h3 className="text-sm font-black text-slate-800">

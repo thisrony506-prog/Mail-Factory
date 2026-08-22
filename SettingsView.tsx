@@ -5,6 +5,7 @@ import { auth, signOut } from './firebase';
 import { SEO } from './SEO';
 import { hapticFeedback } from './haptics';
 import { usePWAInstall } from './usePWAInstall';
+import { AppLogo3D } from './AppLogo3D';
 import {
   Settings,
   User,
@@ -537,16 +538,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               className="w-full flex items-center justify-between p-3 text-left bg-gradient-to-r from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 rounded-2xl transition-all cursor-pointer border border-indigo-200 shadow-xs mt-1"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-transparent flex items-center justify-center shrink-0">
-                  <img
-                    src={appLogo || '/app-logo.png'}
-                    alt="Mail Factory"
-                    className="w-full h-full object-contain drop-shadow-sm"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/app-logo.png';
-                    }}
-                  />
-                </div>
+                <AppLogo3D size={40} glow animated className="shrink-0" />
                 <div>
                   <div className="flex items-center gap-1.5">
                     <h3 className="text-xs font-black text-indigo-950">Mail Factory App</h3>

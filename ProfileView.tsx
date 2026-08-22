@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import confetti from 'canvas-confetti';
 import { useApp } from './AppContext';
 import { translations } from './i18n';
 import { auth, signOut } from './firebase';
@@ -116,10 +117,20 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const mainBalance = (Number(profile?.balance) || 0).toFixed(2);
   const holdBalance = (Number(profile?.hold) || 0).toFixed(2);
 
+  const [wonBonus, setWonBonus] = useState<number | null>(null);
+
   const handleClaimStreak = async () => {
     hapticFeedback.medium();
     setClaimingStreak(true);
-    await claimDailyStreak();
+    const res = await claimDailyStreak();
+    if (res.success && res.bonusAmount) {
+      setWonBonus(res.bonusAmount);
+      confetti({
+        particleCount: 70,
+        spread: 60,
+        origin: { y: 0.6 },
+      });
+    }
     setClaimingStreak(false);
   };
 
@@ -380,6 +391,19 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           })}
         </div>
 
+        {/* Bonus won alert */}
+        {wonBonus !== null && (
+          <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold flex items-center justify-between animate-in fade-in slide-in-from-top-1">
+            <span className="flex items-center gap-1.5 font-bold">
+              <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
+              {language === 'bn' ? 'আজকের অর্জিত ক্যাশ বোনাস:' : "Today's Cash Bonus Won:"}
+            </span>
+            <span className="font-mono font-black text-sm text-emerald-700 bg-white px-2.5 py-1 rounded-xl border border-emerald-200 shadow-xs">
+              +৳{wonBonus.toFixed(2)}
+            </span>
+          </div>
+        )}
+
         <button
           onClick={handleClaimStreak}
           disabled={claimingStreak || alreadyClaimed}
@@ -390,11 +414,15 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           }`}
         >
           {claimingStreak ? (
-            <span>ক্লেইম হচ্ছে...</span>
+            <span>{language === 'bn' ? 'বোনাস জমা হচ্ছে...' : 'Claiming Bonus...'}</span>
           ) : alreadyClaimed ? (
             <>
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              <span>{t.streakBonusClaimedToday}</span>
+              <span>
+                {wonBonus
+                  ? `${language === 'bn' ? 'বোনাস যুক্ত হয়েছে' : 'Bonus Added'} (+৳${wonBonus.toFixed(2)})`
+                  : t.streakBonusClaimedToday}
+              </span>
             </>
           ) : (
             <>
