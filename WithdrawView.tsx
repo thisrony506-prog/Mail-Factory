@@ -47,7 +47,7 @@ export const WithdrawView: React.FC = () => {
   const renderBrandIcon = (type: string) => {
     if (type === 'bkash') {
       return (
-        <div className="w-13 h-13 rounded-2xl bg-[#E2136E] flex items-center justify-center shadow-md relative overflow-hidden ring-2 ring-pink-500/30 shrink-0 p-1">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-[#E2136E] flex items-center justify-center shadow-md relative overflow-hidden ring-2 ring-pink-500/30 shrink-0 p-1">
           <img 
             src={BKASH_LOGO} 
             alt="bKash" 
@@ -58,7 +58,7 @@ export const WithdrawView: React.FC = () => {
             }}
           />
           <div className="absolute inset-0 bg-[#E2136E] flex items-center justify-center text-white z-0">
-            <svg viewBox="0 0 512 512" className="w-8 h-8 text-white fill-current">
+            <svg viewBox="0 0 512 512" className="w-6 h-6 sm:w-8 sm:h-8 text-white fill-current">
               <path d="M380 120L256 50L100 170L70 310L190 230L256 350L350 190L430 210L380 120Z" />
               <path d="M100 170L256 230L190 440L70 310L100 170Z" opacity="0.95" />
             </svg>
@@ -68,7 +68,7 @@ export const WithdrawView: React.FC = () => {
     }
     if (type === 'nagad') {
       return (
-        <div className="w-13 h-13 rounded-2xl bg-[#EC1C24] flex flex-col items-center justify-center shadow-md relative overflow-hidden ring-2 ring-red-500/30 shrink-0 p-1">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-[#EC1C24] flex flex-col items-center justify-center shadow-md relative overflow-hidden ring-2 ring-red-500/30 shrink-0 p-1">
           <img 
             src={NAGAD_LOGO} 
             alt="Nagad" 
@@ -79,28 +79,28 @@ export const WithdrawView: React.FC = () => {
             }}
           />
           <div className="absolute inset-0 bg-[#EC1C24] flex flex-col items-center justify-center text-white p-0.5 z-0">
-            <svg viewBox="0 0 100 100" className="w-6 h-6 text-white fill-current">
+            <svg viewBox="0 0 100 100" className="w-5 h-5 sm:w-6 sm:h-6 text-white fill-current">
               <path d="M50 15 C30 15 15 30 15 50 C15 70 30 85 50 85 C60 85 70 80 77 73 L67 63 C63 67 57 70 50 70 C38 70 30 62 30 50 C30 38 38 30 50 30 C57 30 63 33 67 37 L77 27 C70 20 60 15 50 15 Z" />
               <circle cx="50" cy="50" r="12" />
             </svg>
-            <span className="text-[10px] font-black text-white tracking-widest uppercase scale-y-90 font-sans mt-[-2px]">নগদ</span>
+            <span className="text-[8px] sm:text-[10px] font-black text-white tracking-widest uppercase scale-y-90 font-sans mt-[-2px]">নগদ</span>
           </div>
         </div>
       );
     }
     if (type === 'rocket') {
       return (
-        <div className="w-13 h-13 rounded-2xl bg-[#8C3494] flex flex-col items-center justify-center shadow-md relative overflow-hidden ring-2 ring-white/40 p-1 shrink-0 text-white font-black">
-          <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-[#8C3494] flex flex-col items-center justify-center shadow-md relative overflow-hidden ring-2 ring-white/40 p-1 shrink-0 text-white font-black">
+          <svg viewBox="0 0 24 24" className="w-5 h-5 sm:w-6 sm:h-6 fill-current">
             <path d="M12 2L2 7l10 5 10-5-10-5M2 17l10 5 10-5M2 12l10 5 10-5" />
           </svg>
-          <span className="text-[9px] font-bold uppercase tracking-tighter">Rocket</span>
+          <span className="text-[7px] sm:text-[9px] font-bold uppercase tracking-tighter">Rocket</span>
         </div>
       );
     }
     if (type === 'usdt') {
       return (
-        <div className="w-13 h-13 rounded-2xl bg-[#26A17B] flex items-center justify-center shadow-md relative overflow-hidden ring-2 ring-emerald-500/30 shrink-0 p-1">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-[#26A17B] flex items-center justify-center shadow-md relative overflow-hidden ring-2 ring-emerald-500/30 shrink-0 p-1">
           <img 
             src={USDT_LOGO} 
             alt="USDT BEP20" 
@@ -111,7 +111,7 @@ export const WithdrawView: React.FC = () => {
             }}
           />
           <div className="absolute inset-0 bg-[#26A17B] flex items-center justify-center text-white z-0">
-            <svg viewBox="0 0 100 100" className="w-7 h-7 text-white fill-current">
+            <svg viewBox="0 0 100 100" className="w-5 h-5 sm:w-7 sm:h-7 text-white fill-current">
               <rect x="25" y="24" width="50" height="12" rx="3"/>
               <rect x="44" y="36" width="12" height="38" rx="3"/>
               <ellipse cx="50" cy="55" rx="22" ry="7" fill="none" stroke="currentColor" strokeWidth="5"/>
@@ -121,7 +121,7 @@ export const WithdrawView: React.FC = () => {
       );
     }
     return (
-      <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-black text-xs shadow-md shrink-0">
+      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-black text-xs shadow-md shrink-0">
         Pay
       </div>
     );
@@ -274,15 +274,15 @@ export const WithdrawView: React.FC = () => {
           </p>
 
           {/* Balance display box */}
-          <div className="mt-5 p-3 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex justify-around items-center shadow-sm">
-            <div>
-              <span className="text-xs uppercase font-extrabold text-white/70 block tracking-wider">{t.mainBalance}</span>
-              <span className="text-xl font-black text-white font-mono mt-0.5 block">৳{availableBalance.toFixed(2)}</span>
+          <div className="mt-5 p-2 sm:p-3 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex justify-around items-center shadow-sm">
+            <div className="px-1 text-center">
+              <span className="text-[10px] sm:text-xs uppercase font-extrabold text-white/70 block tracking-widest">{t.mainBalance}</span>
+              <span className="text-base sm:text-xl font-black text-white font-mono mt-0.5 block">৳{availableBalance.toFixed(2)}</span>
             </div>
-            <div className="w-px h-8 bg-white/20" />
-            <div>
-              <span className="text-xs uppercase font-extrabold text-white/70 block tracking-wider">{t.holdBalance}</span>
-              <span className="text-xl font-black text-amber-300 font-mono mt-0.5 block">৳{(profile?.hold || 0).toFixed(2)}</span>
+            <div className="w-px h-8 bg-white/20 mx-1" />
+            <div className="px-1 text-center">
+              <span className="text-[10px] sm:text-xs uppercase font-extrabold text-white/70 block tracking-widest">{t.holdBalance}</span>
+              <span className="text-base sm:text-xl font-black text-amber-300 font-mono mt-0.5 block">৳{(profile?.hold || 0).toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -308,7 +308,7 @@ export const WithdrawView: React.FC = () => {
               <label className="block text-xs font-extrabold text-slate-600 uppercase tracking-widest ml-1">
                 {t.selectPaymentMethod}
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 {methodsArray.map(([key, method]) => {
                   const isSelected = selectedKey === key;
                   const type = getMethodType(key, method.name);
@@ -317,7 +317,7 @@ export const WithdrawView: React.FC = () => {
                       key={key}
                       type="button"
                       onClick={() => handleMethodSelect(key)}
-                      className={`p-3.5 rounded-2xl border-2 text-center transition-all flex items-center gap-3 relative overflow-hidden text-left ${
+                      className={`p-2.5 sm:p-3.5 rounded-2xl border-2 text-center transition-all flex items-center gap-2 sm:gap-3 relative overflow-hidden text-left ${
                         isSelected
                           ? 'border-indigo-600 bg-indigo-50/60 text-indigo-950 shadow-md ring-2 ring-indigo-600/20'
                           : 'border-slate-100 bg-white text-slate-600 hover:bg-slate-50 hover:border-slate-200'
@@ -325,8 +325,7 @@ export const WithdrawView: React.FC = () => {
                     >
                       {renderBrandIcon(type)}
                       <div className="space-y-0.5 min-w-0 flex-1">
-                        <span className="text-xs font-black truncate block text-slate-900">{method.name}</span>
-                        <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block">Instant Payout</span>
+                        <span className="text-[11px] sm:text-xs font-black line-clamp-2 leading-tight text-slate-900">{method.name}</span>
                       </div>
                     </button>
                   );
@@ -336,7 +335,7 @@ export const WithdrawView: React.FC = () => {
 
             {/* Account Number Input */}
             <div className="space-y-2 relative">
-              <label className="block text-xs font-extrabold text-slate-600 uppercase tracking-widest ml-1">
+              <label className="block text-xs font-extrabold text-slate-600 uppercase tracking-widest ml-1 line-clamp-2 leading-tight">
                 {isUSDT ? 'BEP20 Wallet Address' : type === 'bkash' ? 'bKash Account number' : type === 'nagad' ? 'nogod Account number' : `${t.accountNumber} (${currentMethod.name})`}
               </label>
               <div className="relative">
@@ -347,7 +346,7 @@ export const WithdrawView: React.FC = () => {
                   placeholder={
                     isUSDT ? '0xXXXXXXXXXXXXXXXXXXXXXXXX' : '01XXXXXXXXX (11 digits)'
                   }
-                  className="w-full rounded-xl border-2 border-slate-200 px-4 py-3.5 pr-12 text-sm font-bold text-slate-900 focus:outline-none focus:border-indigo-600 bg-slate-50 hover:bg-white transition-colors"
+                  className="w-full rounded-xl border-2 border-slate-200 px-4 py-3 sm:py-3.5 pr-12 text-sm font-bold text-slate-900 focus:outline-none focus:border-indigo-600 bg-slate-50 hover:bg-white transition-colors"
                 />
                 <button
                   type="button"
@@ -377,11 +376,11 @@ export const WithdrawView: React.FC = () => {
 
             {/* Amount Input & Presets */}
             <div className="space-y-2">
-              <div className="flex justify-between items-center ml-1 mb-1">
-                <label className="text-xs font-extrabold text-slate-600 uppercase tracking-widest">
+              <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-1.5 ml-1 mb-1">
+                <label className="text-xs font-extrabold text-slate-600 uppercase tracking-widest leading-tight">
                   {t.amount}
                 </label>
-                <span className="text-[11px] font-bold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] sm:text-[11px] font-bold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full inline-block">
                   {t.minWithdrawLabel} ৳{currentMinWithdraw} {isUSDT && '(~$2)'}
                 </span>
               </div>

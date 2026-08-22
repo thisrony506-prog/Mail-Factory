@@ -180,10 +180,10 @@ export const HistoryView: React.FC = () => {
                         key={gIdx}
                         className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100 text-xs font-medium"
                       >
-                        <span className="truncate max-w-[180px] sm:max-w-[240px] text-slate-800 font-mono text-[11px]">
+                        <span className="truncate flex-1 min-w-0 text-slate-800 font-mono text-[11px]">
                           {item.email}
                         </span>
-                        <div>{getStatusBadge(item.status || sub.status)}</div>
+                        <div className="shrink-0 ml-2">{getStatusBadge(item.status || sub.status)}</div>
                       </div>
                     ))}
                   </div>
@@ -232,32 +232,31 @@ export const HistoryView: React.FC = () => {
               return (
                 <div
                   key={wd.key || index}
-                  className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex items-center justify-between"
+                  className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex items-center justify-between gap-3"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-black">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-10 h-10 shrink-0 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-black">
                       ৳
                     </div>
-                    <div>
-                      <div className="text-sm font-black text-slate-800">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-black text-slate-800 truncate">
                         ৳{wd.amount}{' '}
                         <span className="text-xs font-normal text-slate-500">
                           via {wd.paymentMethod || wd.method}
                         </span>
                       </div>
-                      <span className="text-[11px] font-mono text-slate-400 block mt-0.5">
+                      <span className="text-[11px] font-mono text-slate-400 block mt-0.5 truncate">
                         Acc: {wd.paymentNumber} • {wdDate}
                       </span>
                       {wd.feeAmount ? (
-                        <div className="text-[10px] font-bold mt-1 text-slate-500 flex gap-2">
-                          <span className="text-rose-500">Fee: ৳{wd.feeAmount.toFixed(2)}</span>
-                          <span className="text-emerald-600">Net: ৳{(wd.netAmount || wd.amount).toFixed(2)}</span>
+                        <div className="text-[10px] font-bold mt-1 text-slate-500 flex gap-2 truncate">
+                          <span className="text-rose-500 shrink-0">Fee: ৳{wd.feeAmount.toFixed(2)}</span>
+                          <span className="text-emerald-600 truncate">Net: ৳{(wd.netAmount || wd.amount).toFixed(2)}</span>
                         </div>
                       ) : null}
                     </div>
                   </div>
-
-                  <div>{getStatusBadge(wd.status)}</div>
+                  <div className="shrink-0">{getStatusBadge(wd.status)}</div>
                 </div>
               );
             })

@@ -24,15 +24,22 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     console.error('[App Crash Caught by ErrorBoundary]:', error, errorInfo);
   }
 
-  handleReload = () => {
+  handleReload = async () => {
     try {
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+          await registration.unregister();
+        }
+      }
       if ('caches' in window) {
-        caches.keys().then((names) => {
-          names.forEach((name) => caches.delete(name));
-        });
+        const names = await caches.keys();
+        await Promise.all(names.map(name => caches.delete(name)));
       }
       localStorage.removeItem('mf_last_user_profile');
-    } catch {}
+    } catch (e) {
+      console.error('Error clearing cache:', e);
+    }
     window.location.reload();
   };
 

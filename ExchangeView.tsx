@@ -316,9 +316,9 @@ export const ExchangeView: React.FC = () => {
                     </button>
                   )}
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
                     {/* Email Input */}
-                    <div className="relative">
+                    <div className="relative min-w-0">
                       <input
                         type="email"
                         value={row.email}
@@ -332,7 +332,7 @@ export const ExchangeView: React.FC = () => {
                     </div>
 
                     {/* Password Input */}
-                    <div className="relative flex">
+                    <div className="relative flex min-w-0">
                       <input
                         type={row.showPass ? 'text' : 'password'}
                         value={row.password}

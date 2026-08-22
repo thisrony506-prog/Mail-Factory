@@ -6,6 +6,7 @@
   }
 
   html {
+    font-size: clamp(14px, 0.875rem + 0.25vw, 16px);
     -webkit-tap-highlight-color: transparent;
     scroll-behavior: smooth;
     text-rendering: optimizeLegibility;
@@ -13,6 +14,13 @@
     -moz-osx-font-smoothing: grayscale;
     -webkit-text-size-adjust: 100%;
     touch-action: manipulation;
+  }
+
+  p, span, h1, h2, h3, h4, h5, h6, a, li, label, div {
+    overflow-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+    -webkit-hyphens: auto;
   }
 
   body {
