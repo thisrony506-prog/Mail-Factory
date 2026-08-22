@@ -550,7 +550,7 @@ export const translations: Record<Language, TranslationSchema> = {
     "noAccount": "Don't have an account?",
     "haveAccount": "Already have an account?",
     "submitWithdraw": "Submit Withdrawal Request",
-    "minWithdrawLabel": "Minimum Withdrawal: ৳50",
+    "minWithdrawLabel": "Minimum Withdrawal:",
     "accountNumber": "Wallet / Account Number",
     "amount": "Withdrawal Amount (BDT)",
     "selectPaymentMethod": "Select Payment Method",

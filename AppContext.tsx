@@ -426,7 +426,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
   const [maintenanceMode, setMaintenanceMode] = useState<boolean>(false);
   const [isWithdrawDisabled, setIsWithdrawDisabled] = useState<boolean>(false);
-  const [minWithdraw, setMinWithdraw] = useState<number>(100);
+  const [minWithdraw, setMinWithdraw] = useState<number>(150);
   const [commissionPercent, setCommissionPercent] = useState<number>(10);
   const [signupBonusUser, setSignupBonusUser] = useState<number>(5);
   const [signupBonusReferrer, setSignupBonusReferrer] = useState<number>(5);
@@ -629,7 +629,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
             if (val.maintenance_mode !== undefined) setMaintenanceMode(Boolean(val.maintenance_mode));
             if (val.withdraw_disabled !== undefined) setIsWithdrawDisabled(Boolean(val.withdraw_disabled));
-            if (val.min_withdraw !== undefined) setMinWithdraw(Number(val.min_withdraw) || 100);
+            if (val.min_withdraw !== undefined) setMinWithdraw(Number(val.min_withdraw) || 150);
             if (val.commission_percent !== undefined) setCommissionPercent(Number(val.commission_percent) || 10);
             if (val.signup_bonus_user !== undefined) setSignupBonusUser(Number(val.signup_bonus_user) || 5);
             if (val.signup_bonus_referrer !== undefined) setSignupBonusReferrer(Number(val.signup_bonus_referrer) || 5);

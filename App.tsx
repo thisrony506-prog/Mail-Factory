@@ -1,4 +1,5 @@
 import React, { useState, Suspense, lazy } from 'react';
+import './logoPreload';
 import { AppProvider, useApp } from './AppContext';
 import { Navbar } from './Navbar';
 import { HomeView } from './HomeView';

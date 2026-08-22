@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { BKASH_LOGO, NAGAD_LOGO, USDT_LOGO } from './logoPreload';
 import { useApp } from './AppContext';
 import { translations } from './i18n';
 import confetti from 'canvas-confetti';
@@ -33,17 +34,137 @@ export const WithdrawView: React.FC = () => {
 
   const methodsArray = (Object.entries(paymentMethods) as [string, PaymentMethodConfig][]).filter(([_, m]) => m.active);
 
+  const getMethodType = (key: string, name: string) => {
+    const lowerKey = key.toLowerCase();
+    const lowerName = name.toLowerCase();
+    if (lowerKey.includes('bkash') || lowerName.includes('bkash')) return 'bkash';
+    if (lowerKey.includes('nagad') || lowerKey.includes('nogod') || lowerName.includes('nagad') || lowerName.includes('nogod') || lowerName.includes('নগদ')) return 'nagad';
+    if (lowerKey.includes('rocket') || lowerName.includes('rocket')) return 'rocket';
+    if (lowerKey.includes('usdt') || lowerKey.includes('binance') || lowerName.includes('usdt') || lowerName.includes('binance')) return 'usdt';
+    return 'default';
+  };
+
+  const renderBrandIcon = (type: string) => {
+    if (type === 'bkash') {
+      return (
+        <div className="w-13 h-13 rounded-2xl bg-[#E2136E] flex items-center justify-center shadow-md relative overflow-hidden ring-2 ring-pink-500/30 shrink-0 p-1">
+          <img 
+            src={BKASH_LOGO} 
+            alt="bKash" 
+            className="w-full h-full object-cover rounded-xl absolute inset-0 z-10" 
+            referrerPolicy="no-referrer"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+          <div className="absolute inset-0 bg-[#E2136E] flex items-center justify-center text-white z-0">
+            <svg viewBox="0 0 512 512" className="w-8 h-8 text-white fill-current">
+              <path d="M380 120L256 50L100 170L70 310L190 230L256 350L350 190L430 210L380 120Z" />
+              <path d="M100 170L256 230L190 440L70 310L100 170Z" opacity="0.95" />
+            </svg>
+          </div>
+        </div>
+      );
+    }
+    if (type === 'nagad') {
+      return (
+        <div className="w-13 h-13 rounded-2xl bg-[#EC1C24] flex flex-col items-center justify-center shadow-md relative overflow-hidden ring-2 ring-red-500/30 shrink-0 p-1">
+          <img 
+            src={NAGAD_LOGO} 
+            alt="Nagad" 
+            className="w-full h-full object-cover rounded-xl absolute inset-0 z-10" 
+            referrerPolicy="no-referrer"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+          <div className="absolute inset-0 bg-[#EC1C24] flex flex-col items-center justify-center text-white p-0.5 z-0">
+            <svg viewBox="0 0 100 100" className="w-6 h-6 text-white fill-current">
+              <path d="M50 15 C30 15 15 30 15 50 C15 70 30 85 50 85 C60 85 70 80 77 73 L67 63 C63 67 57 70 50 70 C38 70 30 62 30 50 C30 38 38 30 50 30 C57 30 63 33 67 37 L77 27 C70 20 60 15 50 15 Z" />
+              <circle cx="50" cy="50" r="12" />
+            </svg>
+            <span className="text-[10px] font-black text-white tracking-widest uppercase scale-y-90 font-sans mt-[-2px]">নগদ</span>
+          </div>
+        </div>
+      );
+    }
+    if (type === 'rocket') {
+      return (
+        <div className="w-13 h-13 rounded-2xl bg-[#8C3494] flex flex-col items-center justify-center shadow-md relative overflow-hidden ring-2 ring-white/40 p-1 shrink-0 text-white font-black">
+          <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current">
+            <path d="M12 2L2 7l10 5 10-5-10-5M2 17l10 5 10-5M2 12l10 5 10-5" />
+          </svg>
+          <span className="text-[9px] font-bold uppercase tracking-tighter">Rocket</span>
+        </div>
+      );
+    }
+    if (type === 'usdt') {
+      return (
+        <div className="w-13 h-13 rounded-2xl bg-[#26A17B] flex items-center justify-center shadow-md relative overflow-hidden ring-2 ring-emerald-500/30 shrink-0 p-1">
+          <img 
+            src={USDT_LOGO} 
+            alt="USDT BEP20" 
+            className="w-full h-full object-cover rounded-xl absolute inset-0 z-10" 
+            referrerPolicy="no-referrer"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+          <div className="absolute inset-0 bg-[#26A17B] flex items-center justify-center text-white z-0">
+            <svg viewBox="0 0 100 100" className="w-7 h-7 text-white fill-current">
+              <rect x="25" y="24" width="50" height="12" rx="3"/>
+              <rect x="44" y="36" width="12" height="38" rx="3"/>
+              <ellipse cx="50" cy="55" rx="22" ry="7" fill="none" stroke="currentColor" strokeWidth="5"/>
+            </svg>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-black text-xs shadow-md shrink-0">
+        Pay
+      </div>
+    );
+  };
+
   const [selectedKey, setSelectedKey] = useState<string>(() => {
     return methodsArray[0]?.[0] || 'bkash';
   });
 
-  const [accountNumber, setAccountNumber] = useState<string>(profile?.paymentNumber || '');
+  const getSavedAccount = (key: string) => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`saved_account_${profile?.id || 'guest'}_${key}`);
+      if (saved) return saved;
+    }
+    return profile?.paymentNumber || '';
+  };
+
+  const [accountNumber, setAccountNumber] = useState<string>(() => getSavedAccount(methodsArray[0]?.[0] || 'bkash'));
   const [amount, setAmount] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
+  const [showConfirm, setShowConfirm] = useState<boolean>(false);
+
+  const handleMethodSelect = (key: string) => {
+    setSelectedKey(key);
+    setAccountNumber(getSavedAccount(key));
+    if (errorMessage) setErrorMessage(null);
+  };
+
+  const handleAccountChange = (val: string) => {
+    setAccountNumber(val);
+    if (errorMessage) setErrorMessage(null);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`saved_account_${profile?.id || 'guest'}_${selectedKey}`, val);
+    }
+  };
 
   const currentMethod = paymentMethods[selectedKey] || methodsArray[0]?.[1];
+
+  const type = getMethodType(selectedKey, currentMethod.name);
+  const isUSDT = type === 'usdt';
+  const currentMinWithdraw = isUSDT ? 240 : minWithdraw; // Assuming $2 = 240 BDT
 
   const feePercent = currentMethod.feePercent || 0;
   const parsedAmount = Number(amount) || 0;
@@ -64,7 +185,7 @@ export const WithdrawView: React.FC = () => {
     setErrorMessage(null);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handlePreSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     hapticFeedback.medium();
 
@@ -74,7 +195,7 @@ export const WithdrawView: React.FC = () => {
     }
 
     if (!accountNumber.trim()) {
-      setErrorMessage(t.accountNumber);
+      setErrorMessage(isUSDT ? 'Enter BEP20 Wallet Address' : type === 'bkash' ? 'Enter bKash Account number' : type === 'nagad' ? 'Enter nogod Account number' : t.accountNumber);
       return;
     }
     const numAmount = Number(amount);
@@ -82,8 +203,8 @@ export const WithdrawView: React.FC = () => {
       setErrorMessage(t.enterValidAmount);
       return;
     }
-    if (numAmount < minWithdraw) {
-      setErrorMessage(t.minWithdrawLabel + ` ৳${minWithdraw}`);
+    if (numAmount < currentMinWithdraw) {
+      setErrorMessage(t.minWithdrawLabel + ` ৳${currentMinWithdraw}${isUSDT ? ' (~$2)' : ''}`);
       return;
     }
     if (numAmount > availableBalance) {
@@ -91,6 +212,14 @@ export const WithdrawView: React.FC = () => {
       return;
     }
 
+    setShowConfirm(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+    setShowConfirm(false);
+    hapticFeedback.medium();
+    
+    const numAmount = Number(amount);
     setIsSubmitting(true);
     setErrorMessage(null);
 
@@ -173,7 +302,7 @@ export const WithdrawView: React.FC = () => {
           </div>
         ) : (
           /* Form */
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <form onSubmit={handlePreSubmit} className="p-6 space-y-6">
             {/* Payment Method Selector */}
             <div className="space-y-2">
               <label className="block text-xs font-extrabold text-slate-600 uppercase tracking-widest ml-1">
@@ -182,22 +311,23 @@ export const WithdrawView: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 {methodsArray.map(([key, method]) => {
                   const isSelected = selectedKey === key;
+                  const type = getMethodType(key, method.name);
                   return (
                     <button
                       key={key}
                       type="button"
-                      onClick={() => {
-                        setSelectedKey(key);
-                        if (errorMessage) setErrorMessage(null);
-                      }}
-                      className={`p-3 rounded-2xl border-2 text-center transition-all flex flex-col items-center justify-center gap-2 ${
+                      onClick={() => handleMethodSelect(key)}
+                      className={`p-3.5 rounded-2xl border-2 text-center transition-all flex items-center gap-3 relative overflow-hidden text-left ${
                         isSelected
-                          ? 'border-indigo-600 bg-indigo-50/50 text-indigo-900 shadow-sm'
+                          ? 'border-indigo-600 bg-indigo-50/60 text-indigo-950 shadow-md ring-2 ring-indigo-600/20'
                           : 'border-slate-100 bg-white text-slate-600 hover:bg-slate-50 hover:border-slate-200'
                       }`}
                     >
-                      <CreditCard className="w-6 h-6" style={{ color: method.color || '#4F46E5' }} />
-                      <span className="text-xs font-bold truncate w-full">{method.name}</span>
+                      {renderBrandIcon(type)}
+                      <div className="space-y-0.5 min-w-0 flex-1">
+                        <span className="text-xs font-black truncate block text-slate-900">{method.name}</span>
+                        <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block">Instant Payout</span>
+                      </div>
                     </button>
                   );
                 })}
@@ -207,18 +337,15 @@ export const WithdrawView: React.FC = () => {
             {/* Account Number Input */}
             <div className="space-y-2 relative">
               <label className="block text-xs font-extrabold text-slate-600 uppercase tracking-widest ml-1">
-                {t.accountNumber} ({currentMethod.name})
+                {isUSDT ? 'BEP20 Wallet Address' : type === 'bkash' ? 'bKash Account number' : type === 'nagad' ? 'nogod Account number' : `${t.accountNumber} (${currentMethod.name})`}
               </label>
               <div className="relative">
                 <input
                   type="text"
                   value={accountNumber}
-                  onChange={(e) => {
-                    setAccountNumber(e.target.value);
-                    if (errorMessage) setErrorMessage(null);
-                  }}
+                  onChange={(e) => handleAccountChange(e.target.value)}
                   placeholder={
-                    selectedKey === 'binance' ? 'Binance Pay ID / USDT TRC20' : '01XXXXXXXXX (11 digits)'
+                    isUSDT ? '0xXXXXXXXXXXXXXXXXXXXXXXXX' : '01XXXXXXXXX (11 digits)'
                   }
                   className="w-full rounded-xl border-2 border-slate-200 px-4 py-3.5 pr-12 text-sm font-bold text-slate-900 focus:outline-none focus:border-indigo-600 bg-slate-50 hover:bg-white transition-colors"
                 />
@@ -229,8 +356,7 @@ export const WithdrawView: React.FC = () => {
                       hapticFeedback.light();
                       const text = await navigator.clipboard.readText();
                       if (text) {
-                        setAccountNumber(text);
-                        if (errorMessage) setErrorMessage(null);
+                        handleAccountChange(text);
                       }
                     } catch (err) {
                       console.error('Failed to read clipboard', err);
@@ -242,6 +368,11 @@ export const WithdrawView: React.FC = () => {
                   <Clipboard className="w-5 h-5" />
                 </button>
               </div>
+              {isUSDT && (
+                <div className="mt-1 text-[10px] font-bold text-slate-500 uppercase ml-1">
+                  Network: <span className="text-emerald-600">BNB Smart Chain (BEP20)</span>
+                </div>
+              )}
             </div>
 
             {/* Amount Input & Presets */}
@@ -251,7 +382,7 @@ export const WithdrawView: React.FC = () => {
                   {t.amount}
                 </label>
                 <span className="text-[11px] font-bold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full">
-                  {t.minWithdrawLabel} ৳{minWithdraw}
+                  {t.minWithdrawLabel} ৳{currentMinWithdraw} {isUSDT && '(~$2)'}
                 </span>
               </div>
               <input
@@ -261,15 +392,15 @@ export const WithdrawView: React.FC = () => {
                   setAmount(e.target.value);
                   if (errorMessage) setErrorMessage(null);
                 }}
-                min={minWithdraw}
+                min={currentMinWithdraw}
                 max={availableBalance}
-                placeholder={`Min ৳${minWithdraw}`}
+                placeholder={`Min ৳${currentMinWithdraw}${isUSDT ? ' (~$2)' : ''}`}
                 className="w-full rounded-xl border-2 border-slate-200 px-4 py-3.5 text-base font-bold text-slate-900 focus:outline-none focus:border-indigo-600 bg-slate-50 hover:bg-white transition-colors"
               />
               
               {/* Quick amount presets */}
               <div className="flex gap-2 pt-2">
-                {[100, 200, 500, 1000].map((val) => (
+                {[150, 300, 500, 1000].map((val) => (
                   <button
                     key={val}
                     type="button"
@@ -290,7 +421,7 @@ export const WithdrawView: React.FC = () => {
             </div>
 
             {/* Fee Breakdown */}
-            {parsedAmount >= minWithdraw && (
+            {parsedAmount >= currentMinWithdraw && (
               <div className="p-4 rounded-xl bg-indigo-50/80 border border-indigo-100 space-y-2">
                 <div className="flex justify-between text-xs font-medium text-slate-600">
                   <span>{t.amount}</span>
@@ -305,7 +436,7 @@ export const WithdrawView: React.FC = () => {
                   <span className="font-extrabold text-slate-900">{t.netPayable}</span>
                   <div className="text-right">
                     <span className="font-black text-indigo-600 font-mono block">৳{netAmount.toFixed(2)}</span>
-                    {selectedKey === 'binance' && (
+                    {isUSDT && (
                       <span className="text-[11px] font-bold text-amber-600 block mt-0.5">
                         ~ ${(netAmount / 120).toFixed(2)} USDT
                       </span>
@@ -365,6 +496,63 @@ export const WithdrawView: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="p-6 text-center space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto shadow-inner">
+                <AlertCircle className="w-8 h-8" />
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-slate-900">Confirm Withdrawal</h3>
+                <p className="text-sm font-medium text-slate-500 mt-1">Please check your details carefully.</p>
+              </div>
+
+              <div className="bg-slate-50 rounded-xl p-4 space-y-3 text-left">
+                <div>
+                  <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Method</span>
+                  <span className="block text-sm font-black text-slate-700">{currentMethod.name}</span>
+                </div>
+                <div>
+                  <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Account</span>
+                  <span className="block text-sm font-black text-slate-700">{accountNumber}</span>
+                </div>
+                <div>
+                  <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Amount</span>
+                  <span className="block text-lg font-black text-indigo-600 font-mono">৳{netAmount.toFixed(2)}</span>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm(false)}
+                  className="flex-1 py-3.5 rounded-xl font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmSubmit}
+                  disabled={isSubmitting}
+                  className="flex-1 py-3.5 rounded-xl font-bold text-sm bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-200 transition-all flex justify-center items-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <span className="opacity-80">Processing...</span>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4" />
+                      <span>Confirm</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
