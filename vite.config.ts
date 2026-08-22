@@ -106,8 +106,9 @@ export default defineConfig(() => {
         output: {
           manualChunks: {
             vendor: ['react', 'react-dom'],
-            firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
-            ui: ['lucide-react', 'framer-motion']
+            firebase: ['firebase/app', 'firebase/auth', 'firebase/database'],
+            icons: ['lucide-react'],
+            animation: ['motion']
           }
         }
       }

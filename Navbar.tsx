@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { useApp } from './AppContext';
 import { translations, LANGUAGES } from './i18n';
 import { auth, signOut } from './firebase';
@@ -275,16 +274,11 @@ export const Navbar: React.FC<NavbarProps> = ({
       </header>
 
       {/* Comprehensive 3-Line Slide-out Menu Drawer */}
-      <AnimatePresence>
+      
         {isSettingsDrawerOpen && (
           <div className="fixed inset-0 z-50 flex justify-start">
             {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs"
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs animate-fade-in"
               onClick={() => {
                 hapticFeedback.light();
                 setSettingsDrawerOpen(false);
@@ -292,12 +286,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             />
 
             {/* Side Drawer Panel */}
-            <motion.div
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-              className="relative z-10 w-full max-w-xs sm:max-w-sm bg-white h-full shadow-2xl flex flex-col justify-between border-r border-slate-200 overflow-hidden text-slate-800"
+            <div className="relative z-10 w-full max-w-xs sm:max-w-sm bg-white h-full shadow-2xl flex flex-col justify-between border-r border-slate-200 overflow-hidden text-slate-800 animate-slide-in-right"
             >
               {/* Drawer Header */}
               <div className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-800 text-white p-4 flex items-center justify-between shadow-md shrink-0">
@@ -775,10 +764,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="p-3 bg-slate-100 border-t border-slate-200 text-center text-[10px] font-bold text-slate-500 shrink-0">
                 <span>Mail Factory • v2.4.0 • All Rights Reserved</span>
               </div>
-            </motion.div>
+            </div>
           </div>
         )}
-      </AnimatePresence>
+      
     </>
   );
 };

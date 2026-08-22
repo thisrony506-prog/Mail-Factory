@@ -398,7 +398,7 @@ export const HomeView: React.FC = () => {
                         {medals[idx]}
                       </span>
                       {photo ? (
-                        <img src={photo} alt={name} className="w-8 h-8 rounded-full object-cover my-0.5 shadow-sm border border-white/60" />
+                        <img src={photo} alt={name} width={32} height={32} loading="lazy" className="w-8 h-8 rounded-full object-cover my-0.5 shadow-sm border border-white/60" />
                       ) : (
                         <div className="w-8 h-8 rounded-full bg-indigo-600 text-white font-black text-xs flex items-center justify-center my-0.5 shadow-sm">
                           {name.charAt(0).toUpperCase()}

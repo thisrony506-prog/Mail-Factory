@@ -80,6 +80,9 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ message }) => {
           
           <div className="relative w-24 h-24 flex items-center justify-center">
             <img
+              width={96}
+              height={96}
+              fetchPriority="high"
               src={!imgError ? (appLogo || '/app-logo.png') : '/app-logo.png'}
               alt="Mail Factory Logo"
               onError={() => setImgError(true)}

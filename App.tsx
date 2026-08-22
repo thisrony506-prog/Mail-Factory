@@ -2,8 +2,6 @@ import React, { useState, Suspense, lazy } from 'react';
 import './logoPreload';
 import { AppProvider, useApp } from './AppContext';
 import { Navbar } from './Navbar';
-import { HomeView } from './HomeView';
-import { GuestLandingView } from './GuestLandingView';
 import { ViewSkeleton } from './ViewSkeleton';
 import { usePWAInstall } from './usePWAInstall';
 import { LoadingScreen } from './LoadingScreen';
@@ -26,6 +24,8 @@ function lazyWithRetry<T extends React.ComponentType<any>>(
 }
 
 // Code-split / Lazy load non-critical views and heavy modules for instant page load
+const HomeView = lazyWithRetry(() => import('./HomeView').then(m => ({ default: m.HomeView })));
+const GuestLandingView = lazyWithRetry(() => import('./GuestLandingView').then(m => ({ default: m.GuestLandingView })));
 const ExchangeView = lazyWithRetry(() => import('./ExchangeView').then(m => ({ default: m.ExchangeView })));
 const HistoryView = lazyWithRetry(() => import('./HistoryView').then(m => ({ default: m.HistoryView })));
 const SellersView = lazyWithRetry(() => import('./SellersView').then(m => ({ default: m.SellersView })));
@@ -150,7 +150,7 @@ const MainLayout: React.FC = () => {
             </main>
           </div>
         ) : (
-          <GuestLandingView />
+          <Suspense fallback={<ViewSkeleton />}><GuestLandingView /></Suspense>
         )}
         <Suspense fallback={null}>
           <AuthModal />
