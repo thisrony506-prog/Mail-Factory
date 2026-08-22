@@ -50,7 +50,7 @@
     <link rel="preload" href="/app-logo.png" as="image" type="image/png" fetchpriority="high">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Zero Layout Shift Root Styling & Initial Preloader CSS -->
+    <!-- Zero Layout Shift Root Styling -->
     <style>
       html, body {
         margin: 0;
@@ -63,39 +63,6 @@
         min-height: 100vh;
         display: flex;
         flex-direction: column;
-      }
-      .initial-splash {
-        position: fixed;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background-color: #0b0f19;
-        color: #ffffff;
-        z-index: 9999;
-      }
-      .initial-splash-logo {
-        width: 72px;
-        height: 72px;
-        border-radius: 18px;
-        margin-bottom: 16px;
-        animation: initialPulse 1.8s ease-in-out infinite;
-      }
-      .initial-spinner {
-        width: 32px;
-        height: 32px;
-        border: 3px solid rgba(255, 255, 255, 0.1);
-        border-top-color: #6366f1;
-        border-radius: 50%;
-        animation: initialSpin 0.8s linear infinite;
-      }
-      @keyframes initialPulse {
-        0%, 100% { transform: scale(1); opacity: 0.9; }
-        50% { transform: scale(1.06); opacity: 1; }
-      }
-      @keyframes initialSpin {
-        to { transform: rotate(360deg); }
       }
     </style>
 
@@ -130,12 +97,7 @@
     </script>
   </head>
   <body class="bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
-    <div id="root">
-      <div class="initial-splash">
-        <img class="initial-splash-logo" src="/app-logo.png" alt="Mail Factory" onerror="this.style.display='none'" />
-        <div class="initial-spinner"></div>
-      </div>
-    </div>
+    <div id="root"></div>
     <script type="module" src="/main.tsx"></script>
   </body>
 </html>

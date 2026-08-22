@@ -97,8 +97,8 @@ const MainLayout: React.FC = () => {
     }
   }, []);
 
-  // Show custom branded loading screen while auth state is resolving
-  if (loading) {
+  // Show custom branded loading screen only if user is logged in and actively loading data
+  if (loading && user) {
     return <LoadingScreen />;
   }
 

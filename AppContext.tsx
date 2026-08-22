@@ -227,7 +227,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return null;
     }
   });
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [language, setLanguage] = useState<Language>(() => {
     const saved = localStorage.getItem('mf_lang');
     if (saved === 'bn' || saved === 'en') return saved;
