@@ -99,20 +99,7 @@
     </script>
   </head>
   <body class="bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
-    <div id="root">
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background-color:#0b0f19;">
-        <div style="position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:20px;animation:mf-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;">
-          <img src="/app-logo.png" alt="Mail Factory Logo" width="80" height="80" style="width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 8px 24px rgba(79,70,229,0.45));" />
-        </div>
-        <div style="color:rgba(255,255,255,0.85); font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.5px; animation: mf-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;">Loading Mail Factory...</div>
-      </div>
-      <style>
-        @keyframes mf-pulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.8; transform: scale(0.96); }
-        }
-      </style>
-    </div>
+    <div id="root"></div>
     <script>
       window.addEventListener('error', function(e) {
         document.body.innerHTML += '<div style="position:fixed;top:0;left:0;z-index:9999;background:red;color:white;padding:10px;font-size:12px;max-width:100%;word-wrap:break-word;">Global Error: ' + e.message + ' at ' + e.filename + ':' + e.lineno + '</div>';
