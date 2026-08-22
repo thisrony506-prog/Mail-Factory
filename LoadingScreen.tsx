@@ -83,7 +83,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ message }) => {
               width={96}
               height={96}
               fetchPriority="high"
-              src={!imgError ? (appLogo || '/app-logo.webp') : '/app-logo.webp'}
+              src={!imgError ? (appLogo || '/app-logo.png') : '/app-logo.png'}
               alt="Mail Factory Logo"
               onError={() => setImgError(true)}
               className="w-full h-full object-contain drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)]"

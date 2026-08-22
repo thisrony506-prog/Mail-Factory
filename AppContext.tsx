@@ -34,7 +34,7 @@ import {
   isExcludedSeller,
 } from './types';
 
-export const DEFAULT_LOGO = "/app-logo.webp";
+export const DEFAULT_LOGO = "/app-logo.png";
 
 export const DEFAULT_LEVELS: LevelConfig[] = [
   { level: 1, approved: 0, rate: 10, old_rate: 8, title: 'Bronze Member', perkDescription: 'Standard exchange rate' },
