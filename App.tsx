@@ -61,6 +61,26 @@ const MainLayout: React.FC = () => {
     return () => window.removeEventListener('hashchange', handleHashCheck);
   }, [setActiveTab]);
 
+  // Preload key routes in idle background time for instantaneous tab switching without lag
+  React.useEffect(() => {
+    const preloadViews = () => {
+      import('./ExchangeView');
+      import('./HistoryView');
+      import('./SellersView');
+      import('./ProfileView');
+      import('./WithdrawView');
+      import('./ReferralLeaderboard');
+    };
+
+    if ('requestIdleCallback' in window) {
+      (window as Window & { requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => number })
+        .requestIdleCallback(preloadViews, { timeout: 3000 });
+    } else {
+      const timer = setTimeout(preloadViews, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   // Show custom branded loading screen while auth state is resolving
   if (loading) {
     return <LoadingScreen />;
