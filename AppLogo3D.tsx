@@ -57,42 +57,39 @@ export const AppLogo3D: React.FC<AppLogo3DProps> = ({
 
   return (
     <div
-      className={`relative inline-flex items-center justify-center select-none shrink-0 ${
+      className={`relative inline-flex items-center justify-center select-none shrink-0 bg-transparent ${
         animated ? 'transition-transform duration-300 hover:scale-105 active:scale-95' : ''
       } ${className}`}
       style={{ width: dimension, height: dimension }}
     >
-      {/* Subtle Glow */}
+      {/* Subtle Glow if explicitly requested */}
       {glow && (
-        <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-indigo-500/40 via-purple-500/40 to-amber-500/30 opacity-80 blur-md pointer-events-none animate-pulse" />
+        <div className="absolute -inset-1 rounded-full bg-indigo-500/20 opacity-70 blur-md pointer-events-none" />
       )}
 
-      {/* 3D App Icon Container */}
-      <div 
-        className="w-full h-full rounded-2xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-900 text-white flex items-center justify-center shadow-[0_4px_16px_rgba(79,70,229,0.4),inset_0_1px_1px_rgba(255,255,255,0.35),inset_0_-2px_4px_rgba(0,0,0,0.4)] border border-indigo-400/30 relative overflow-hidden"
-        style={{ width: dimension, height: dimension }}
-      >
-        {!hasError ? (
-          <img
-            src={currentSrc}
-            alt="Mail Factory Logo"
-            width={dimension}
-            height={dimension}
-            loading="eager"
-            decoding="async"
-            className="w-full h-full object-cover select-none relative z-10"
-            onError={handleError}
-          />
-        ) : (
-          <>
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.4),transparent_60%)] pointer-events-none" />
-            <Mail className="w-[52%] h-[52%] text-white relative z-10 drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" strokeWidth={2.2} />
-            <div className="absolute -bottom-0.5 -right-0.5 bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 rounded-full p-1 shadow-[0_2px_6px_rgba(0,0,0,0.3)] border border-white/40 flex items-center justify-center z-20">
-              <Sparkles className="w-3 h-3 text-amber-950 fill-amber-300" />
-            </div>
-          </>
-        )}
-      </div>
+      {!hasError ? (
+        <img
+          src={currentSrc}
+          alt="Mail Factory Logo"
+          width={dimension}
+          height={dimension}
+          loading="eager"
+          decoding="async"
+          className="w-full h-full object-contain select-none bg-transparent"
+          onError={handleError}
+        />
+      ) : (
+        <div 
+          className="w-full h-full rounded-xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 text-white flex items-center justify-center shadow-md border border-white/20 relative overflow-hidden"
+          style={{ width: dimension, height: dimension }}
+        >
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(251,191,36,0.3),transparent_50%)]" />
+          <Mail className="w-1/2 h-1/2 text-white relative z-10 drop-shadow" />
+          <div className="absolute bottom-0.5 right-0.5 bg-amber-400 text-amber-950 rounded-full p-0.5 shadow">
+            <Sparkles className="w-2.5 h-2.5" />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
