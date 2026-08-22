@@ -24,6 +24,11 @@ export interface Submission {
   count: number;
   commission_percent?: number;
   processedForBalance?: boolean;
+  rejectReason?: string;
+  rejectionReason?: string;
+  reason?: string;
+  adminNote?: string;
+  note?: string;
 }
 
 export interface WithdrawRequest {
@@ -41,6 +46,11 @@ export interface WithdrawRequest {
   requestedAt: number;
   processedAt?: number;
   transactionNote?: string;
+  trxId?: string;
+  rejectReason?: string;
+  rejectionReason?: string;
+  reason?: string;
+  adminNote?: string;
   processedForBalance?: boolean;
 }
 

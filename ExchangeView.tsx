@@ -23,6 +23,7 @@ interface RowState {
   email: string;
   password: string;
   showPass?: boolean;
+  error?: string;
 }
 
 export const ExchangeView: React.FC = () => {
@@ -46,7 +47,7 @@ export const ExchangeView: React.FC = () => {
   ]);
 
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [globalError, setGlobalError] = useState<string | null>(null);
   const [successData, setSuccessData] = useState<{ count: number; totalAmount: number } | null>(null);
 
   const activeRate = gmailType === 'new' ? currentLevel.rate : currentLevel.old_rate;
@@ -65,7 +66,7 @@ export const ExchangeView: React.FC = () => {
   const handleRemoveRow = (id: string) => {
     hapticFeedback.light();
     if (rows.length <= 2) {
-      setErrorMessage(t.minTwoGmails);
+      setGlobalError(t.minTwoGmails);
       return;
     }
     setRows((prev) => prev.filter((r) => r.id !== id));
@@ -74,9 +75,9 @@ export const ExchangeView: React.FC = () => {
   // Update row
   const handleRowChange = (id: string, field: 'email' | 'password', value: string) => {
     setRows((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, [field]: value } : r))
+      prev.map((r) => (r.id === id ? { ...r, [field]: value, error: undefined } : r))
     );
-    if (errorMessage) setErrorMessage(null);
+    setGlobalError(null);
   };
 
   const toggleShowPass = (id: string) => {
@@ -86,9 +87,12 @@ export const ExchangeView: React.FC = () => {
     );
   };
 
-  // Validate & Submit
+    // Validate & Submit
   const handleValidateAndSubmit = async () => {
     hapticFeedback.medium();
+    setGlobalError(null);
+    setRows((prev) => prev.map((r) => ({ ...r, error: undefined })));
+
     if (!user) {
       setAuthModalOpen(true);
       return;
@@ -96,64 +100,72 @@ export const ExchangeView: React.FC = () => {
 
     if (rows.length < 2) {
       hapticFeedback.error();
-      setErrorMessage(t.minTwoGmails);
+      setGlobalError(t.minTwoGmails);
       return;
     }
 
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
+    const emailRegex = /^[a-zA-Z0-9.]+@gmail\.com$/i;
     const seenEmails = new Set<string>();
     const cleanedGmails: Array<{ email: string; password: string }> = [];
+    let hasError = false;
+    const newRows = [...rows];
 
-    for (let i = 0; i < rows.length; i++) {
-      const email = rows[i].email.trim().toLowerCase();
-      const pass = rows[i].password.trim();
+    for (let i = 0; i < newRows.length; i++) {
+      const email = newRows[i].email.trim().toLowerCase();
+      const pass = newRows[i].password.trim();
 
       if (!email || !pass) {
-        hapticFeedback.error();
-        setErrorMessage(
-          language === 'bn'
-            ? `সারি নম্বর ${i + 1} এ ইমেইল বা পাসওয়ার্ড খালি রয়েছে!`
-            : `Row #${i + 1} has empty email or password!`
-        );
-        return;
+        newRows[i].error = language === 'bn'
+            ? 'ইমেইল বা পাসওয়ার্ড খালি রয়েছে!'
+            : 'Empty email or password!';
+        hasError = true;
+        continue;
       }
 
+      if (email.includes('+')) {
+        newRows[i].error = language === 'bn'
+            ? 'ইমেইল এলিয়াস (+) ব্যবহার করা যাবে না!'
+            : 'Cannot contain email aliases (+ trick)!';
+        hasError = true;
+        continue;
+      }
+      
       if (!emailRegex.test(email)) {
-        hapticFeedback.error();
-        setErrorMessage(
-          language === 'bn'
-            ? `সারি নম্বর ${i + 1} (${email}) একটি বৈধ @gmail.com নয়!`
-            : `Row #${i + 1} (${email}) is not a valid @gmail.com!`
-        );
-        return;
+        newRows[i].error = language === 'bn'
+            ? 'এটি একটি বৈধ @gmail.com নয়!'
+            : 'Not a valid @gmail.com!';
+        hasError = true;
+        continue;
       }
 
       if (pass.length < 6) {
-        hapticFeedback.error();
-        setErrorMessage(
-          language === 'bn'
-            ? `সারি নম্বর ${i + 1} এর পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে!`
-            : `Row #${i + 1} password must be at least 6 characters!`
-        );
-        return;
+        newRows[i].error = language === 'bn'
+            ? 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে!'
+            : 'Password must be at least 6 characters!';
+        hasError = true;
+        continue;
       }
 
-      if (seenEmails.has(email)) {
-        hapticFeedback.error();
-        setErrorMessage(
-          language === 'bn'
-            ? `ইমেইল "${email}" একাধিকবার দেওয়া হয়েছে!`
-            : `Duplicate email "${email}" found in the list!`
-        );
-        return;
+      const normalizedEmail = email.split('@')[0].replace(/\./g, '') + '@gmail.com';
+      if (seenEmails.has(normalizedEmail)) {
+        newRows[i].error = language === 'bn'
+            ? 'এই ইমেইলটি একাধিকবার দেওয়া হয়েছে!'
+            : 'Duplicate email found in the list!';
+        hasError = true;
+        continue;
       }
 
-      seenEmails.add(email);
+      seenEmails.add(normalizedEmail);
       cleanedGmails.push({ email, password: pass });
     }
 
+    if (hasError) {
+      hapticFeedback.error();
+      setRows(newRows);
+      return;
+    }
+
     setIsSubmitting(true);
-    setErrorMessage(null);
 
     const result = await submitGmails({
       gmails: cleanedGmails,
@@ -179,8 +191,8 @@ export const ExchangeView: React.FC = () => {
       
       const subCount = Number(localStorage.getItem('mf_exchange_count') || 0) + 1;
       localStorage.setItem('mf_exchange_count', subCount.toString());
-      const hasRated = localStorage.getItem('mf_has_rated') === '1';
 
+      const hasRated = localStorage.getItem('mf_has_rated') === '1';
       if (subCount === 3 && !hasRated) {
         setTimeout(() => {
           setRateModalOpen(true);
@@ -191,13 +203,15 @@ export const ExchangeView: React.FC = () => {
         count: cleanedGmails.length,
         totalAmount: cleanedGmails.length * activeRate,
       });
+
       // reset form
       setRows([
         { id: '1', email: '', password: '', showPass: false },
         { id: '2', email: '', password: '', showPass: false },
       ]);
     } else {
-      setErrorMessage(result.message || 'Submission failed.');
+      hapticFeedback.error();
+      setGlobalError(result.message || 'Submission failed.');
     }
   };
 
@@ -349,17 +363,23 @@ export const ExchangeView: React.FC = () => {
                       </button>
                     </div>
                   </div>
+                  {row.error && (
+                    <div className="mt-2 flex items-start gap-1.5 text-rose-500 animate-in fade-in slide-in-from-top-1">
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <p className="text-[13px] font-medium leading-snug">{row.error}</p>
+                    </div>
+                  )}
                 </div>
               );
             })}
 
-            {/* Error Banner */}
-            {errorMessage && (
-              <div className="mt-4 p-3 rounded-xl bg-rose-50 border border-rose-100 flex items-start gap-2.5 text-rose-700 text-[12px] font-bold text-left animate-fade-in">
-                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                <span className="leading-relaxed">{errorMessage}</span>
+            {globalError && (
+              <div className="mt-4 p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 animate-in fade-in slide-in-from-top-2">
+                <AlertCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                <p className="text-sm font-medium text-rose-600">{globalError}</p>
               </div>
             )}
+            
 
             {/* Action Buttons */}
             <div className="flex flex-col gap-3 mt-4">
@@ -411,6 +431,7 @@ export const ExchangeView: React.FC = () => {
             </div>
           </div>
         </div>
+      
     </div>
   );
 };

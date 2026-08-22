@@ -5,6 +5,9 @@ import { Navbar } from './Navbar';
 import { ViewSkeleton } from './ViewSkeleton';
 import { usePWAInstall } from './usePWAInstall';
 import { LoadingScreen } from './LoadingScreen';
+import { HomeView } from './HomeView';
+import { GuestLandingView } from './GuestLandingView';
+
 import { MessageSquare, Bell } from 'lucide-react';
 
 // Resilient dynamic import helper with auto-retry on network drop or new deployment
@@ -24,8 +27,6 @@ function lazyWithRetry<T extends React.ComponentType<any>>(
 }
 
 // Code-split / Lazy load non-critical views and heavy modules for instant page load
-const HomeView = lazyWithRetry(() => import('./HomeView').then(m => ({ default: m.HomeView })));
-const GuestLandingView = lazyWithRetry(() => import('./GuestLandingView').then(m => ({ default: m.GuestLandingView })));
 const ExchangeView = lazyWithRetry(() => import('./ExchangeView').then(m => ({ default: m.ExchangeView })));
 const HistoryView = lazyWithRetry(() => import('./HistoryView').then(m => ({ default: m.HistoryView })));
 const SellersView = lazyWithRetry(() => import('./SellersView').then(m => ({ default: m.SellersView })));
@@ -98,8 +99,12 @@ const MainLayout: React.FC = () => {
     }
   }, []);
 
-  // Show custom branded loading screen only if user is logged in and actively loading data
-  if (loading && user) {
+  // Determine if we should show the loading screen
+  // If we have a cached profile or an active user, and we are still loading, show LoadingScreen
+  // This prevents the "flash of guest view" for returning logged-in users,
+  // while allowing new guests (and PageSpeed Insights) to see the GuestLandingView instantly.
+  const hasCachedProfile = !!localStorage.getItem('mf_last_user_profile');
+  if (loading && (user || hasCachedProfile)) {
     return <LoadingScreen />;
   }
 

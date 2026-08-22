@@ -133,7 +133,7 @@ export const WithdrawView: React.FC = () => {
 
   const getSavedAccount = (key: string) => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(`saved_account_${profile?.id || 'guest'}_${key}`);
+      const saved = localStorage.getItem(`saved_account_${profile?.uid || 'guest'}_${key}`);
       if (saved) return saved;
     }
     return profile?.paymentNumber || '';
@@ -142,21 +142,22 @@ export const WithdrawView: React.FC = () => {
   const [accountNumber, setAccountNumber] = useState<string>(() => getSavedAccount(methodsArray[0]?.[0] || 'bkash'));
   const [amount, setAmount] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{ amount?: string; account?: string; global?: string }>({});
+
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [showConfirm, setShowConfirm] = useState<boolean>(false);
 
   const handleMethodSelect = (key: string) => {
     setSelectedKey(key);
     setAccountNumber(getSavedAccount(key));
-    if (errorMessage) setErrorMessage(null);
+    setFieldErrors({});
   };
 
   const handleAccountChange = (val: string) => {
     setAccountNumber(val);
-    if (errorMessage) setErrorMessage(null);
+    setFieldErrors(prev => ({ ...prev, account: undefined, global: undefined }));
     if (typeof window !== 'undefined') {
-      localStorage.setItem(`saved_account_${profile?.id || 'guest'}_${selectedKey}`, val);
+      localStorage.setItem(`saved_account_${profile?.uid || 'guest'}_${selectedKey}`, val);
     }
   };
 
@@ -174,7 +175,7 @@ export const WithdrawView: React.FC = () => {
   const handleMaxAmount = () => {
     hapticFeedback.light();
     setAmount(Math.floor(availableBalance).toString());
-    setErrorMessage(null);
+    setFieldErrors(prev => ({ ...prev, amount: undefined, global: undefined }));
   };
 
   const handleQuickAmount = (val: number) => {
@@ -182,33 +183,56 @@ export const WithdrawView: React.FC = () => {
     const current = Number(amount) || 0;
     const newAmount = Math.min(current + val, Math.floor(availableBalance));
     setAmount(newAmount.toString());
-    setErrorMessage(null);
+    setFieldErrors(prev => ({ ...prev, amount: undefined, global: undefined }));
   };
 
   const handlePreSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     hapticFeedback.medium();
-
+    setFieldErrors({});
+    
     if (isWithdrawDisabled) {
-      setErrorMessage(t.withdrawDisabledAlert);
+      setFieldErrors({ global: t.withdrawDisabledAlert });
+      hapticFeedback.error();
       return;
     }
 
-    if (!accountNumber.trim()) {
-      setErrorMessage(isUSDT ? 'Enter BEP20 Wallet Address' : type === 'bkash' ? 'Enter bKash Account number' : type === 'nagad' ? 'Enter nogod Account number' : t.accountNumber);
+    const acc = accountNumber.trim();
+    if (!acc) {
+      setFieldErrors({ account: isUSDT ? 'Enter BEP20 Wallet Address' : type === 'bkash' ? 'Enter bKash Account number' : type === 'nagad' ? 'Enter nogod Account number' : t.accountNumber });
+      hapticFeedback.error();
       return;
     }
+
+    if (type === 'bkash' || type === 'nagad' || type === 'rocket') {
+      const phoneRegex = /^01[3-9][0-9]{8}$/;
+      if (!phoneRegex.test(acc)) {
+        setFieldErrors({ account: language === 'bn' ? 'অনুগ্রহ করে একটি সঠিক ১১-ডিজিটের মোবাইল নম্বর দিন!' : 'Please enter a valid 11-digit mobile number!' });
+        hapticFeedback.error();
+        return;
+      }
+    } else if (isUSDT) {
+      if (!acc.startsWith('0x') || acc.length !== 42) {
+        setFieldErrors({ account: language === 'bn' ? 'অনুগ্রহ করে সঠিক Binance BEP20 অ্যাড্রেস দিন (0x দিয়ে শুরু হবে)!' : 'Please enter a valid Binance BEP20 address (starts with 0x)!' });
+        hapticFeedback.error();
+        return;
+      }
+    }
+
     const numAmount = Number(amount);
     if (!amount || isNaN(numAmount) || numAmount <= 0) {
-      setErrorMessage(t.enterValidAmount);
+      setFieldErrors({ amount: t.enterValidAmount });
+      hapticFeedback.error();
       return;
     }
     if (numAmount < currentMinWithdraw) {
-      setErrorMessage(t.minWithdrawLabel + ` ৳${currentMinWithdraw}${isUSDT ? ' (~$2)' : ''}`);
+      setFieldErrors({ amount: t.minWithdrawLabel + ` ৳${currentMinWithdraw}${isUSDT ? ' (~$2)' : ''}` });
+      hapticFeedback.error();
       return;
     }
     if (numAmount > availableBalance) {
-      setErrorMessage(t.insufficientBalance);
+      setFieldErrors({ amount: t.insufficientBalance });
+      hapticFeedback.error();
       return;
     }
 
@@ -221,7 +245,7 @@ export const WithdrawView: React.FC = () => {
     
     const numAmount = Number(amount);
     setIsSubmitting(true);
-    setErrorMessage(null);
+    setFieldErrors({});
 
     const res = await requestWithdraw({
       amount: numAmount,
@@ -249,7 +273,7 @@ export const WithdrawView: React.FC = () => {
         setActiveTab('profile'); // Return to profile after success
       }, 3500);
     } else {
-      setErrorMessage(res.message);
+      setFieldErrors({ global: res.message });
       hapticFeedback.error();
     }
   };
@@ -367,6 +391,12 @@ export const WithdrawView: React.FC = () => {
                   <Clipboard className="w-5 h-5" />
                 </button>
               </div>
+              {fieldErrors.account && (
+                <div className="mt-1.5 flex items-start gap-1.5 text-rose-500 animate-in fade-in slide-in-from-top-1 px-1">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-[2px]" />
+                  <p className="text-xs font-bold leading-snug">{fieldErrors.account}</p>
+                </div>
+              )}
               {isUSDT && (
                 <div className="mt-1 text-[10px] font-bold text-slate-500 uppercase ml-1">
                   Network: <span className="text-emerald-600">BNB Smart Chain (BEP20)</span>
@@ -389,13 +419,19 @@ export const WithdrawView: React.FC = () => {
                 value={amount}
                 onChange={(e) => {
                   setAmount(e.target.value);
-                  if (errorMessage) setErrorMessage(null);
+                  setFieldErrors(prev => ({ ...prev, amount: undefined, global: undefined }));
                 }}
                 min={currentMinWithdraw}
                 max={availableBalance}
                 placeholder={`Min ৳${currentMinWithdraw}${isUSDT ? ' (~$2)' : ''}`}
-                className="w-full rounded-xl border-2 border-slate-200 px-4 py-3.5 text-base font-bold text-slate-900 focus:outline-none focus:border-indigo-600 bg-slate-50 hover:bg-white transition-colors"
+                className={`w-full rounded-xl border-2 px-4 py-3.5 text-base font-bold text-slate-900 focus:outline-none bg-slate-50 hover:bg-white transition-colors ${fieldErrors.amount ? 'border-rose-400 focus:border-rose-500' : 'border-slate-200 focus:border-indigo-600'}`}
               />
+              {fieldErrors.amount && (
+                <div className="mt-1 flex items-start gap-1.5 text-rose-500 animate-in fade-in slide-in-from-top-1 px-1">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-[2px]" />
+                  <p className="text-xs font-bold leading-snug">{fieldErrors.amount}</p>
+                </div>
+              )}
               
               {/* Quick amount presets */}
               <div className="flex gap-2 pt-2">
@@ -445,13 +481,13 @@ export const WithdrawView: React.FC = () => {
               </div>
             )}
 
-            {/* Error Message */}
-            {errorMessage && (
-              <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold flex items-center gap-2.5 animate-in fade-in slide-in-from-top-2">
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                <span>{errorMessage}</span>
+            {fieldErrors.global && (
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 animate-in fade-in slide-in-from-top-2 mb-2">
+                <AlertCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                <p className="text-sm font-bold text-rose-600 leading-snug">{fieldErrors.global}</p>
               </div>
             )}
+            
 
             {/* Submit Action */}
             <button
@@ -552,6 +588,7 @@ export const WithdrawView: React.FC = () => {
           </div>
         </div>
       )}
+      
     </div>
   );
 };

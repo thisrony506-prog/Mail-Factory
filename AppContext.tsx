@@ -34,7 +34,7 @@ import {
   isExcludedSeller,
 } from './types';
 
-export const DEFAULT_LOGO = "https://z-cdn-media.chatglm.cn/files/254f7f82-610d-4700-abc8-2e10435c149a.png?auth_key=1874890147-5ce8a86650d0488299a25b07660a73f8-0-b25e70b5ad3109adec869d78d8584440";
+export const DEFAULT_LOGO = "/app-logo.webp";
 
 export const DEFAULT_LEVELS: LevelConfig[] = [
   { level: 1, approved: 0, rate: 10, old_rate: 8, title: 'Bronze Member', perkDescription: 'Standard exchange rate' },
@@ -54,10 +54,10 @@ export const DEFAULT_SHIFTS: Record<string, ShiftInfo> = {
 };
 
 export const DEFAULT_PAYMENT_METHODS: Record<string, PaymentMethodConfig> = {
-  bkash: { name: 'bKash', icon: 'bi-wallet2', color: '#E2136E', active: true, minWithdraw: 100, feePercent: 6 },
-  nagad: { name: 'Nagad', icon: 'bi-wallet2', color: '#F6921D', active: true, minWithdraw: 100, feePercent: 6 },
-  rocket: { name: 'Rocket', icon: 'bi-send-check', color: '#8C3494', active: true, minWithdraw: 100, feePercent: 6 },
-  binance: { name: 'USDT (BEP20)', icon: 'bi-currency-exchange', color: '#F0B90B', active: true, minWithdraw: 200, feePercent: 6 },
+  bkash: { name: 'bKash', icon: 'bi-wallet2', color: '#E2136E', active: true, minWithdraw: 150, feePercent: 6 },
+  nagad: { name: 'Nagad', icon: 'bi-wallet2', color: '#F6921D', active: true, minWithdraw: 150, feePercent: 6 },
+  rocket: { name: 'Rocket', icon: 'bi-send-check', color: '#8C3494', active: true, minWithdraw: 150, feePercent: 6 },
+  binance: { name: 'USDT (BEP20)', icon: 'bi-currency-exchange', color: '#F0B90B', active: true, minWithdraw: 240, feePercent: 6 },
 };
 
 interface AppContextType {
@@ -1119,7 +1119,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       // Check for duplicate emails already used
       for (const item of data.gmails) {
-        const q = query(ref(db, 'used_emails'), orderByChild('email'), equalTo(item.email.toLowerCase().trim()));
+        // Normalize gmail to prevent dot trick (t.e.s.t@gmail.com == test@gmail.com)
+        const localPart = item.email.split('@')[0].replace(/\./g, '');
+        const normalizedEmail = `${localPart}@gmail.com`.toLowerCase();
+        
+        const q = query(ref(db, 'used_emails'), orderByChild('email'), equalTo(normalizedEmail));
         const snap = await get(q);
         if (snap.exists()) {
           return { success: false, message: `Email "${item.email}" has already been submitted in the past.` };
@@ -1155,8 +1159,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       
       // Record in used_emails
       for (const g of data.gmails) {
+        const localPart = g.email.split('@')[0].replace(/\./g, '');
+        const normalizedEmail = `${localPart}@gmail.com`.toLowerCase();
+        
         const emailRef = push(ref(db, 'used_emails'));
-        updates[`used_emails/${emailRef.key}`] = { email: g.email.toLowerCase().trim(), submittedAt: Date.now() };
+        updates[`used_emails/${emailRef.key}`] = { email: normalizedEmail, submittedAt: Date.now() };
       }
 
       await update(ref(db), updates);

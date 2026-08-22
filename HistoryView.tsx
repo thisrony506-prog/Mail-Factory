@@ -10,6 +10,7 @@ import {
   Wallet,
   Calendar,
   Layers,
+  AlertCircle,
 } from 'lucide-react';
 import { Submission, WithdrawRequest } from './types';
 
@@ -170,6 +171,21 @@ export const HistoryView: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Submission Rejection Reason if any */}
+                  {(sub.rejectReason || sub.rejectionReason || sub.reason || sub.adminNote || (sub.status === 'rejected' && sub.note)) && (
+                    <div className="mt-3 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2 animate-in fade-in">
+                      <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-bold block text-rose-800 text-[11px]">
+                          {language === 'bn' ? 'বাতিলের কারণ / অ্যাডমিন নোট:' : 'Rejection Reason / Admin Note:'}
+                        </span>
+                        <p className="mt-0.5 leading-snug font-medium text-slate-700">
+                          {sub.rejectReason || sub.rejectionReason || sub.reason || sub.adminNote || sub.note}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Expanded Individual Gmails list */}
                   <div className="mt-3 pt-3 border-t border-slate-100 space-y-1.5 animate-fade-in">
                     <div className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">
@@ -223,10 +239,19 @@ export const HistoryView: React.FC = () => {
             </div>
           ) : (
             withdrawRequests.map((wd, index) => {
-              const wdDate = new Date(wd.requestedAt).toLocaleDateString('en-GB', {
+              const dateObj = new Date(wd.requestedAt);
+              const wdDate = dateObj.toLocaleDateString(language === 'bn' ? 'bn-BD' : 'en-GB', {
                 day: 'numeric',
                 month: 'short',
                 year: 'numeric',
+              });
+              const wdTime = dateObj.toLocaleTimeString(language === 'bn' ? 'bn-BD' : 'en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true,
+              });
+              const wdDay = dateObj.toLocaleDateString(language === 'bn' ? 'bn-BD' : 'en-US', {
+                weekday: 'long',
               });
 
               return (
@@ -245,8 +270,11 @@ export const HistoryView: React.FC = () => {
                           via {wd.paymentMethod || wd.method}
                         </span>
                       </div>
-                      <span className="text-[11px] font-mono text-slate-400 block mt-0.5 truncate">
-                        Acc: {wd.paymentNumber} • {wdDate}
+                      <span className="text-[11px] font-medium text-slate-400 block mt-0.5 truncate">
+                        {wdTime} • {wdDate} • {wdDay}
+                      </span>
+                      <span className="text-[11px] font-mono text-slate-500 block mt-0.5 truncate">
+                        Acc: {wd.paymentNumber}
                       </span>
                       {wd.feeAmount ? (
                         <div className="text-[10px] font-bold mt-1 text-slate-500 flex gap-2 truncate">
@@ -254,6 +282,24 @@ export const HistoryView: React.FC = () => {
                           <span className="text-emerald-600 truncate">Net: ৳{(wd.netAmount || wd.amount).toFixed(2)}</span>
                         </div>
                       ) : null}
+                      {wd.trxId && (
+                        <div className="text-[11px] font-bold mt-1.5 bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md inline-block border border-indigo-100">
+                          TrxID: <span className="font-mono">{wd.trxId}</span>
+                        </div>
+                      )}
+                      {(wd.rejectReason || wd.rejectionReason || wd.reason || wd.adminNote || (wd.status === 'rejected' && wd.transactionNote)) && (
+                        <div className="mt-2 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2 animate-in fade-in">
+                          <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                          <div>
+                            <span className="font-bold block text-rose-800 text-[11px]">
+                              {language === 'bn' ? 'বাতিলের কারণ:' : 'Rejection Reason:'}
+                            </span>
+                            <p className="mt-0.5 leading-snug font-medium text-slate-700">
+                              {wd.rejectReason || wd.rejectionReason || wd.reason || wd.adminNote || wd.transactionNote}
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="shrink-0">{getStatusBadge(wd.status)}</div>

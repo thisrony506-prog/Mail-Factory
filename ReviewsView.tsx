@@ -42,7 +42,7 @@ export const ReviewsView: React.FC = () => {
           }));
 
           // Show all non-rejected reviews publicly (approved, pending, or legacy without status)
-          const published = allList.filter((r) => r.status !== 'rejected');
+          const published = allList.filter((r) => r.status === 'approved' || !r.status);
           const dist: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
           let sum = 0;
           published.forEach((r) => {
@@ -108,7 +108,7 @@ export const ReviewsView: React.FC = () => {
         userPhoto: profile?.photoURL || user.photoURL || '',
         rating,
         text: reviewText.trim(),
-        status: 'approved',
+        status: 'pending',
         createdAt: myReview?.createdAt || Date.now(),
         updatedAt: Date.now(),
         isVerified: Boolean(
