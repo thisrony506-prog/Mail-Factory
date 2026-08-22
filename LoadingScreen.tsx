@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, Lock, RefreshCw, Sparkles } from 'lucide-react';
+import { RefreshCw, Sparkles, Lock } from 'lucide-react';
 import { useApp, DEFAULT_LOGO } from './AppContext';
+import { AppLogo3D } from './AppLogo3D';
 
 interface LoadingScreenProps {
   message?: string;
@@ -23,7 +24,6 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ message }) => {
 
   const [stepIndex, setStepIndex] = useState(0);
   const [showRetry, setShowRetry] = useState(false);
-  const [imgError, setImgError] = useState(false);
 
   const bnSteps = [
     'সিকিউর সার্ভার কানেকশন তৈরি হচ্ছে...',
@@ -75,17 +75,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ message }) => {
       <div className="flex flex-col items-center justify-center space-y-7 relative z-10 w-full max-w-xs text-center">
         {/* Glowing Website Logo */}
         <div className="relative flex items-center justify-center">
-          {/* Outer glowing ambient ring */}
-          <div className="absolute -inset-3 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-40 blur-xl animate-pulse pointer-events-none" />
-          
-          <div className="relative w-24 h-24 flex items-center justify-center">
-            <img
-              src={!imgError ? (appLogo || '/app-logo.png') : '/app-logo.png'}
-              alt="Mail Factory Logo"
-              onError={() => setImgError(true)}
-              className="w-full h-full object-contain drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
-            />
-          </div>
+          <AppLogo3D size={84} glow animated src={appLogo} />
         </div>
 
         {/* Brand Name & Title */}
