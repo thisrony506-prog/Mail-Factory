@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { LOGO_BASE64 } from './logoBase64';
 import { DEFAULT_LOGO } from './AppContext';
-import bundledLogo from './src/assets/app-logo.png';
+import { Mail, Sparkles } from 'lucide-react';
 
 interface AppLogo3DProps {
   className?: string;
@@ -40,51 +41,63 @@ export const AppLogo3D: React.FC<AppLogo3DProps> = ({
     }
   }
 
-  const [currentSrcIndex, setCurrentSrcIndex] = useState<number>(0);
-  
-  // Try bundled logo first, then props/default, then static paths
-  const sources = [
-    src,
-    bundledLogo,
-    DEFAULT_LOGO,
-    '/app-logo.png',
-    '/new-logo.png',
-  ].filter(Boolean) as string[];
+  const [hasError, setHasError] = useState(false);
+  const sources = [src, LOGO_BASE64, DEFAULT_LOGO, '/new-logo.png', '/app-logo.png'].filter(Boolean) as string[];
+  const [srcIndex, setSrcIndex] = useState(0);
 
-  const currentSrc = sources[currentSrcIndex] || bundledLogo || '/app-logo.png';
+  const currentSrc = sources[srcIndex] || LOGO_BASE64;
 
-  const handleImgError = () => {
-    if (currentSrcIndex < sources.length - 1) {
-      setCurrentSrcIndex((prev) => prev + 1);
+  const handleError = () => {
+    if (srcIndex < sources.length - 1) {
+      setSrcIndex(prev => prev + 1);
+    } else {
+      setHasError(true);
     }
   };
 
   return (
     <div
-      className={`relative inline-flex items-center justify-center select-none shrink-0 bg-transparent ${
+      className={`relative inline-flex items-center justify-center select-none shrink-0 ${
         animated ? 'transition-transform duration-300 hover:scale-105 active:scale-95' : ''
       } ${className}`}
       style={{ width: dimension, height: dimension }}
     >
-      {/* Subtle Glow only if explicitly requested */}
+      {/* Subtle Glow */}
       {glow && (
-        <div
-          className="absolute -inset-1 rounded-full bg-indigo-500/30 opacity-70 blur-md pointer-events-none"
-        />
+        <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-indigo-500/40 via-purple-500/40 to-amber-500/30 opacity-80 blur-md pointer-events-none animate-pulse" />
       )}
 
-      <img
-        src={currentSrc}
-        alt="Mail Factory Logo"
-        width={dimension}
-        height={dimension}
-        loading="eager"
-        decoding="async"
-        className="w-full h-full object-contain select-none relative z-10 transition-transform drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)]"
-        onError={handleImgError}
-      />
+      {/* 3D App Icon Container */}
+      <div 
+        className="w-full h-full rounded-2xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-900 text-white flex items-center justify-center shadow-[0_4px_16px_rgba(79,70,229,0.4),inset_0_1px_1px_rgba(255,255,255,0.35),inset_0_-2px_4px_rgba(0,0,0,0.4)] border border-indigo-400/30 relative overflow-hidden"
+        style={{ width: dimension, height: dimension }}
+      >
+        {!hasError ? (
+          <img
+            src={currentSrc}
+            alt="Mail Factory Logo"
+            width={dimension}
+            height={dimension}
+            loading="eager"
+            decoding="async"
+            className="w-full h-full object-cover select-none relative z-10"
+            onError={handleError}
+          />
+        ) : (
+          <>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.4),transparent_60%)] pointer-events-none" />
+            <Mail className="w-[52%] h-[52%] text-white relative z-10 drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" strokeWidth={2.2} />
+            <div className="absolute -bottom-0.5 -right-0.5 bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 rounded-full p-1 shadow-[0_2px_6px_rgba(0,0,0,0.3)] border border-white/40 flex items-center justify-center z-20">
+              <Sparkles className="w-3 h-3 text-amber-950 fill-amber-300" />
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 };
+
+
+
 
 
