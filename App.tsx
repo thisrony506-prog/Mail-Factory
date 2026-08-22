@@ -2,34 +2,50 @@ import React, { useState, Suspense, lazy } from 'react';
 import { AppProvider, useApp } from './AppContext';
 import { Navbar } from './Navbar';
 import { HomeView } from './HomeView';
+import { GuestLandingView } from './GuestLandingView';
 import { ViewSkeleton } from './ViewSkeleton';
 import { usePWAInstall } from './usePWAInstall';
 import { LoadingScreen } from './LoadingScreen';
 import { MessageSquare, Bell } from 'lucide-react';
 
-// Code-split / Lazy load non-critical views and heavy modules for instant page load
-const ExchangeView = lazy(() => import('./ExchangeView').then(m => ({ default: m.ExchangeView })));
-const HistoryView = lazy(() => import('./HistoryView').then(m => ({ default: m.HistoryView })));
-const SellersView = lazy(() => import('./SellersView').then(m => ({ default: m.SellersView })));
-const ProfileView = lazy(() => import('./ProfileView').then(m => ({ default: m.ProfileView })));
-const WithdrawView = lazy(() => import('./WithdrawView').then(m => ({ default: m.WithdrawView })));
-const PrivacyView = lazy(() => import('./PrivacyView').then(m => ({ default: m.PrivacyView })));
-const AboutView = lazy(() => import('./AboutView').then(m => ({ default: m.AboutView })));
-const ReviewsView = lazy(() => import('./ReviewsView').then(m => ({ default: m.ReviewsView })));
-const SettingsView = lazy(() => import('./SettingsView').then(m => ({ default: m.SettingsView })));
-const ChangePasswordView = lazy(() => import('./ChangePasswordView').then(m => ({ default: m.ChangePasswordView })));
-const EditProfileView = lazy(() => import('./EditProfileView').then(m => ({ default: m.EditProfileView })));
-const MemberIdCardView = lazy(() => import('./MemberIdCardView').then(m => ({ default: m.MemberIdCardView })));
-const ReferralLeaderboard = lazy(() => import('./ReferralLeaderboard').then(m => ({ default: m.ReferralLeaderboard })));
-const LiveChatDrawer = lazy(() => import('./LiveChatDrawer').then(m => ({ default: m.LiveChatDrawer })));
-const NotificationDrawer = lazy(() => import('./NotificationDrawer').then(m => ({ default: m.NotificationDrawer })));
-const AuthModal = lazy(() => import('./AuthModal').then(m => ({ default: m.AuthModal })));
-const GuestLandingView = lazy(() => import('./GuestLandingView').then(m => ({ default: m.GuestLandingView })));
-const IOSInstallGuideModal = lazy(() => import('./IOSInstallGuideModal').then(m => ({ default: m.IOSInstallGuideModal })));
+// Resilient dynamic import helper with auto-retry on network drop or new deployment
+function lazyWithRetry<T extends React.ComponentType<any>>(
+  factory: () => Promise<{ default: T }>
+) {
+  return lazy(() =>
+    factory().catch((error) => {
+      console.warn('[Chunk Load Warning] Retrying dynamic import...', error);
+      return new Promise<{ default: T }>((resolve, reject) => {
+        setTimeout(() => {
+          factory().then(resolve).catch(reject);
+        }, 1000);
+      });
+    })
+  );
+}
 
-const FAQModal = lazy(() => import('./Modals').then(m => ({ default: m.FAQModal })));
-const ContactModal = lazy(() => import('./Modals').then(m => ({ default: m.ContactModal })));
-const RateAppModal = lazy(() => import('./Modals').then(m => ({ default: m.RateAppModal })));
+// Code-split / Lazy load non-critical views and heavy modules for instant page load
+const ExchangeView = lazyWithRetry(() => import('./ExchangeView').then(m => ({ default: m.ExchangeView })));
+const HistoryView = lazyWithRetry(() => import('./HistoryView').then(m => ({ default: m.HistoryView })));
+const SellersView = lazyWithRetry(() => import('./SellersView').then(m => ({ default: m.SellersView })));
+const ProfileView = lazyWithRetry(() => import('./ProfileView').then(m => ({ default: m.ProfileView })));
+const WithdrawView = lazyWithRetry(() => import('./WithdrawView').then(m => ({ default: m.WithdrawView })));
+const PrivacyView = lazyWithRetry(() => import('./PrivacyView').then(m => ({ default: m.PrivacyView })));
+const AboutView = lazyWithRetry(() => import('./AboutView').then(m => ({ default: m.AboutView })));
+const ReviewsView = lazyWithRetry(() => import('./ReviewsView').then(m => ({ default: m.ReviewsView })));
+const SettingsView = lazyWithRetry(() => import('./SettingsView').then(m => ({ default: m.SettingsView })));
+const ChangePasswordView = lazyWithRetry(() => import('./ChangePasswordView').then(m => ({ default: m.ChangePasswordView })));
+const EditProfileView = lazyWithRetry(() => import('./EditProfileView').then(m => ({ default: m.EditProfileView })));
+const MemberIdCardView = lazyWithRetry(() => import('./MemberIdCardView').then(m => ({ default: m.MemberIdCardView })));
+const ReferralLeaderboard = lazyWithRetry(() => import('./ReferralLeaderboard').then(m => ({ default: m.ReferralLeaderboard })));
+const LiveChatDrawer = lazyWithRetry(() => import('./LiveChatDrawer').then(m => ({ default: m.LiveChatDrawer })));
+const NotificationDrawer = lazyWithRetry(() => import('./NotificationDrawer').then(m => ({ default: m.NotificationDrawer })));
+const AuthModal = lazyWithRetry(() => import('./AuthModal').then(m => ({ default: m.AuthModal })));
+const IOSInstallGuideModal = lazyWithRetry(() => import('./IOSInstallGuideModal').then(m => ({ default: m.IOSInstallGuideModal })));
+
+const FAQModal = lazyWithRetry(() => import('./Modals').then(m => ({ default: m.FAQModal })));
+const ContactModal = lazyWithRetry(() => import('./Modals').then(m => ({ default: m.ContactModal })));
+const RateAppModal = lazyWithRetry(() => import('./Modals').then(m => ({ default: m.RateAppModal })));
 
 const MainLayout: React.FC = () => {
   const {
@@ -133,9 +149,7 @@ const MainLayout: React.FC = () => {
             </main>
           </div>
         ) : (
-          <Suspense fallback={<ViewSkeleton type="full" />}>
-            <GuestLandingView />
-          </Suspense>
+          <GuestLandingView />
         )}
         <Suspense fallback={null}>
           <AuthModal />

@@ -757,6 +757,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
+  // Top-level guaranteed auth loader unlock (prevents hanging in restricted browsers/sandboxes)
+  useEffect(() => {
+    const globalUnlockTimer = setTimeout(() => {
+      setLoading(false);
+    }, 1200);
+    return () => clearTimeout(globalUnlockTimer);
+  }, []);
+
   // Auth & Profile Listener
   useEffect(() => {
     let unsubNotifs: (() => void) | null = null;
