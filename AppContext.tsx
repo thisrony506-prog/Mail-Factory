@@ -1162,11 +1162,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     withdrawRequests.forEach(wd => {
         if (wd.status === 'rejected' && !wd.processedForBalance) {
-            balanceDelta += wd.amount;
+            // Admin panel already refunds the balance, so we only mark it as processed locally
+            // to avoid double refunding the user.
             updates[`withdraw_requests/${wd.key}/processedForBalance`] = true;
+            addNotification('উত্তোলন বাতিল ⚠️', `আপনার ৳${wd.amount} এর উত্তোলন রিকোয়েস্ট রিজেক্ট করা হয়েছে।`, 'danger');
         } else if (wd.status === 'approved' && !wd.processedForBalance) {
             // Already deducted upon request
             updates[`withdraw_requests/${wd.key}/processedForBalance`] = true;
+            addNotification('উত্তোলন সফল 🎉', `আপনার ৳${wd.amount} এর উত্তোলন সফলভাবে সম্পন্ন হয়েছে।`, 'success');
         }
     });
 
