@@ -85,6 +85,7 @@ interface AppContextType {
   signupBonusUser: number;
   signupBonusReferrer: number;
   submissions: Submission[];
+  allSubmissions: Submission[];
   withdrawRequests: WithdrawRequest[];
   notifications: AppNotification[];
   unreadNotifsCount: number;
@@ -345,6 +346,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const setNotifDrawerOpen = useCallback((open: boolean) => {
     setNotifDrawerOpenState(open);
+    if (open) {
+      markAllNotificationsRead();
+    }
     try {
       if (open) {
         if (window.location.pathname !== '/notifications') {
@@ -444,6 +448,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [signupBonusUser, setSignupBonusUser] = useState<number>(5);
   const [signupBonusReferrer, setSignupBonusReferrer] = useState<number>(5);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [allSubmissions, setAllSubmissions] = useState<Submission[]>([]);
   const [withdrawRequests, setWithdrawRequests] = useState<WithdrawRequest[]>([]);
   const [allUsers, setAllUsers] = useState<UserProfile[]>(() => {
     try {
@@ -808,7 +813,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const googleUser = result.user;
           const userSnap = await get(ref(db, `users/${googleUser.uid}`));
           if (!userSnap.exists()) {
-            const refParam = getUrlParam('ref');
+            const refParam = (getUrlParam('ref') || '').toUpperCase();
             let refId: string | null = null;
             if (refParam) {
               try {
@@ -816,6 +821,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 const sn = await get(q);
                 if (sn.exists()) {
                   sn.forEach((c) => { refId = c.key; });
+                } else {
+                  const directSnap = await get(ref(db, `users/${refParam}`));
+                  if (directSnap.exists()) {
+                    refId = refParam;
+                  }
                 }
               } catch { }
             }
@@ -944,22 +954,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
           );
 
-          // Fetch user submissions (Admins listen to master submissions; regular users query master submissions by userId)
-          const subRef = isAdminUser ? ref(db, 'submissions') : query(ref(db, 'submissions'), orderByChild('userId'), equalTo(currUser.uid));
+          // Fetch user submissions (master submissions for all users so referrals and commissions work accurately)
+          const subRef = ref(db, 'submissions');
           unsubSubRef = onValue(
             subRef,
             (snap) => {
+              const allSubs: Submission[] = [];
               const mySubs: Submission[] = [];
               if (snap.exists()) {
                 snap.forEach((c) => {
                   const sub = c.val() as Submission;
+                  sub.key = c.key;
+                  allSubs.push(sub);
                   if (isAdminUser || sub.userId === currUser.uid) {
-                    sub.key = c.key;
                     mySubs.push(sub);
                   }
                 });
+                allSubs.sort((a, b) => (b.submittedAt || 0) - (a.submittedAt || 0));
                 mySubs.sort((a, b) => (b.submittedAt || 0) - (a.submittedAt || 0));
               }
+              setAllSubmissions(allSubs);
               setSubmissions(mySubs);
             },
             (err) => {
@@ -1138,9 +1152,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             balanceDelta += sub.totalAmount;
             holdDelta -= sub.totalAmount;
             updates[`submissions/${sub.key}/processedForBalance`] = true;
+            addNotification('জিমেইল সাবমিশন অনুমোদিত! 🎉', `আপনার ${sub.count || sub.quantity || 1} টি জিমেইল সাবমিশন সফলভাবে অনুমোদিত হয়েছে এবং ৳${sub.totalAmount} ব্যালেন্সে যোগ হয়েছে।`, 'success');
         } else if (sub.status === 'rejected' && !sub.processedForBalance) {
             holdDelta -= sub.totalAmount;
             updates[`submissions/${sub.key}/processedForBalance`] = true;
+            addNotification('সাবমিশন রিজেক্ট করা হয়েছে ⚠️', `দুঃখিত, আপনার সাবমিশনটি যাচাইয়ে রিজেক্ট করা হয়েছে।`, 'danger');
         }
     });
 
@@ -1176,34 +1192,70 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // --- Self-Healing Referral Earnings to Main Balance Sync ---
   useEffect(() => {
-    if (!user || !profile || !profile.referralCode) return;
+    if (!user || !profile || (!profile.referralCode && !profile.uid)) return;
 
-    const userRefCode = profile.referralCode || profile.uid?.slice(0, 8).toUpperCase() || '';
-    const myReferred = (allUsers || []).filter(
-      (u) => u && u.uid !== profile.uid && (u.referredBy === userRefCode || u.referredBy === profile.uid)
-    );
+    const userRefCode = (profile.referralCode || '').trim().toUpperCase();
+    const profileUid = (profile.uid || '').trim();
+    const shortUid = profileUid.slice(0, 8).toUpperCase();
 
-    let computedRefEarnings = 0;
+    const myReferred = (allUsers || []).filter((u) => {
+      if (!u || u.uid === profile.uid || !u.referredBy) return false;
+      const refBy = u.referredBy.trim().toUpperCase();
+      return (
+        (userRefCode && refBy === userRefCode) ||
+        (profileUid && u.referredBy === profileUid) ||
+        (shortUid && refBy === shortUid)
+      );
+    });
+
+    let friendCommissionsTotal = 0;
     myReferred.forEach((f) => {
-      const friendSubs = (submissions || []).filter((sub) => sub.userId === f.uid && sub.status === 'approved');
+      const friendSubs = (allSubmissions || []).filter(
+        (sub) => sub.userId === f.uid && (sub.status === 'approved' || sub.status?.toLowerCase() === 'approved')
+      );
       const approvedCountFromSubs = friendSubs.reduce(
         (acc, sub) => acc + (Number(sub.count) || Number(sub.quantity) || 1),
         0
       );
-      const totalGmails = approvedCountFromSubs > 0 ? approvedCountFromSubs : Number(f.manual_approved_count) || Number(f.total_submitted) || 0;
-      const friendTotalEarnings = Number(f.totalEarnings || 0) || (totalGmails * 10);
+      const approvedEarningsFromSubs = friendSubs.reduce(
+        (acc, sub) => acc + (Number(sub.totalAmount) || Number(sub.amount) || (Number(sub.count || sub.quantity || 1) * 10)),
+        0
+      );
+      const friendTotalEarnings = approvedEarningsFromSubs > 0 ? approvedEarningsFromSubs : (approvedCountFromSubs * 10);
       const commission = Math.round((friendTotalEarnings * (commissionPercent || 10)) / 100);
-      const bonus = signupBonusUser || 5;
-      computedRefEarnings += (bonus + commission);
+      friendCommissionsTotal += commission;
     });
 
+    const signupBonusesTotal = myReferred.length * (signupBonusUser || 5);
+    const totalComputedEarnings = signupBonusesTotal + friendCommissionsTotal;
+
+    const existingReferralEarnings = Number(profile.referralEarnings || 0);
+    const computedRefEarnings = Math.max(existingReferralEarnings, totalComputedEarnings);
+
     const lastProcessed = Number(profile.lastProcessedRefEarnings) || 0;
-    if (computedRefEarnings > lastProcessed) {
-      const delta = computedRefEarnings - lastProcessed;
+    const delta = computedRefEarnings > lastProcessed ? computedRefEarnings - lastProcessed : 0;
+
+    if (delta > 0 || computedRefEarnings !== existingReferralEarnings || (computedRefEarnings > 0 && Number(profile.balance || 0) < computedRefEarnings && !profile.referralBalanceSynced)) {
       const syncRefEarnings = async () => {
         try {
           const updates = {};
-          updates[`users/${user.uid}/balance`] = (Number(profile.balance) || 0) + delta;
+          let currentBalance = Number(profile.balance || 0);
+          let currentTotalEarnings = Number(profile.totalEarnings || 0);
+
+          if (delta > 0) {
+            currentBalance += delta;
+            currentTotalEarnings += delta;
+            updates[`users/${user.uid}/balance`] = currentBalance;
+            updates[`users/${user.uid}/totalEarnings`] = currentTotalEarnings;
+          } else if (!profile.referralBalanceSynced && computedRefEarnings > 0) {
+            // Force sync if balance doesn't reflect referral earnings yet
+            currentBalance += computedRefEarnings;
+            currentTotalEarnings += computedRefEarnings;
+            updates[`users/${user.uid}/balance`] = currentBalance;
+            updates[`users/${user.uid}/totalEarnings`] = currentTotalEarnings;
+            updates[`users/${user.uid}/referralBalanceSynced`] = true;
+          }
+
           updates[`users/${user.uid}/referralEarnings`] = computedRefEarnings;
           updates[`users/${user.uid}/lastProcessedRefEarnings`] = computedRefEarnings;
           await update(ref(db), updates);
@@ -1213,7 +1265,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
       syncRefEarnings();
     }
-  }, [user, profile, allUsers, submissions, commissionPercent, signupBonusUser]);
+  }, [user, profile, allUsers, allSubmissions, commissionPercent, signupBonusUser]);
   // -----------------------------------------------------------
 
   const submitGmails = async (data: {

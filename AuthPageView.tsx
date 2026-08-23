@@ -133,16 +133,21 @@ export const AuthPageView: React.FC<AuthPageViewProps> = ({
       const userSnap = await get(ref(db, `users/${googleUser.uid}`));
       if (!userSnap.exists()) {
         let refId: string | null = null;
-        const codeToUse = referralCodeInput.trim() || getUrlParam('ref');
+        const codeToUse = (referralCodeInput.trim() || getUrlParam('ref') || '').toUpperCase();
 
         if (codeToUse) {
           try {
-            const q = query(ref(db, 'users'), orderByChild('referralCode'), equalTo(codeToUse.toUpperCase()));
+            const q = query(ref(db, 'users'), orderByChild('referralCode'), equalTo(codeToUse));
             const sn = await get(q);
             if (sn.exists()) {
               sn.forEach((c) => {
                 refId = c.key;
               });
+            } else {
+              const directSnap = await get(ref(db, `users/${codeToUse}`));
+              if (directSnap.exists()) {
+                refId = codeToUse;
+              }
             }
           } catch {
             // safe ignore
@@ -258,16 +263,21 @@ export const AuthPageView: React.FC<AuthPageViewProps> = ({
 
         const res = await createUserWithEmailAndPassword(auth, cleanEmail, password);
         let refId: string | null = null;
-        const codeToUse = referralCodeInput.trim() || getUrlParam('ref');
+        const codeToUse = (referralCodeInput.trim() || getUrlParam('ref') || '').toUpperCase();
 
         if (codeToUse) {
           try {
-            const q = query(ref(db, 'users'), orderByChild('referralCode'), equalTo(codeToUse.toUpperCase()));
+            const q = query(ref(db, 'users'), orderByChild('referralCode'), equalTo(codeToUse));
             const sn = await get(q);
             if (sn.exists()) {
               sn.forEach((c) => {
                 refId = c.key;
               });
+            } else {
+              const directSnap = await get(ref(db, `users/${codeToUse}`));
+              if (directSnap.exists()) {
+                refId = codeToUse;
+              }
             }
           } catch {
             // safe ignore

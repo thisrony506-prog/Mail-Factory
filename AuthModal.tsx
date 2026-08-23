@@ -96,7 +96,7 @@ export const AuthModal: React.FC = () => {
       const userSnap = await get(ref(db, `users/${googleUser.uid}`));
       if (!userSnap.exists()) {
         // Create new user profile
-        const codeToUse = referralCodeInput.trim() || getUrlParam('ref');
+        const codeToUse = (referralCodeInput.trim() || getUrlParam('ref') || '').toUpperCase();
         let refId: string | null = null;
 
         if (codeToUse) {
@@ -107,6 +107,11 @@ export const AuthModal: React.FC = () => {
               sn.forEach((c) => {
                 refId = c.key;
               });
+            } else {
+              const directSnap = await get(ref(db, `users/${codeToUse}`));
+              if (directSnap.exists()) {
+                refId = codeToUse;
+              }
             }
           } catch {
             // safe ignore
@@ -224,7 +229,7 @@ export const AuthModal: React.FC = () => {
         }
 
         const res = await createUserWithEmailAndPassword(auth, cleanEmail, password);
-        const codeToUse = referralCodeInput.trim() || getUrlParam('ref');
+        const codeToUse = (referralCodeInput.trim() || getUrlParam('ref') || '').toUpperCase();
         let refId: string | null = null;
 
         if (codeToUse) {
@@ -235,6 +240,11 @@ export const AuthModal: React.FC = () => {
               sn.forEach((c) => {
                 refId = c.key;
               });
+            } else {
+              const directSnap = await get(ref(db, `users/${codeToUse}`));
+              if (directSnap.exists()) {
+                refId = codeToUse;
+              }
             }
           } catch {
             // safe ignore

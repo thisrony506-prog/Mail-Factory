@@ -72,7 +72,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const referrerName = useMemo(() => {
     if (!profile?.referredBy) return null;
     const found = allUsers.find(
-      (u) => u.referralCode === profile.referredBy || u.uid === profile.referredBy
+      (u) =>
+        u.referralCode === profile.referredBy ||
+        u.uid === profile.referredBy ||
+        (profile.referredBy && u.referralCode?.toUpperCase() === profile.referredBy.toUpperCase()) ||
+        (profile.referredBy && u.uid === profile.referredBy)
     );
     return found ? found.username || found.email?.split('@')[0] || profile.referredBy : profile.referredBy;
   }, [profile?.referredBy, allUsers]);
