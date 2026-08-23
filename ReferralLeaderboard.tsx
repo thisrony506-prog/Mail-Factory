@@ -118,7 +118,7 @@ export const ReferralLeaderboard: React.FC = () => {
   const referralLink = `${siteDomain}/register?ref=${refCode}`;
   const userId = profile?.uid || 'MF-USER-001';
 
-  // Process & Compute Top 10 Referral Earners
+  // Process & Compute Top Referral Earners from Real Users ONLY
   const leaderboardData: ReferralLeaderboardItem[] = useMemo(() => {
     const realUsers = (allUsers || []).filter(
       (u) => u && !isExcludedSeller(u.username, u.email, u.uid)
@@ -129,15 +129,14 @@ export const ReferralLeaderboard: React.FC = () => {
         (friend) => friend.referredBy === u.referralCode || friend.referredBy === u.uid
       );
       const computedRefEarnings =
-        Number(u.referralEarnings) ||
-        referredFriends.length * (signupBonusUser || 5) +
-          referredFriends.reduce(
-            (acc, f) => acc + (Number(f.totalEarnings || 0) * (commissionPercent || 10)) / 100,
-            0
-          );
+        Number(u.referralEarnings || 0) +
+        referredFriends.reduce(
+          (acc, f) => acc + (Number(f.totalEarnings || 0) * (commissionPercent || 10)) / 100,
+          0
+        );
 
       const refEarnings = Math.max(computedRefEarnings, Number(u.referralEarnings || 0));
-      const refCount = Math.max(referredFriends.length, Math.floor(refEarnings / 15));
+      const refCount = referredFriends.length;
 
       return {
         uid: u.uid,
@@ -152,52 +151,6 @@ export const ReferralLeaderboard: React.FC = () => {
       };
     });
 
-    if (list.length < 10) {
-      const demoUsers = [
-        { name: 'Rafiqul Islam', baseEarn: 4850, count: 62, badge: 'Diamond Ambassador' },
-        { name: 'Sabbir Ahmed', baseEarn: 3920, count: 48, badge: 'Platinum Recruiter' },
-        { name: 'Anika Rahman', baseEarn: 3100, count: 41, badge: 'Gold Promoter' },
-        { name: 'Hasan Mahmud', baseEarn: 2650, count: 35, badge: 'Silver Partner' },
-        { name: 'Tareq Rahman', baseEarn: 2180, count: 29, badge: 'Silver Partner' },
-        { name: 'Mahfuz Alam', baseEarn: 1840, count: 24, badge: 'Rising Star' },
-        { name: 'Nusrat Jahan', baseEarn: 1520, count: 19, badge: 'Rising Star' },
-        { name: 'Kamrul Islam', baseEarn: 1290, count: 16, badge: 'Affiliate Pro' },
-        { name: 'Fahim Shahriar', baseEarn: 980, count: 12, badge: 'Affiliate Pro' },
-        { name: 'Jubayer Hossain', baseEarn: 750, count: 9, badge: 'Affiliate Member' },
-      ];
-
-      demoUsers.forEach((demo, idx) => {
-        if (!list.some((item) => item.username.toLowerCase() === demo.name.toLowerCase())) {
-          list.push({
-            uid: `demo_ref_${idx}`,
-            username: demo.name,
-            email: `${demo.name.toLowerCase().replace(/\s+/g, '')}@gmail.com`,
-            photoURL: '',
-            referralEarnings: demo.baseEarn,
-            referredCount: demo.count,
-            rank: 0,
-            badge: demo.badge,
-            isCurrentUser: false,
-          });
-        }
-      });
-    }
-
-    list = list.map((item) => {
-      let multiplier = 1;
-      if (timeFilter === 'month') multiplier = 0.45;
-      if (timeFilter === 'week') multiplier = 0.18;
-
-      const adjustedEarn = Math.round(item.referralEarnings * multiplier);
-      const adjustedCount = Math.max(1, Math.round(item.referredCount * multiplier));
-
-      return {
-        ...item,
-        referralEarnings: adjustedEarn,
-        referredCount: adjustedCount,
-      };
-    });
-
     if (profile && !list.some((item) => item.uid === profile.uid)) {
       list.push({
         uid: profile.uid,
@@ -205,7 +158,9 @@ export const ReferralLeaderboard: React.FC = () => {
         email: profile.email,
         photoURL: profile.photoURL,
         referralEarnings: Number(profile.referralEarnings || 0),
-        referredCount: 0,
+        referredCount: realUsers.filter(
+          (friend) => friend.referredBy === profile.referralCode || friend.referredBy === profile.uid
+        ).length,
         rank: 0,
         badge: 'Ambassador',
         isCurrentUser: true,
@@ -230,23 +185,24 @@ export const ReferralLeaderboard: React.FC = () => {
     });
 
     return list;
-  }, [allUsers, profile, signupBonusUser, commissionPercent, timeFilter]);
+  }, [allUsers, profile, signupBonusUser, commissionPercent]);
 
-  // Compute My Referred Friends List with exact timestamps & earnings
+  // Compute My Referred Friends List from Real Database Users ONLY
   const myReferredFriends: ReferredFriendItem[] = useMemo(() => {
     const userRefCode = profile?.referralCode || profile?.uid?.slice(0, 8).toUpperCase() || 'MF100';
-    const myRealReferred = (allUsers || []).filter(
-      (u) => u.referredBy === userRefCode || u.referredBy === profile?.uid
+    const realUsers = allUsers || [];
+    const myRealReferred = realUsers.filter(
+      (u) => u.referredBy === userRefCode || (profile?.uid && u.referredBy === profile.uid)
     );
 
-    let friendsList: ReferredFriendItem[] = myRealReferred.map((f, i) => {
-      const totalGmails = Math.max(1, Math.floor((f.totalEarnings || 150) / 10));
-      const commission = Math.round(((f.totalEarnings || 150) * (commissionPercent || 10)) / 100);
+    const friendsList: ReferredFriendItem[] = myRealReferred.map((f, i) => {
+      const totalGmails = Math.max(0, Math.floor((f.totalEarnings || 0) / 10));
+      const commission = Math.round(((f.totalEarnings || 0) * (commissionPercent || 10)) / 100);
       const bonus = signupBonusUser || 5;
       return {
         uid: f.uid || `ref_friend_${i}`,
         username: f.username || (f.email ? f.email.split('@')[0] : 'Friend'),
-        email: f.email || 'seller@gmail.com',
+        email: f.email || '',
         registeredAt: f.createdAt
           ? new Date(f.createdAt).toLocaleString('en-US', {
               year: 'numeric',
@@ -255,7 +211,7 @@ export const ReferralLeaderboard: React.FC = () => {
               hour: '2-digit',
               minute: '2-digit',
             })
-          : '15 Aug 2026, 02:30 PM',
+          : 'Recent',
         signupBonus: bonus,
         salesCommission: commission,
         totalIncome: bonus + commission,
@@ -263,29 +219,6 @@ export const ReferralLeaderboard: React.FC = () => {
         gmailsSold: totalGmails,
       };
     });
-
-    // Provide rich realistic sample records if user is new or has zero referred accounts
-    if (friendsList.length === 0) {
-      const demoFriends = [
-        { name: 'Sabbir Hossain', email: 'sab***@gmail.com', date: '16 Aug 2026, 05:15 PM', bonus: 5, commission: 85, gmails: 17 },
-        { name: 'Tanvir Ahmed', email: 'tan***@gmail.com', date: '16 Aug 2026, 02:40 PM', bonus: 5, commission: 50, gmails: 10 },
-        { name: 'Nusrat Jahan', email: 'nus***@gmail.com', date: '15 Aug 2026, 09:10 PM', bonus: 5, commission: 35, gmails: 7 },
-        { name: 'Kamrul Hasan', email: 'kam***@gmail.com', date: '14 Aug 2026, 11:05 AM', bonus: 5, commission: 110, gmails: 22 },
-        { name: 'Fahim Shahriar', email: 'fah***@gmail.com', date: '12 Aug 2026, 04:50 PM', bonus: 5, commission: 25, gmails: 5 },
-      ];
-
-      friendsList = demoFriends.map((d, idx) => ({
-        uid: `demo_friend_${idx}`,
-        username: d.name,
-        email: d.email,
-        registeredAt: d.date,
-        signupBonus: d.bonus,
-        salesCommission: d.commission,
-        totalIncome: d.bonus + d.commission,
-        status: 'Active',
-        gmailsSold: d.gmails,
-      }));
-    }
 
     return friendsList;
   }, [allUsers, profile, commissionPercent, signupBonusUser]);
