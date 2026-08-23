@@ -1174,6 +1174,48 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [submissions, withdrawRequests, profile?.balance, profile?.hold, profile?.totalEarnings, user]);
   // -----------------------------------------------------------
 
+  // --- Self-Healing Referral Earnings to Main Balance Sync ---
+  useEffect(() => {
+    if (!user || !profile || !profile.referralCode) return;
+
+    const userRefCode = profile.referralCode || profile.uid?.slice(0, 8).toUpperCase() || '';
+    const myReferred = (allUsers || []).filter(
+      (u) => u && u.uid !== profile.uid && (u.referredBy === userRefCode || u.referredBy === profile.uid)
+    );
+
+    let computedRefEarnings = 0;
+    myReferred.forEach((f) => {
+      const friendSubs = (submissions || []).filter((sub) => sub.userId === f.uid && sub.status === 'approved');
+      const approvedCountFromSubs = friendSubs.reduce(
+        (acc, sub) => acc + (Number(sub.count) || Number(sub.quantity) || 1),
+        0
+      );
+      const totalGmails = approvedCountFromSubs > 0 ? approvedCountFromSubs : Number(f.manual_approved_count) || Number(f.total_submitted) || 0;
+      const friendTotalEarnings = Number(f.totalEarnings || 0) || (totalGmails * 10);
+      const commission = Math.round((friendTotalEarnings * (commissionPercent || 10)) / 100);
+      const bonus = signupBonusUser || 5;
+      computedRefEarnings += (bonus + commission);
+    });
+
+    const lastProcessed = Number(profile.lastProcessedRefEarnings) || 0;
+    if (computedRefEarnings > lastProcessed) {
+      const delta = computedRefEarnings - lastProcessed;
+      const syncRefEarnings = async () => {
+        try {
+          const updates = {};
+          updates[`users/${user.uid}/balance`] = (Number(profile.balance) || 0) + delta;
+          updates[`users/${user.uid}/referralEarnings`] = computedRefEarnings;
+          updates[`users/${user.uid}/lastProcessedRefEarnings`] = computedRefEarnings;
+          await update(ref(db), updates);
+        } catch (e) {
+          console.error('Failed to sync referral earnings to balance:', e);
+        }
+      };
+      syncRefEarnings();
+    }
+  }, [user, profile, allUsers, submissions, commissionPercent, signupBonusUser]);
+  // -----------------------------------------------------------
+
   const submitGmails = async (data: {
     gmails: Array<{ email: string; password: string; recoveryEmail?: string }>;
     type: 'new' | 'old';

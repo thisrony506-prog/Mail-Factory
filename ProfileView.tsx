@@ -66,7 +66,16 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     claimDailyStreak,
     submissions,
     withdrawRequests,
+    allUsers,
   } = useApp();
+
+  const referrerName = useMemo(() => {
+    if (!profile?.referredBy) return null;
+    const found = allUsers.find(
+      (u) => u.referralCode === profile.referredBy || u.uid === profile.referredBy
+    );
+    return found ? found.username || found.email?.split('@')[0] || profile.referredBy : profile.referredBy;
+  }, [profile?.referredBy, allUsers]);
 
   const hasWithdrawn = Boolean(
     (Number(profile?.total_withdrawn) > 0) ||
@@ -219,6 +228,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 <Flame className="w-3.5 h-3.5 text-orange-400" />
                 <span>{profile?.login_streak || 1} Days Streak</span>
               </span>
+
+              {referrerName && (
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold px-3 py-1 rounded-full bg-indigo-500/30 border border-indigo-400/40 text-purple-200">
+                  <span>🤝 Referred by: <strong className="text-white">{referrerName}</strong></span>
+                </span>
+              )}
 
               <span className="text-[11px] text-indigo-200 font-medium px-2.5 py-1 rounded-full bg-black/20">
                 Joined {memberSince}
