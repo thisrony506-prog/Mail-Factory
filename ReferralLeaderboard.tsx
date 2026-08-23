@@ -72,6 +72,7 @@ export const ReferralLeaderboard: React.FC = () => {
     signupBonusUser,
     commissionPercent,
     withdrawRequests,
+    submissions,
   } = useApp();
 
   const isRefUserVerified = (item: ReferralLeaderboardItem): boolean => {
@@ -196,7 +197,18 @@ export const ReferralLeaderboard: React.FC = () => {
     );
 
     const friendsList: ReferredFriendItem[] = myRealReferred.map((f, i) => {
-      const totalGmails = Math.max(0, Math.floor((f.totalEarnings || 0) / 10));
+      const friendApprovedSubs = (submissions || []).filter(
+        (sub) => sub.userId === f.uid && sub.status === 'approved'
+      );
+      const approvedCountFromSubs = friendApprovedSubs.reduce(
+        (acc, sub) => acc + (Number(sub.count) || Number(sub.quantity) || 1),
+        0
+      );
+      const totalGmails =
+        approvedCountFromSubs > 0
+          ? approvedCountFromSubs
+          : Number(f.manual_approved_count) || Number(f.total_submitted) || 0;
+
       const commission = Math.round(((f.totalEarnings || 0) * (commissionPercent || 10)) / 100);
       const bonus = signupBonusUser || 5;
       return {
@@ -221,7 +233,7 @@ export const ReferralLeaderboard: React.FC = () => {
     });
 
     return friendsList;
-  }, [allUsers, profile, commissionPercent, signupBonusUser]);
+  }, [allUsers, profile, commissionPercent, signupBonusUser, submissions]);
 
   // Filtered Referred Friends
   const filteredReferredFriends = useMemo(() => {

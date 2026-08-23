@@ -263,6 +263,48 @@ export const onSubmissionStatusChange = functions.database
 
     const isNowApproved = after.status === "approved";
     const wasApproved = before.status === "approved";
+    const isNowRejected = after.status === "rejected";
+    const wasRejected = before.status === "rejected";
+
+    if (isNowRejected && !wasRejected) {
+      const userId = after.userId;
+      const totalAmount = Number(after.totalAmount) || 0;
+      const count = Number(after.count) || Number(after.quantity) || 1;
+
+      // If it was previously credited or approved, deduct from balance & totalEarnings
+      if (after.balanceCredited || wasApproved) {
+        try {
+          await db.ref(`users/${userId}`).transaction((user) => {
+            if (!user) return user;
+            return {
+              ...user,
+              balance: Math.max(0, (Number(user.balance) || 0) - totalAmount),
+              totalEarnings: Math.max(0, (Number(user.totalEarnings) || 0) - totalAmount),
+              manual_approved_count: Math.max(0, (Number(user.manual_approved_count) || 0) - count),
+            };
+          });
+          console.log(`Deducted ৳${totalAmount} from user ${userId} for rejected submission`);
+        } catch (err) {
+          console.error(`Failed to deduct balance for rejected submission for user ${userId}:`, err);
+        }
+        await change.after.ref.child("balanceCredited").set(false);
+      }
+
+      // Push notification
+      const reason = after.adminNote || after.rejectReason || "Submission did not meet quality guidelines.";
+      try {
+        await db.ref(`users/${userId}/notifications`).push({
+          title: "Submission Rejected ❌",
+          desc: `Your submission for ${count} Gmail(s) was rejected. Reason: ${reason}`,
+          type: "error",
+          read: false,
+          timestamp: Date.now(),
+          time: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+        });
+      } catch (err) {
+        console.error("Error pushing submission rejection notification:", err);
+      }
+    }
 
     if (isNowApproved && !wasApproved && !after.balanceCredited) {
       // Mark credited immediately

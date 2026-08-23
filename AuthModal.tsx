@@ -60,6 +60,7 @@ export const AuthModal: React.FC = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirmPass, setConfirmPass] = useState<string>('');
+  const [referralCodeInput, setReferralCodeInput] = useState<string>(() => getUrlParam('ref') || '');
   const [showPass, setShowPass] = useState<boolean>(false);
   const [agreeTerms, setAgreeTerms] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -95,12 +96,12 @@ export const AuthModal: React.FC = () => {
       const userSnap = await get(ref(db, `users/${googleUser.uid}`));
       if (!userSnap.exists()) {
         // Create new user profile
-        const refParam = getUrlParam('ref');
+        const codeToUse = referralCodeInput.trim() || getUrlParam('ref');
         let refId: string | null = null;
 
-        if (refParam) {
+        if (codeToUse) {
           try {
-            const q = query(ref(db, 'users'), orderByChild('referralCode'), equalTo(refParam));
+            const q = query(ref(db, 'users'), orderByChild('referralCode'), equalTo(codeToUse));
             const sn = await get(q);
             if (sn.exists()) {
               sn.forEach((c) => {
@@ -144,6 +145,7 @@ export const AuthModal: React.FC = () => {
           try {
             await update(ref(db, `users/${refId}`), {
               referralEarnings: increment(signupBonusReferrer),
+              balance: increment(signupBonusReferrer),
             });
           } catch {
             // Handled securely server-side or ignored if cross-user write is protected
@@ -222,12 +224,12 @@ export const AuthModal: React.FC = () => {
         }
 
         const res = await createUserWithEmailAndPassword(auth, cleanEmail, password);
-        const refParam = getUrlParam('ref');
+        const codeToUse = referralCodeInput.trim() || getUrlParam('ref');
         let refId: string | null = null;
 
-        if (refParam) {
+        if (codeToUse) {
           try {
-            const q = query(ref(db, 'users'), orderByChild('referralCode'), equalTo(refParam));
+            const q = query(ref(db, 'users'), orderByChild('referralCode'), equalTo(codeToUse));
             const sn = await get(q);
             if (sn.exists()) {
               sn.forEach((c) => {
@@ -271,6 +273,7 @@ export const AuthModal: React.FC = () => {
           try {
             await update(ref(db, `users/${refId}`), {
               referralEarnings: increment(signupBonusReferrer),
+              balance: increment(signupBonusReferrer),
             });
           } catch {
             // Handled securely server-side or ignored if cross-user write is protected
@@ -447,23 +450,43 @@ export const AuthModal: React.FC = () => {
             </div>
 
             {mode === 'register' && (
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-700 ml-1">
-                  {t.confirmPassword}
-                </label>
-                <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
-                    <Lock className="w-4 h-4" />
+              <>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-700 ml-1">
+                    {t.confirmPassword}
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+                      <Lock className="w-4 h-4" />
+                    </div>
+                    <input
+                      type={showPass ? 'text' : 'password'}
+                      value={confirmPass}
+                      onChange={(e) => setConfirmPass(e.target.value)}
+                      placeholder="Re-enter password"
+                      className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 bg-slate-50/50 hover:bg-slate-50 transition-all pl-10"
+                    />
                   </div>
-                  <input
-                    type={showPass ? 'text' : 'password'}
-                    value={confirmPass}
-                    onChange={(e) => setConfirmPass(e.target.value)}
-                    placeholder="Re-enter password"
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 bg-slate-50/50 hover:bg-slate-50 transition-all pl-10"
-                  />
                 </div>
-              </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-700 ml-1">
+                    {language === 'bn' ? 'রেফারেল কোড (ঐচ্ছিক)' : 'Referral Code (Optional)'}
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+                      <Users className="w-4 h-4" />
+                    </div>
+                    <input
+                      type="text"
+                      value={referralCodeInput}
+                      onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())}
+                      placeholder="REF123"
+                      className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 uppercase focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 bg-slate-50/50 hover:bg-slate-50 transition-all pl-10"
+                    />
+                  </div>
+                </div>
+              </>
             )}
 
             {mode === 'login' && (

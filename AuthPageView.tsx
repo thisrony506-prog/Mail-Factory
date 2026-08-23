@@ -63,7 +63,7 @@ export const AuthPageView: React.FC<AuthPageViewProps> = ({
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirmPass, setConfirmPass] = useState<string>('');
-  const [referralCodeInput, setReferralCodeInput] = useState<string>('');
+  const [referralCodeInput, setReferralCodeInput] = useState<string>(() => getUrlParam('ref') || '');
   const [showPass, setShowPass] = useState<boolean>(false);
   const [agreeTerms, setAgreeTerms] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -181,6 +181,7 @@ export const AuthPageView: React.FC<AuthPageViewProps> = ({
           try {
             await update(ref(db, `users/${refId}`), {
               referralEarnings: increment(signupBonusReferrer),
+              balance: increment(signupBonusReferrer),
             });
           } catch {
             // Ignore
@@ -305,6 +306,7 @@ export const AuthPageView: React.FC<AuthPageViewProps> = ({
           try {
             await update(ref(db, `users/${refId}`), {
               referralEarnings: increment(signupBonusReferrer),
+              balance: increment(signupBonusReferrer),
             });
           } catch {
             // Ignore
