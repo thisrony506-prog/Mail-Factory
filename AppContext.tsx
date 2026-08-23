@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { getClientFingerprint } from './deviceUtils';
 import {
   auth,
   db,
@@ -823,6 +824,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             if (refId === googleUser.uid) {
               refId = null;
             }
+
+            const { deviceId, ipAddress } = await getClientFingerprint();
+
             await set(ref(db, `users/${googleUser.uid}`), {
               username: googleUser.displayName || 'Google User',
               email: googleUser.email,
@@ -840,6 +844,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               total_submitted: 0,
               total_withdrawn: 0,
               auth_provider: 'google',
+              deviceId,
+              ipAddress,
             });
             if (refId && referrerBonus > 0) {
               try {

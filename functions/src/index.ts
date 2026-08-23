@@ -345,4 +345,73 @@ export const onSubmissionStatusChange = functions.database
     return null;
   });
 
+/**
+ * 3. Fraud Detection for Referral Registrations
+ * Automatically checks for duplicate IP addresses or device IDs upon referral account creation
+ * to flag and prevent potential fraudulent signups before admin review.
+ */
+export const checkFraudulentSignup = functions.database
+  .ref("/users/{uid}")
+  .onCreate(async (snapshot, context) => {
+    const newUser = snapshot.val();
+    const uid = context.params.uid;
+
+    if (!newUser || !newUser.referredBy) {
+      return null;
+    }
+
+    const deviceId = newUser.deviceId;
+    const ipAddress = newUser.ipAddress;
+
+    if (!deviceId && !ipAddress) {
+      return null;
+    }
+
+    try {
+      const usersSnap = await db.ref("users").once("value");
+      const allUsers = usersSnap.val() || {};
+
+      let isFraud = false;
+      let matchedReason = "";
+
+      for (const [existingUid, existingUser] of Object.entries(allUsers) as [string, any][]) {
+        if (existingUid === uid) continue;
+        if (!existingUser) continue;
+
+        if (deviceId && existingUser.deviceId && deviceId === existingUser.deviceId) {
+          isFraud = true;
+          matchedReason = `Duplicate Device ID match with user ${existingUid}`;
+          break;
+        }
+
+        if (ipAddress && existingUser.ipAddress && ipAddress === existingUser.ipAddress && ipAddress !== "127.0.0.1" && ipAddress !== "localhost") {
+          isFraud = true;
+          matchedReason = `Duplicate IP Address match (${ipAddress}) with user ${existingUid}`;
+          break;
+        }
+      }
+
+      if (isFraud) {
+        await snapshot.ref.update({
+          isFraudulent: true,
+          fraudReason: matchedReason,
+          status: "flagged",
+          holdBonus: true,
+        });
+
+        await db.ref("admin_notifications").push({
+          title: "🚨 Fraudulent Referral Signup Flagged",
+          desc: `User ${newUser.username || uid} was flagged due to: ${matchedReason}. Referred by: ${newUser.referredBy}`,
+          type: "warning",
+          timestamp: Date.now(),
+          read: false,
+        });
+      }
+    } catch (err) {
+      console.error("Error in checkFraudulentSignup:", err);
+    }
+
+    return null;
+  });
+
 export * from "./reviews";

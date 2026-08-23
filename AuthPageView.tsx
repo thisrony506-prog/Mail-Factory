@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from './AppContext';
 import { translations, LANGUAGES } from './i18n';
 import { hapticFeedback } from './haptics';
+import { getClientFingerprint } from './deviceUtils';
 import {
   auth,
   db,
@@ -152,6 +153,8 @@ export const AuthPageView: React.FC<AuthPageViewProps> = ({
           refId = null;
         }
 
+        const { deviceId, ipAddress } = await getClientFingerprint();
+
         const newReferralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
         await set(ref(db, `users/${googleUser.uid}`), {
           username: googleUser.displayName || 'Google User',
@@ -170,6 +173,8 @@ export const AuthPageView: React.FC<AuthPageViewProps> = ({
           total_submitted: 0,
           total_withdrawn: 0,
           auth_provider: 'google',
+          deviceId,
+          ipAddress,
         });
 
         if (refId && signupBonusReferrer > 0) {
@@ -272,6 +277,8 @@ export const AuthPageView: React.FC<AuthPageViewProps> = ({
           refId = null;
         }
 
+        const { deviceId, ipAddress } = await getClientFingerprint();
+
         const newReferralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
         await set(ref(db, `users/${res.user.uid}`), {
           username: name.trim(),
@@ -290,6 +297,8 @@ export const AuthPageView: React.FC<AuthPageViewProps> = ({
           total_submitted: 0,
           total_withdrawn: 0,
           auth_provider: 'email',
+          deviceId,
+          ipAddress,
         });
 
         if (refId && signupBonusReferrer > 0) {
