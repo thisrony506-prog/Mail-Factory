@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BKASH_LOGO, NAGAD_LOGO, USDT_LOGO } from './logoPreload';
+import { BKASH_LOGO, NAGAD_LOGO, NAGAD_DIRECT_LOGO, USDT_LOGO } from './logoPreload';
 import { useApp } from './AppContext';
 import { translations } from './i18n';
 import confetti from 'canvas-confetti';
@@ -68,24 +68,23 @@ export const WithdrawView: React.FC = () => {
     }
     if (type === 'nagad') {
       return (
-        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-[#EC1C24] flex flex-col items-center justify-center shadow-md relative overflow-hidden ring-2 ring-red-500/30 shrink-0 p-1">
+        <a 
+          href={NAGAD_LOGO} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white flex items-center justify-center shadow-md relative overflow-hidden ring-2 ring-red-500/30 shrink-0 p-0.5 block cursor-pointer hover:opacity-95 transition-opacity"
+          title="Nagad Logo"
+        >
           <img 
-            src={NAGAD_LOGO} 
+            src={NAGAD_DIRECT_LOGO} 
             alt="Nagad" 
-            className="w-full h-full object-cover rounded-xl absolute inset-0 z-10" 
+            className="w-full h-full object-cover rounded-xl relative z-10 bg-white" 
             referrerPolicy="no-referrer"
             onError={(e) => {
-              e.currentTarget.style.display = 'none';
+              e.currentTarget.src = NAGAD_LOGO;
             }}
           />
-          <div className="absolute inset-0 bg-[#EC1C24] flex flex-col items-center justify-center text-white p-0.5 z-0">
-            <svg viewBox="0 0 100 100" className="w-5 h-5 sm:w-6 sm:h-6 text-white fill-current">
-              <path d="M50 15 C30 15 15 30 15 50 C15 70 30 85 50 85 C60 85 70 80 77 73 L67 63 C63 67 57 70 50 70 C38 70 30 62 30 50 C30 38 38 30 50 30 C57 30 63 33 67 37 L77 27 C70 20 60 15 50 15 Z" />
-              <circle cx="50" cy="50" r="12" />
-            </svg>
-            <span className="text-[8px] sm:text-[10px] font-black text-white tracking-widest uppercase scale-y-90 font-sans mt-[-2px]">নগদ</span>
-          </div>
-        </div>
+        </a>
       );
     }
     if (type === 'rocket') {
