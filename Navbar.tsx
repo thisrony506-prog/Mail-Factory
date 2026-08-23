@@ -141,8 +141,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span className="text-base sm:text-lg md:text-xl font-black text-amber-300 whitespace-nowrap">Factory</span>
                 </div>
                 <div className="flex items-center gap-1 sm:gap-1.5 mt-0.5 min-w-0">
-                  <span className="text-[8px] sm:text-[9px] md:text-[10px] font-semibold tracking-wider text-indigo-200 uppercase truncate max-w-[85px] xs:max-w-[130px] sm:max-w-none">
-                    {t.slogan}
+                  <span className="text-[8px] sm:text-[9px] md:text-[10px] font-bold tracking-wider text-amber-300 uppercase truncate max-w-[120px] xs:max-w-[150px] sm:max-w-none">
+                    ★ FAST & TRUSTED ★
                   </span>
                   <div className="hidden md:flex items-center gap-1 bg-black/20 px-1.5 py-0.5 rounded-full border border-white/10 shrink-0">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
