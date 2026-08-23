@@ -115,7 +115,7 @@ export const ReferralLeaderboard: React.FC = () => {
   const siteDomain = typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost')
     ? window.location.origin
     : 'https://mailfactory.top';
-  const referralLink = `${siteDomain}/register?ref=${refCode}`;
+  const referralLink = `${siteDomain}/#/register?ref=${refCode}`;
   const userId = profile?.uid || 'MF-USER-001';
 
   // Process & Compute Top Referral Earners from Real Users ONLY

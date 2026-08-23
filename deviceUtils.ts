@@ -24,3 +24,30 @@ export async function getClientFingerprint(): Promise<{ deviceId: string; ipAddr
 
   return { deviceId, ipAddress };
 }
+
+export function getUrlParam(param: string): string | null {
+  try {
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.has(param)) {
+      return searchParams.get(param);
+    }
+    const hash = window.location.hash;
+    if (hash) {
+      const qIndex = hash.indexOf('?');
+      if (qIndex !== -1) {
+        const hashQuery = new URLSearchParams(hash.substring(qIndex + 1));
+        if (hashQuery.has(param)) {
+          return hashQuery.get(param);
+        }
+      }
+      const cleanHash = hash.replace(/^#/, '');
+      const hashParams = new URLSearchParams(cleanHash);
+      if (hashParams.has(param)) {
+        return hashParams.get(param);
+      }
+    }
+  } catch (e) {
+    console.warn('Error getting URL param:', e);
+  }
+  return null;
+}

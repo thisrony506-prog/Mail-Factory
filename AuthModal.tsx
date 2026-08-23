@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from './AppContext';
 import { translations } from './i18n';
 import { hapticFeedback } from './haptics';
-import { getClientFingerprint } from './deviceUtils';
+import { getClientFingerprint, getUrlParam } from './deviceUtils';
 import {
   auth,
   db,
@@ -95,8 +95,7 @@ export const AuthModal: React.FC = () => {
       const userSnap = await get(ref(db, `users/${googleUser.uid}`));
       if (!userSnap.exists()) {
         // Create new user profile
-        const urlParams = new URLSearchParams(window.location.search);
-        const refParam = urlParams.get('ref');
+        const refParam = getUrlParam('ref');
         let refId: string | null = null;
 
         if (refParam) {
@@ -223,8 +222,7 @@ export const AuthModal: React.FC = () => {
         }
 
         const res = await createUserWithEmailAndPassword(auth, cleanEmail, password);
-        const urlParams = new URLSearchParams(window.location.search);
-        const refParam = urlParams.get('ref');
+        const refParam = getUrlParam('ref');
         let refId: string | null = null;
 
         if (refParam) {

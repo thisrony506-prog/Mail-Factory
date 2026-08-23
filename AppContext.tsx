@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { getClientFingerprint } from './deviceUtils';
+import { getClientFingerprint, getUrlParam } from './deviceUtils';
 import {
   auth,
   db,
@@ -188,6 +188,9 @@ export const PATH_TO_TAB: Record<string, ActiveTab> = {
   '/contact': 'contact',
   '/contact-us': 'contact',
   '/support': 'contact',
+  '/register': 'home',
+  '/signup': 'home',
+  '/login': 'home',
 };
 
 const getInitialTabFromUrl = (): ActiveTab => {
@@ -204,9 +207,10 @@ const getInitialTabFromUrl = (): ActiveTab => {
         return PATH_TO_TAB[formatted];
       }
     }
-    const hash = window.location.hash.replace('#', '').toLowerCase();
+    const hash = window.location.hash.replace(/^#/, '').toLowerCase();
     if (hash) {
-      const formatted = `/${hash.replace(/^\//, '')}`;
+      const [hashPath] = hash.split('?');
+      const formatted = `/${hashPath.replace(/^\//, '')}`;
       if (PATH_TO_TAB[formatted]) {
         return PATH_TO_TAB[formatted];
       }
@@ -253,7 +257,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isAuthModalOpen, setIsAuthModalOpenState] = useState<boolean>(() => {
     try {
       const path = window.location.pathname.toLowerCase();
-      return path === '/login' || path === '/register' || path === '/signup';
+      const hash = window.location.hash.toLowerCase();
+      const hasRef = getUrlParam('ref') !== null;
+      return path === '/login' || path === '/register' || path === '/signup' ||
+             hash.includes('register') || hash.includes('signup') || hash.includes('login') || hasRef;
     } catch {
       return false;
     }
@@ -262,7 +269,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>(() => {
     try {
       const path = window.location.pathname.toLowerCase();
-      if (path === '/register' || path === '/signup') return 'register';
+      const hash = window.location.hash.toLowerCase();
+      const hasRef = getUrlParam('ref') !== null;
+      if (path === '/register' || path === '/signup' || hash.includes('register') || hash.includes('signup') || hasRef) {
+        return 'register';
+      }
     } catch {}
     return 'login';
   });
@@ -797,8 +808,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const googleUser = result.user;
           const userSnap = await get(ref(db, `users/${googleUser.uid}`));
           if (!userSnap.exists()) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const refParam = urlParams.get('ref');
+            const refParam = getUrlParam('ref');
             let refId: string | null = null;
             if (refParam) {
               try {

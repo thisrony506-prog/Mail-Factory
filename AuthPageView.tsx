@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from './AppContext';
 import { translations, LANGUAGES } from './i18n';
 import { hapticFeedback } from './haptics';
-import { getClientFingerprint } from './deviceUtils';
+import { getClientFingerprint, getUrlParam } from './deviceUtils';
 import {
   auth,
   db,
@@ -133,7 +133,7 @@ export const AuthPageView: React.FC<AuthPageViewProps> = ({
       const userSnap = await get(ref(db, `users/${googleUser.uid}`));
       if (!userSnap.exists()) {
         let refId: string | null = null;
-        const codeToUse = referralCodeInput.trim() || new URLSearchParams(window.location.search).get('ref');
+        const codeToUse = referralCodeInput.trim() || getUrlParam('ref');
 
         if (codeToUse) {
           try {
@@ -257,7 +257,7 @@ export const AuthPageView: React.FC<AuthPageViewProps> = ({
 
         const res = await createUserWithEmailAndPassword(auth, cleanEmail, password);
         let refId: string | null = null;
-        const codeToUse = referralCodeInput.trim() || new URLSearchParams(window.location.search).get('ref');
+        const codeToUse = referralCodeInput.trim() || getUrlParam('ref');
 
         if (codeToUse) {
           try {
