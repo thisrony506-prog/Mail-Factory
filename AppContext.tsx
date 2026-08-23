@@ -1213,15 +1213,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const friendSubs = (allSubmissions || []).filter(
         (sub) => sub.userId === f.uid && (sub.status === 'approved' || sub.status?.toLowerCase() === 'approved')
       );
+      
       const approvedCountFromSubs = friendSubs.reduce(
         (acc, sub) => acc + (Number(sub.count) || Number(sub.quantity) || 1),
         0
       );
+      
+      const manualApprovedCount = Number(f.manual_approved_count) || 0;
+      const totalApprovedCount = Math.max(approvedCountFromSubs, manualApprovedCount);
+
       const approvedEarningsFromSubs = friendSubs.reduce(
         (acc, sub) => acc + (Number(sub.totalAmount) || Number(sub.amount) || (Number(sub.count || sub.quantity || 1) * 10)),
         0
       );
-      const friendTotalEarnings = approvedEarningsFromSubs > 0 ? approvedEarningsFromSubs : (approvedCountFromSubs * 10);
+      
+      const friendTotalEarnings = Math.max(approvedEarningsFromSubs, totalApprovedCount * 10);
       const commission = Math.round((friendTotalEarnings * (commissionPercent || 10)) / 100);
       friendCommissionsTotal += commission;
     });
@@ -1235,10 +1241,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const lastProcessed = Number(profile.lastProcessedRefEarnings) || 0;
     const delta = computedRefEarnings > lastProcessed ? computedRefEarnings - lastProcessed : 0;
 
-    if (delta > 0 || computedRefEarnings !== existingReferralEarnings || (computedRefEarnings > 0 && Number(profile.balance || 0) < computedRefEarnings && !profile.referralBalanceSynced)) {
+    if (delta > 0 || computedRefEarnings !== existingReferralEarnings) {
       const syncRefEarnings = async () => {
         try {
-          const updates = {};
+          const updates: any = {};
           let currentBalance = Number(profile.balance || 0);
           let currentTotalEarnings = Number(profile.totalEarnings || 0);
 
@@ -1247,17 +1253,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             currentTotalEarnings += delta;
             updates[`users/${user.uid}/balance`] = currentBalance;
             updates[`users/${user.uid}/totalEarnings`] = currentTotalEarnings;
-          } else if (!profile.referralBalanceSynced && computedRefEarnings > 0) {
-            // Force sync if balance doesn't reflect referral earnings yet
-            currentBalance += computedRefEarnings;
-            currentTotalEarnings += computedRefEarnings;
-            updates[`users/${user.uid}/balance`] = currentBalance;
-            updates[`users/${user.uid}/totalEarnings`] = currentTotalEarnings;
-            updates[`users/${user.uid}/referralBalanceSynced`] = true;
           }
 
           updates[`users/${user.uid}/referralEarnings`] = computedRefEarnings;
           updates[`users/${user.uid}/lastProcessedRefEarnings`] = computedRefEarnings;
+          updates[`users/${user.uid}/referralBalanceSynced`] = true;
+          
           await update(ref(db), updates);
         } catch (e) {
           console.error('Failed to sync referral earnings to balance:', e);

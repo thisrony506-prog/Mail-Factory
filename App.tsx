@@ -49,6 +49,9 @@ const FAQModal = lazyWithRetry(() => import('./Modals').then(m => ({ default: m.
 const ContactModal = lazyWithRetry(() => import('./Modals').then(m => ({ default: m.ContactModal })));
 const RateAppModal = lazyWithRetry(() => import('./Modals').then(m => ({ default: m.RateAppModal })));
 
+const GlobalSMSPopup = lazyWithRetry(() => import('./GlobalSMSPopup').then(m => ({ default: m.GlobalSMSPopup })));
+const FCMSetup = lazyWithRetry(() => import('./FCMSetup').then(m => ({ default: m.FCMSetup })));
+
 const MainLayout: React.FC = () => {
   const {
     user,
@@ -258,6 +261,8 @@ const MainLayout: React.FC = () => {
           }}
         />
         <RateAppModal isOpen={isRateModalOpen} onClose={() => setRateModalOpen(false)} />
+        <GlobalSMSPopup />
+        { /* <FCMSetup /> */ }
       </Suspense>
     </div>
   );

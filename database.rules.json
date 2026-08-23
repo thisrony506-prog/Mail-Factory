@@ -68,6 +68,11 @@
       ".read": "auth != null",
       ".write": "auth != null && (auth.token.email === 'gmrony135@gmail.com' || auth.token.email === 'mailfactorybd@gmail.com' || auth.token.email === 'iamronyofficial1@gmail.com')"
     },
+    "global_announcements": {
+      ".read": "auth != null",
+      ".write": "auth != null && (auth.token.email === 'gmrony135@gmail.com' || auth.token.email === 'mailfactorybd@gmail.com' || auth.token.email === 'iamronyofficial1@gmail.com')",
+      ".indexOn": ["timestamp"]
+    },
     "history": {
       ".read": "auth != null",
       ".write": "auth != null && (auth.token.email === 'gmrony135@gmail.com' || auth.token.email === 'mailfactorybd@gmail.com' || auth.token.email === 'iamronyofficial1@gmail.com')"

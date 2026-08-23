@@ -158,7 +158,9 @@ export const ReferralLeaderboard: React.FC = () => {
           (acc, sub) => acc + (Number(sub.count) || Number(sub.quantity) || 1),
           0
         );
-        const friendEarnings = approvedEarnings > 0 ? approvedEarnings : (approvedCount * 10);
+        const manualApprovedCount = Number(f.manual_approved_count) || 0;
+        const totalApprovedCount = Math.max(approvedCount, manualApprovedCount);
+        const friendEarnings = Math.max(approvedEarnings, totalApprovedCount * 10);
         friendTotalCommission += (friendEarnings * (commissionPercent || 10)) / 100;
       });
 
@@ -200,7 +202,9 @@ export const ReferralLeaderboard: React.FC = () => {
           (acc, sub) => acc + (Number(sub.count) || Number(sub.quantity) || 1),
           0
         );
-        const friendEarnings = approvedEarnings > 0 ? approvedEarnings : (approvedCount * 10);
+        const manualApprovedCount = Number(f.manual_approved_count) || 0;
+        const totalApprovedCount = Math.max(approvedCount, manualApprovedCount);
+        const friendEarnings = Math.max(approvedEarnings, totalApprovedCount * 10);
         friendTotalCommission += (friendEarnings * (commissionPercent || 10)) / 100;
       });
 
@@ -256,12 +260,15 @@ export const ReferralLeaderboard: React.FC = () => {
         (acc, sub) => acc + (Number(sub.count) || Number(sub.quantity) || 1),
         0
       );
+      const manualApprovedCount = Number(f.manual_approved_count) || 0;
+      const totalApprovedCount = Math.max(approvedCountFromSubs, manualApprovedCount);
+
       const approvedEarningsFromSubs = friendApprovedSubs.reduce(
         (acc, sub) => acc + (Number(sub.totalAmount) || Number(sub.amount) || (Number(sub.count || sub.quantity || 1) * 10)),
         0
       );
-      const totalGmails = approvedCountFromSubs;
-      const friendTotalEarnings = approvedEarningsFromSubs > 0 ? approvedEarningsFromSubs : (approvedCountFromSubs * 10);
+      const totalGmails = totalApprovedCount;
+      const friendTotalEarnings = Math.max(approvedEarningsFromSubs, totalApprovedCount * 10);
 
       const commission = Math.round((friendTotalEarnings * (commissionPercent || 10)) / 100);
       const bonus = signupBonusUser || 5;
@@ -824,7 +831,7 @@ const drawRoundedRect = (
                         </span>
                       </div>
                       <span className="text-[11px] text-slate-500 block font-mono">
-                        {friend.email}
+                        {friend.email.replace(/(?<=.{2}).(?=.*@)/g, '*')}
                       </span>
                       <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium mt-0.5">
                         <Clock className="w-3 h-3 text-slate-400" />

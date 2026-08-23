@@ -1,4 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import {
   initializeAuth,
   getAuth,
@@ -63,6 +64,15 @@ export const auth = authInstance;
 export const db: Database = getDatabase(app);
 export const googleProvider = new GoogleAuthProvider();
 
+export let messaging: any = null;
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  try {
+    messaging = getMessaging(app);
+  } catch (e) {
+    console.warn('Firebase Messaging not supported', e);
+  }
+}
+
 export {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -90,7 +100,9 @@ export {
   remove,
   onChildAdded,
   goOnline,
-  goOffline
+  goOffline,
+  getToken,
+  onMessage
 };
 
 export type { User };

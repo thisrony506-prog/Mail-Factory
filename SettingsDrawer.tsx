@@ -66,6 +66,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
 
   const t = translations[language];
   const { isInstallable, promptInstall } = usePWAInstall();
+  const isAdmin = user && user.email && ['gmrony135@gmail.com', 'mailfactorybd@gmail.com', 'iamronyofficial1@gmail.com'].includes(user.email);
 
   const handleLogout = async () => {
     if (window.confirm(language === 'bn' ? 'আপনি কি নিশ্চিত যে লগআউট করতে চান?' : 'Are you sure you want to log out?')) {

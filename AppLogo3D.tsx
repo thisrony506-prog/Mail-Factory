@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { LOGO_BASE64 } from './logoBase64';
-import { DEFAULT_LOGO } from './AppContext';
 import { Mail, Sparkles } from 'lucide-react';
 
 interface AppLogo3DProps {
@@ -23,28 +22,18 @@ export const AppLogo3D: React.FC<AppLogo3DProps> = ({
     dimension = size;
   } else {
     switch (size) {
-      case 'xs':
-        dimension = 24;
-        break;
-      case 'sm':
-        dimension = 32;
-        break;
-      case 'md':
-        dimension = 40;
-        break;
-      case 'lg':
-        dimension = 52;
-        break;
-      case 'xl':
-        dimension = 72;
-        break;
+      case 'xs': dimension = 24; break;
+      case 'sm': dimension = 32; break;
+      case 'md': dimension = 40; break;
+      case 'lg': dimension = 52; break;
+      case 'xl': dimension = 72; break;
     }
   }
 
   const [hasError, setHasError] = useState(false);
-  const sources = [src, LOGO_BASE64, DEFAULT_LOGO, '/new-logo.png', '/app-logo.png'].filter(Boolean) as string[];
   const [srcIndex, setSrcIndex] = useState(0);
-
+  
+  const sources = [src, LOGO_BASE64, '/app-logo.png'].filter(Boolean) as string[];
   const currentSrc = sources[srcIndex] || LOGO_BASE64;
 
   const handleError = () => {
@@ -62,11 +51,9 @@ export const AppLogo3D: React.FC<AppLogo3DProps> = ({
       } ${className}`}
       style={{ width: dimension, height: dimension }}
     >
-      {/* Subtle Glow if explicitly requested */}
       {glow && (
         <div className="absolute -inset-1 rounded-full bg-indigo-500/20 opacity-70 blur-md pointer-events-none" />
       )}
-
       {!hasError ? (
         <img
           src={currentSrc}
@@ -80,21 +67,12 @@ export const AppLogo3D: React.FC<AppLogo3DProps> = ({
         />
       ) : (
         <div 
-          className="w-full h-full rounded-xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 text-white flex items-center justify-center shadow-md border border-white/20 relative overflow-hidden"
+          className="w-full h-full rounded-xl bg-gradient-to-br from-indigo-600 to-purple-800 text-white flex items-center justify-center shadow-md relative overflow-hidden"
           style={{ width: dimension, height: dimension }}
         >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(251,191,36,0.3),transparent_50%)]" />
-          <Mail className="w-1/2 h-1/2 text-white relative z-10 drop-shadow" />
-          <div className="absolute bottom-0.5 right-0.5 bg-amber-400 text-amber-950 rounded-full p-0.5 shadow">
-            <Sparkles className="w-2.5 h-2.5" />
-          </div>
+          <Mail className="w-1/2 h-1/2 text-white relative z-10" />
         </div>
       )}
     </div>
   );
 };
-
-
-
-
-

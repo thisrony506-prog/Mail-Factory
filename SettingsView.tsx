@@ -56,9 +56,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     currentLevel,
     addNotification,
   } = useApp();
-
+  
   const t = translations[language];
   const { isInstallable, promptInstall } = usePWAInstall();
+  const isAdmin = user && user.email && ['gmrony135@gmail.com', 'mailfactorybd@gmail.com', 'iamronyofficial1@gmail.com'].includes(user.email);
 
   const handleLogout = async () => {
     try {
