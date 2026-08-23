@@ -148,6 +148,10 @@ export const AuthPageView: React.FC<AuthPageViewProps> = ({
           }
         }
 
+        if (refId === googleUser.uid) {
+          refId = null;
+        }
+
         const newReferralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
         await set(ref(db, `users/${googleUser.uid}`), {
           username: googleUser.displayName || 'Google User',
@@ -262,6 +266,10 @@ export const AuthPageView: React.FC<AuthPageViewProps> = ({
           } catch {
             // safe ignore
           }
+        }
+
+        if (refId === res.user.uid) {
+          refId = null;
         }
 
         const newReferralCode = Math.random().toString(36).substring(2, 8).toUpperCase();

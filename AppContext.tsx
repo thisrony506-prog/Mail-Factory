@@ -808,12 +808,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 }
               } catch { }
             }
+            let userBonus = 5;
+            let referrerBonus = 5;
+            try {
+              const settingsSnap = await get(ref(db, 'settings'));
+              if (settingsSnap.exists()) {
+                const sVal = settingsSnap.val();
+                if (sVal.signup_bonus_user !== undefined) userBonus = Number(sVal.signup_bonus_user) || 5;
+                if (sVal.signup_bonus_referrer !== undefined) referrerBonus = Number(sVal.signup_bonus_referrer) || 5;
+              }
+            } catch {}
+
             const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+            if (refId === googleUser.uid) {
+              refId = null;
+            }
             await set(ref(db, `users/${googleUser.uid}`), {
               username: googleUser.displayName || 'Google User',
               email: googleUser.email,
               photoURL: googleUser.photoURL || '',
-              balance: 100, // Fallback default signupBonusUser
+              balance: userBonus,
               hold: 0,
               paymentNumber: '',
               paymentMethod: '',
@@ -827,10 +841,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               total_withdrawn: 0,
               auth_provider: 'google',
             });
-            if (refId) {
+            if (refId && referrerBonus > 0) {
               try {
                 await update(ref(db, `users/${refId}`), {
-                  referralEarnings: increment(50), // Fallback default signupBonusReferrer
+                  referralEarnings: increment(referrerBonus),
                 });
               } catch { }
             }

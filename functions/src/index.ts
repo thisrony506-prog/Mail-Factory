@@ -288,6 +288,45 @@ export const onSubmissionStatusChange = functions.database
         console.error(`Failed to credit balance for user ${userId}:`, err);
       }
 
+      // Check if user was referred by someone to credit commission based on Admin Settings
+      try {
+        const userSnap = await db.ref(`users/${userId}`).once("value");
+        const userData = userSnap.val();
+        if (userData && userData.referredBy) {
+          const referrerId = userData.referredBy;
+          if (referrerId !== userId) {
+            // Fetch dynamic commission percent from settings
+            const settingsSnap = await db.ref("settings").once("value");
+            const settingsVal = settingsSnap.val() || {};
+            const commissionPercent = Number(settingsVal.commission_percent) || 10;
+
+            const commissionAmount = (totalAmount * commissionPercent) / 100;
+            if (commissionAmount > 0) {
+              await db.ref(`users/${referrerId}`).transaction((refUser) => {
+                if (!refUser) return refUser;
+                const currentRefEarnings = Number(refUser.referralEarnings) || 0;
+                const currentBalance = Number(refUser.balance) || 0;
+                return {
+                  ...refUser,
+                  balance: currentBalance + commissionAmount,
+                  referralEarnings: currentRefEarnings + commissionAmount,
+                };
+              });
+              await db.ref(`users/${referrerId}/notifications`).push({
+                title: "Referral Commission Earned! 🎁",
+                desc: `You received ৳${commissionAmount.toFixed(2)} (${commissionPercent}%) commission from your referred friend's approved submission.`,
+                type: "success",
+                read: false,
+                timestamp: Date.now(),
+                time: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to credit referral commission:", err);
+      }
+
       // Push notification
       try {
         await db.ref(`users/${userId}/notifications`).push({

@@ -113,6 +113,9 @@ export const AuthModal: React.FC = () => {
         }
 
         const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+        if (refId === googleUser.uid) {
+          refId = null;
+        }
         await set(ref(db, `users/${googleUser.uid}`), {
           username: googleUser.displayName || 'Google User',
           email: googleUser.email,
@@ -233,6 +236,9 @@ export const AuthModal: React.FC = () => {
         }
 
         const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+        if (refId === res.user.uid) {
+          refId = null;
+        }
         await set(ref(db, `users/${res.user.uid}`), {
           username: name.trim(),
           email: cleanEmail,
