@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import confetti from 'canvas-confetti';
 import { useApp } from './AppContext';
+import { useUserBalance } from './useUserBalance';
 import { translations } from './i18n';
 import { auth, signOut } from './firebase';
 import { usePWAInstall } from './usePWAInstall';
@@ -127,6 +128,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
   const alreadyClaimed = profile?.last_login_date === new Date().toDateString();
 
+  const { balance: realTimeBalance, loading: balanceLoading } = useUserBalance(user);
+
   const mainBalance = (Number(profile?.balance) || 0).toFixed(2);
   const holdBalance = (Number(profile?.hold) || 0).toFixed(2);
 
@@ -150,8 +153,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   // Submissions stats
   const totalSubCount = profile?.total_submitted || submissions.length;
   const approvedCount = profile?.manual_approved_count || 0;
-  const pendingCount = submissions.filter((s) => s.status === 'pending').length;
-  const rejectedCount = submissions.filter((s) => s.status === 'rejected').length;
+  const pendingCount = submissions.filter((s) => (s.status || '').toLowerCase() === 'pending').length;
+  const checkingCount = submissions.filter((s) => (s.status || '').toLowerCase() === 'checking').length;
+  const rejectedCount = submissions.filter((s) => (s.status || '').toLowerCase() === 'rejected').length;
 
   // Level progress percentage
   const currentReq = currentLevel.approved;
@@ -288,23 +292,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       {/* 2. MAIN BALANCE & WALLET ACTIONS */}
       <div className="rounded-3xl bg-white border border-slate-200/80 p-5 shadow-sm space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {/* Main Balance */}
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-50 to-indigo-100/60 border border-indigo-200/70">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-extrabold text-indigo-700 flex items-center gap-1.5">
-                <Wallet className="w-4 h-4 text-indigo-600" />
-                {t.mainBalance}
-              </span>
-              <span className="px-2 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-black uppercase">
-                Available
-              </span>
-            </div>
-            <div className="text-2xl sm:text-3xl font-black text-slate-900 font-mono">
-              ৳{mainBalance}
-            </div>
-            <span className="text-[10px] text-slate-500 font-medium mt-0.5 block">
-              {t.directWithdrawMethods}
-            </span>
+          {/* Main Balance (Real-time via useUserBalance hook) */}
+          <div className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white p-4 rounded-2xl shadow-lg">
+            <p className="text-xs uppercase tracking-wider opacity-80">Available Balance</p>
+            <h2 className="text-3xl font-black mt-1 font-mono">
+              {balanceLoading ? "..." : `৳${realTimeBalance.toFixed(2)}`}
+            </h2>
           </div>
 
           {/* Hold Balance */}
@@ -571,8 +564,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </div>
         </div>
 
-        {/* 4 Stat Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        {/* 5 Stat Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
           <div className="p-3.5 rounded-2xl bg-indigo-50/60 border border-indigo-100/80 flex items-center gap-3">
             <div className="p-2 rounded-xl bg-indigo-600 text-white shadow-sm flex-shrink-0">
               <Activity className="w-4 h-4" />
@@ -593,9 +586,19 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </div>
           </div>
 
+          <div className="p-3.5 rounded-2xl bg-sky-50/60 border border-sky-100/80 flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-sky-600 text-white shadow-sm flex-shrink-0">
+              <Clock className="w-4 h-4 animate-spin" />
+            </div>
+            <div>
+              <span className="text-[10px] font-extrabold text-sky-900 uppercase block">{t.checking || 'Checking'}</span>
+              <span className="text-base font-black text-sky-950 font-mono">{checkingCount} টি</span>
+            </div>
+          </div>
+
           <div className="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-100/80 flex items-center gap-3">
             <div className="p-2 rounded-xl bg-amber-600 text-white shadow-sm flex-shrink-0">
-              <Clock className="w-4 h-4" />
+              <Hourglass className="w-4 h-4" />
             </div>
             <div>
               <span className="text-[10px] font-extrabold text-amber-900 uppercase block">{t.pending}</span>

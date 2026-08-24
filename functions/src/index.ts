@@ -261,10 +261,13 @@ export const onSubmissionStatusChange = functions.database
 
     if (!before || !after) return null;
 
-    const isNowApproved = after.status === "approved";
-    const wasApproved = before.status === "approved";
-    const isNowRejected = after.status === "rejected";
-    const wasRejected = before.status === "rejected";
+    const afterStatus = (after.status || '').toLowerCase();
+    const beforeStatus = (before.status || '').toLowerCase();
+
+    const isNowApproved = afterStatus === "approved";
+    const wasApproved = beforeStatus === "approved";
+    const isNowRejected = afterStatus === "rejected";
+    const wasRejected = beforeStatus === "rejected";
 
     if (isNowRejected && !wasRejected) {
       const userId = after.userId;

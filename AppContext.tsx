@@ -966,7 +966,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                   const sub = c.val() as Submission;
                   sub.key = c.key;
                   allSubs.push(sub);
-                  if (isAdminUser || sub.userId === currUser.uid) {
+                  if (isAdminUser || sub.userId === currUser.uid || sub.userEmail === currUser.email) {
                     mySubs.push(sub);
                   }
                 });
@@ -1151,13 +1151,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     submissions.forEach(sub => {
         if (sub.userId !== user.uid) return;
-        if (sub.status === 'approved' && !sub.processedForBalance) {
+        const sStatus = (sub.status || '').toLowerCase();
+        if (sStatus === 'approved' && !sub.processedForBalance) {
             // Admin panel and Cloud Functions already credit the balance on server-side.
             // Client-side only clears hold balance to prevent double crediting.
             holdDelta -= sub.totalAmount;
             updates[`submissions/${sub.key}/processedForBalance`] = true;
             addNotification('জিমেইল সাবমিশন অনুমোদিত! 🎉', `আপনার ${sub.count || sub.quantity || 1} টি জিমেইল সাবমিশন সফলভাবে অনুমোদিত হয়েছে এবং ৳${sub.totalAmount} ব্যালেন্সে যোগ হয়েছে।`, 'success');
-        } else if (sub.status === 'rejected' && !sub.processedForBalance) {
+        } else if (sStatus === 'rejected' && !sub.processedForBalance) {
             holdDelta -= sub.totalAmount;
             updates[`submissions/${sub.key}/processedForBalance`] = true;
             addNotification('সাবমিশন রিজেক্ট করা হয়েছে ⚠️', `দুঃখিত, আপনার সাবমিশনটি যাচাইয়ে রিজেক্ট করা হয়েছে।`, 'danger');
@@ -1166,12 +1167,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     withdrawRequests.forEach(wd => {
         if (wd.userId !== user.uid) return;
-        if (wd.status === 'rejected' && !wd.processedForBalance) {
+        const wStatus = (wd.status || '').toLowerCase();
+        if (wStatus === 'rejected' && !wd.processedForBalance) {
             // Admin panel already refunds the balance, so we only mark it as processed locally
             // to avoid double refunding the user.
             updates[`withdraw_requests/${wd.key}/processedForBalance`] = true;
             addNotification('উত্তোলন বাতিল ⚠️', `আপনার ৳${wd.amount} এর উত্তোলন রিকোয়েস্ট রিজেক্ট করা হয়েছে।`, 'danger');
-        } else if (wd.status === 'approved' && !wd.processedForBalance) {
+        } else if (wStatus === 'approved' && !wd.processedForBalance) {
             // Already deducted upon request
             updates[`withdraw_requests/${wd.key}/processedForBalance`] = true;
             addNotification('উত্তোলন সফল 🎉', `আপনার ৳${wd.amount} এর উত্তোলন সফলভাবে সম্পন্ন হয়েছে।`, 'success');
@@ -1181,12 +1183,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (Object.keys(updates).length > 0) {
         const applyReconciliation = async () => {
             try {
-                if (balanceDelta !== 0 || holdDelta !== 0) {
+                if (balanceDelta !== 0) {
                     updates[`users/${user.uid}/balance`] = (profile.balance || 0) + balanceDelta;
+                }
+                if (holdDelta !== 0) {
                     updates[`users/${user.uid}/hold`] = Math.max(0, (profile.hold || 0) + holdDelta);
-                    if (balanceDelta > 0) {
-                        updates[`users/${user.uid}/totalEarnings`] = (profile.totalEarnings || 0) + balanceDelta;
-                    }
+                }
+                if (balanceDelta > 0) {
+                    updates[`users/${user.uid}/totalEarnings`] = (profile.totalEarnings || 0) + balanceDelta;
                 }
                 await update(ref(db), updates);
             } catch (e) {
@@ -1311,6 +1315,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const subKey = newSubRef.key || String(Date.now());
       const newSub: Submission = {
         userId: user.uid,
+        userEmail: user.email || '',
         username: profile?.username || user.displayName || 'User',
         submittedAt: Date.now(),
         status: 'pending',

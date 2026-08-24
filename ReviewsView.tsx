@@ -42,7 +42,7 @@ export const ReviewsView: React.FC = () => {
           }));
 
           // Show all non-rejected reviews publicly (approved, pending, or legacy without status)
-          const published = allList.filter((r) => r.status === 'approved' || !r.status);
+          const published = allList.filter((r) => (r.status || '').toLowerCase() === 'approved' || !r.status);
           const dist: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
           let sum = 0;
           published.forEach((r) => {
@@ -216,8 +216,8 @@ export const ReviewsView: React.FC = () => {
               <div className="flex justify-between items-center mb-2">
                 <h4 className="font-bold text-slate-800 text-sm">Your Review</h4>
                 <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded-full ${
-                  myReview.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : 
-                  myReview.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'
+                  (myReview.status || '').toLowerCase() === 'approved' ? 'bg-emerald-100 text-emerald-700' : 
+                  (myReview.status || '').toLowerCase() === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'
                 }`}>
                   {myReview.status}
                 </span>

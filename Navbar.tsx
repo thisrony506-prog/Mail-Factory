@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from './AppContext';
+import { useUserBalance } from './useUserBalance';
 import { translations, LANGUAGES } from './i18n';
 import { auth, signOut } from './firebase';
 import { AppLogo3D } from './AppLogo3D';
@@ -102,7 +103,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
   };
 
-  const mainBalance = (Number(profile?.balance) || 0).toFixed(2);
+  const { balance: realTimeBalance, loading: balanceLoading } = useUserBalance(user);
+  const mainBalance = balanceLoading ? "..." : (Number(realTimeBalance) || 0).toFixed(2);
   const holdBalance = (Number(profile?.hold) || 0).toFixed(2);
 
   return (

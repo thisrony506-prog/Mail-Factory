@@ -14,7 +14,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.onSubmissionStatusChange = exports.onWithdrawStatusChange = exports.onUserCreated = void 0;
+exports.checkFraudulentSignup = exports.onSubmissionStatusChange = exports.onWithdrawStatusChange = exports.onUserCreated = void 0;
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
@@ -260,8 +260,52 @@ exports.onSubmissionStatusChange = functions.database
     const after = change.after.val();
     if (!before || !after)
         return null;
-    const isNowApproved = after.status === "approved";
-    const wasApproved = before.status === "approved";
+    const afterStatus = (after.status || '').toLowerCase();
+    const beforeStatus = (before.status || '').toLowerCase();
+    const isNowApproved = afterStatus === "approved";
+    const wasApproved = beforeStatus === "approved";
+    const isNowRejected = afterStatus === "rejected";
+    const wasRejected = beforeStatus === "rejected";
+    if (isNowRejected && !wasRejected) {
+        const userId = after.userId;
+        const totalAmount = Number(after.totalAmount) || 0;
+        const count = Number(after.count) || Number(after.quantity) || 1;
+        // If it was previously credited or approved, deduct from balance & totalEarnings
+        if (after.balanceCredited || wasApproved) {
+            try {
+                await db.ref(`users/${userId}`).transaction((user) => {
+                    if (!user)
+                        return user;
+                    return {
+                        ...user,
+                        balance: Math.max(0, (Number(user.balance) || 0) - totalAmount),
+                        totalEarnings: Math.max(0, (Number(user.totalEarnings) || 0) - totalAmount),
+                        manual_approved_count: Math.max(0, (Number(user.manual_approved_count) || 0) - count),
+                    };
+                });
+                console.log(`Deducted ৳${totalAmount} from user ${userId} for rejected submission`);
+            }
+            catch (err) {
+                console.error(`Failed to deduct balance for rejected submission for user ${userId}:`, err);
+            }
+            await change.after.ref.child("balanceCredited").set(false);
+        }
+        // Push notification
+        const reason = after.adminNote || after.rejectReason || "Submission did not meet quality guidelines.";
+        try {
+            await db.ref(`users/${userId}/notifications`).push({
+                title: "Submission Rejected ❌",
+                desc: `Your submission for ${count} Gmail(s) was rejected. Reason: ${reason}`,
+                type: "error",
+                read: false,
+                timestamp: Date.now(),
+                time: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+            });
+        }
+        catch (err) {
+            console.error("Error pushing submission rejection notification:", err);
+        }
+    }
     if (isNowApproved && !wasApproved && !after.balanceCredited) {
         // Mark credited immediately
         await change.after.ref.child("balanceCredited").set(true);
@@ -285,6 +329,45 @@ exports.onSubmissionStatusChange = functions.database
         catch (err) {
             console.error(`Failed to credit balance for user ${userId}:`, err);
         }
+        // Check if user was referred by someone to credit commission based on Admin Settings
+        try {
+            const userSnap = await db.ref(`users/${userId}`).once("value");
+            const userData = userSnap.val();
+            if (userData && userData.referredBy) {
+                const referrerId = userData.referredBy;
+                if (referrerId !== userId) {
+                    // Fetch dynamic commission percent from settings
+                    const settingsSnap = await db.ref("settings").once("value");
+                    const settingsVal = settingsSnap.val() || {};
+                    const commissionPercent = Number(settingsVal.commission_percent) || 10;
+                    const commissionAmount = (totalAmount * commissionPercent) / 100;
+                    if (commissionAmount > 0) {
+                        await db.ref(`users/${referrerId}`).transaction((refUser) => {
+                            if (!refUser)
+                                return refUser;
+                            const currentRefEarnings = Number(refUser.referralEarnings) || 0;
+                            const currentBalance = Number(refUser.balance) || 0;
+                            return {
+                                ...refUser,
+                                balance: currentBalance + commissionAmount,
+                                referralEarnings: currentRefEarnings + commissionAmount,
+                            };
+                        });
+                        await db.ref(`users/${referrerId}/notifications`).push({
+                            title: "Referral Commission Earned! 🎁",
+                            desc: `You received ৳${commissionAmount.toFixed(2)} (${commissionPercent}%) commission from your referred friend's approved submission.`,
+                            type: "success",
+                            read: false,
+                            timestamp: Date.now(),
+                            time: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+                        });
+                    }
+                }
+            }
+        }
+        catch (err) {
+            console.error("Failed to credit referral commission:", err);
+        }
         // Push notification
         try {
             await db.ref(`users/${userId}/notifications`).push({
@@ -299,6 +382,66 @@ exports.onSubmissionStatusChange = functions.database
         catch (err) {
             console.error("Error pushing submission approval notification:", err);
         }
+    }
+    return null;
+});
+/**
+ * 3. Fraud Detection for Referral Registrations
+ * Automatically checks for duplicate IP addresses or device IDs upon referral account creation
+ * to flag and prevent potential fraudulent signups before admin review.
+ */
+exports.checkFraudulentSignup = functions.database
+    .ref("/users/{uid}")
+    .onCreate(async (snapshot, context) => {
+    const newUser = snapshot.val();
+    const uid = context.params.uid;
+    if (!newUser || !newUser.referredBy) {
+        return null;
+    }
+    const deviceId = newUser.deviceId;
+    const ipAddress = newUser.ipAddress;
+    if (!deviceId && !ipAddress) {
+        return null;
+    }
+    try {
+        const usersSnap = await db.ref("users").once("value");
+        const allUsers = usersSnap.val() || {};
+        let isFraud = false;
+        let matchedReason = "";
+        for (const [existingUid, existingUser] of Object.entries(allUsers)) {
+            if (existingUid === uid)
+                continue;
+            if (!existingUser)
+                continue;
+            if (deviceId && existingUser.deviceId && deviceId === existingUser.deviceId) {
+                isFraud = true;
+                matchedReason = `Duplicate Device ID match with user ${existingUid}`;
+                break;
+            }
+            if (ipAddress && existingUser.ipAddress && ipAddress === existingUser.ipAddress && ipAddress !== "127.0.0.1" && ipAddress !== "localhost") {
+                isFraud = true;
+                matchedReason = `Duplicate IP Address match (${ipAddress}) with user ${existingUid}`;
+                break;
+            }
+        }
+        if (isFraud) {
+            await snapshot.ref.update({
+                isFraudulent: true,
+                fraudReason: matchedReason,
+                status: "flagged",
+                holdBonus: true,
+            });
+            await db.ref("admin_notifications").push({
+                title: "🚨 Fraudulent Referral Signup Flagged",
+                desc: `User ${newUser.username || uid} was flagged due to: ${matchedReason}. Referred by: ${newUser.referredBy}`,
+                type: "warning",
+                timestamp: Date.now(),
+                read: false,
+            });
+        }
+    }
+    catch (err) {
+        console.error("Error in checkFraudulentSignup:", err);
     }
     return null;
 });

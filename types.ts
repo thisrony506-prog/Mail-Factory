@@ -14,6 +14,7 @@ export interface Submission {
   id?: string;
   key?: string;
   userId: string;
+  userEmail?: string;
   username: string;
   submittedAt: number;
   status: SubmissionStatus;

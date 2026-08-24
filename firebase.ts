@@ -106,3 +106,37 @@ export {
 };
 
 export type { User };
+
+// ইউজারের ব্যালেন্স আপডেট বা এডিট করার ফাংশন (অ্যাডমিন প্যানেলের জন্য)
+export const updateAdminUserBalance = async (userId: string, amountChange: number, type: 'add' | 'subtract' | 'set', newBalance?: number) => {
+  try {
+    const userRef = ref(db, `users/${userId}`);
+    const snapshot = await get(userRef);
+    
+    if (snapshot.exists()) {
+      const userData = snapshot.val();
+      let currentBalance = Number(userData.balance || 0);
+      let updatedBalance = currentBalance;
+
+      if (type === 'add') {
+        updatedBalance = currentBalance + Number(amountChange);
+      } else if (type === 'subtract') {
+        updatedBalance = Math.max(0, currentBalance - Number(amountChange));
+      } else if (type === 'set' && newBalance !== undefined) {
+        updatedBalance = Number(newBalance);
+      }
+
+      // ফায়ারবেসে ইউজারের ব্যালেন্স আপডেট করা
+      await update(userRef, {
+        balance: updatedBalance,
+        lastBalanceUpdate: Date.now()
+      });
+
+      console.log(`Balance successfully updated for user ${userId}. New Balance: ${updatedBalance}`);
+      return true;
+    }
+  } catch (error) {
+    console.error("Error updating user balance:", error);
+    return false;
+  }
+};

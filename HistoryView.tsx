@@ -24,7 +24,8 @@ export const HistoryView: React.FC = () => {
 
   // Filter Submissions
   const filteredSubmissions = submissions.filter((sub) => {
-    if (filterStatus !== 'all' && sub.status !== filterStatus) return false;
+    const subStatus = (sub.status || '').toLowerCase();
+    if (filterStatus !== 'all' && subStatus !== filterStatus) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const hasMatchingEmail = sub.gmails?.some((g) => g.email.toLowerCase().includes(q));
@@ -34,7 +35,7 @@ export const HistoryView: React.FC = () => {
   });
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
+    switch ((status || '').toLowerCase()) {
       case 'approved':
       case 'completed':
         return (
@@ -54,7 +55,7 @@ export const HistoryView: React.FC = () => {
         return (
           <span className="inline-flex items-center gap-1 text-[11px] font-bold text-sky-700 bg-sky-100 px-2.5 py-0.5 rounded-full">
             <Clock className="w-3 h-3 animate-spin" />
-            <span>{t.auditProcessing}</span>
+            <span>{t.checking}</span>
           </span>
         );
       default:
@@ -117,8 +118,9 @@ export const HistoryView: React.FC = () => {
               onChange={(e) => setFilterStatus(e.target.value)}
               className="rounded-xl bg-white border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
             >
-              <option value="all">{t.allReviews}</option>
+              <option value="all">{t.allReviews || 'All'}</option>
               <option value="pending">{t.pending}</option>
+              <option value="checking">{t.checking || 'Checking'}</option>
               <option value="approved">{t.approved}</option>
               <option value="rejected">{t.rejected}</option>
             </select>
@@ -199,7 +201,9 @@ export const HistoryView: React.FC = () => {
                         <span className="truncate flex-1 min-w-0 text-slate-800 font-mono text-[11px]">
                           {item.email}
                         </span>
-                        <div className="shrink-0 ml-2">{getStatusBadge(item.status || sub.status)}</div>
+                        <div className="shrink-0 ml-2">
+                          {getStatusBadge(item.status === 'pending' || !item.status ? sub.status : item.status)}
+                        </div>
                       </div>
                     ))}
                   </div>
