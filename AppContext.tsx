@@ -127,6 +127,7 @@ interface AppContextType {
   isRateModalOpen: boolean;
   setRateModalOpen: (open: boolean) => void;
   claimDailyStreak: () => Promise<{ success: boolean; streakCount: number; bonusAmount?: number }>;
+  claimReferralEarnings: () => Promise<{ success: boolean; addedAmount: number; message: string }>;
   appLogo: string;
   copyText: (text: string, label?: string) => Promise<boolean>;
 }
@@ -234,6 +235,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return null;
     }
   });
+
+  // Local state caching layer for profile and wallet data
+  useEffect(() => {
+    if (profile && profile.uid) {
+      try {
+        localStorage.setItem('mf_last_user_profile', JSON.stringify(profile));
+        localStorage.setItem(`mf_wallet_cache_${profile.uid}`, JSON.stringify({
+          balance: profile.balance || 0,
+          hold: profile.hold || 0,
+          totalEarnings: profile.totalEarnings || 0,
+          referralEarnings: profile.referralEarnings || 0,
+          updatedAt: Date.now()
+        }));
+      } catch (e) {
+        console.warn('Failed to cache profile/wallet data:', e);
+      }
+    }
+  }, [profile]);
   const [loading, setLoading] = useState<boolean>(false);
   const [language, setLanguage] = useState<Language>(() => {
     const saved = localStorage.getItem('mf_lang');
@@ -624,6 +643,63 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       window.removeEventListener('online', handleOnline);
     };
   }, []);
+
+  // Firebase connection persistence monitoring (.info/connected)
+  useEffect(() => {
+    try {
+      const connectedRef = ref(db, '.info/connected');
+      const unsubscribeConnected = onValue(connectedRef, (snap) => {
+        const isConnected = snap.val() === true;
+        console.log('[Firebase Connection Status] RTDB Connected:', isConnected);
+        if (isConnected) {
+          try {
+            goOnline(db);
+          } catch {}
+        }
+      });
+      return () => unsubscribeConnected();
+    } catch (e) {
+      console.warn('Connection listener error:', e);
+    }
+  }, []);
+
+  // Database operation retry and logging helpers
+  const logDbOp = (opName: string, path: string, details?: any) => {
+    console.log(`[Firebase DB Operation] ${opName} at path: "${path}"`, details || '');
+  };
+
+  const getWithRetry = async (dbRef: any, maxRetries = 3, delayMs = 1000): Promise<any> => {
+    let attempt = 0;
+    while (attempt < maxRetries) {
+      try {
+        attempt++;
+        logDbOp('GET', dbRef.toString(), { attempt });
+        const snap = await get(dbRef);
+        return snap;
+      } catch (error) {
+        console.warn(`[Firebase DB Operation] GET failed at "${dbRef.toString()}" (attempt ${attempt}/${maxRetries}):`, error);
+        if (attempt >= maxRetries) throw error;
+        await new Promise(res => setTimeout(res, delayMs * attempt));
+      }
+    }
+  };
+
+  const updateWithRetry = async (dbRefOrPath: any, values: any, maxRetries = 3, delayMs = 1000): Promise<any> => {
+    let attempt = 0;
+    const targetRef = typeof dbRefOrPath === 'string' ? ref(db, dbRefOrPath) : dbRefOrPath;
+    while (attempt < maxRetries) {
+      try {
+        attempt++;
+        logDbOp('UPDATE', targetRef.toString(), { keys: Object.keys(values), attempt });
+        await update(targetRef, values);
+        return true;
+      } catch (error) {
+        console.warn(`[Firebase DB Operation] UPDATE failed at "${targetRef.toString()}" (attempt ${attempt}/${maxRetries}):`, error);
+        if (attempt >= maxRetries) throw error;
+        await new Promise(res => setTimeout(res, delayMs * attempt));
+      }
+    }
+  };
 
   // Sync Global Settings
   useEffect(() => {
@@ -1158,6 +1234,109 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { success: true, streakCount: newStreak, bonusAmount };
   };
 
+  // Claim Referral Earnings to Main Balance
+  const claimReferralEarnings = async (): Promise<{ success: boolean; addedAmount: number; message: string }> => {
+    if (!user || !profile) return { success: false, addedAmount: 0, message: 'Please login first.' };
+
+    const userRefCode = (profile.referralCode || '').trim().toUpperCase();
+    const profileUid = (profile.uid || '').trim();
+    const shortUid = profileUid.slice(0, 8).toUpperCase();
+
+    const myReferred = (allUsers || []).filter((u) => {
+      if (!u || u.uid === profile.uid || !u.referredBy) return false;
+      const refBy = u.referredBy.trim().toUpperCase();
+      return (
+        (userRefCode && refBy === userRefCode) ||
+        (profileUid && u.referredBy === profileUid) ||
+        (shortUid && refBy === shortUid)
+      );
+    });
+
+    let friendCommissionsTotal = 0;
+    myReferred.forEach((f) => {
+      const friendSubs = (allSubmissions || []).filter(
+        (sub) => sub.userId === f.uid && (sub.status === 'approved' || sub.status?.toLowerCase() === 'approved')
+      );
+      const approvedCountFromSubs = friendSubs.reduce(
+        (acc, sub) => acc + (Number(sub.count) || Number(sub.quantity) || 1),
+        0
+      );
+      const manualApprovedCount = Number(f.manual_approved_count) || 0;
+      const totalApprovedCount = Math.max(approvedCountFromSubs, manualApprovedCount);
+
+      const approvedEarningsFromSubs = friendSubs.reduce(
+        (acc, sub) => acc + (Number(sub.totalAmount) || Number(sub.amount) || (Number(sub.count || sub.quantity || 1) * 10)),
+        0
+      );
+      const friendTotalEarnings = Math.max(approvedEarningsFromSubs, totalApprovedCount * 10);
+      const commission = Math.round((friendTotalEarnings * (commissionPercent || 10)) / 100);
+      friendCommissionsTotal += commission;
+    });
+
+    const signupBonusesTotal = myReferred.length * (signupBonusUser || 5);
+    const totalComputedEarnings = signupBonusesTotal + friendCommissionsTotal;
+
+    const existingReferralEarnings = Number(profile.referralEarnings || 0);
+    const computedRefEarnings = Math.max(existingReferralEarnings, totalComputedEarnings);
+    const lastProcessed = Number(profile.lastProcessedRefEarnings) || 0;
+
+    const finalDelta = Math.max(
+      computedRefEarnings > lastProcessed ? computedRefEarnings - lastProcessed : 0,
+      computedRefEarnings > existingReferralEarnings ? computedRefEarnings - existingReferralEarnings : 0
+    );
+
+    if (computedRefEarnings <= lastProcessed && finalDelta <= 0 && existingReferralEarnings <= 0 && totalComputedEarnings <= 0) {
+      return {
+        success: false,
+        addedAmount: 0,
+        message: language === 'bn' ? 'ক্লেম করার মতো নতুন রেফারেল ইনকাম নেই।' : 'No new referral earnings to claim.',
+      };
+    }
+
+    try {
+      const updates: any = {};
+      let currentBalance = Number(profile.balance || 0);
+      let currentTotalEarnings = Number(profile.totalEarnings || 0);
+
+      const addAmount = finalDelta > 0 ? finalDelta : (computedRefEarnings > existingReferralEarnings ? computedRefEarnings - existingReferralEarnings : 0);
+
+      if (addAmount > 0) {
+        currentBalance += addAmount;
+        currentTotalEarnings += addAmount;
+        updates[`users/${user.uid}/balance`] = currentBalance;
+        updates[`users/${user.uid}/totalEarnings`] = currentTotalEarnings;
+      }
+
+      updates[`users/${user.uid}/referralEarnings`] = computedRefEarnings;
+      updates[`users/${user.uid}/lastProcessedRefEarnings`] = computedRefEarnings;
+      updates[`users/${user.uid}/referralBalanceSynced`] = true;
+
+      await update(ref(db), updates);
+
+      setProfile((prev) =>
+        prev
+          ? {
+              ...prev,
+              balance: currentBalance,
+              totalEarnings: currentTotalEarnings,
+              referralEarnings: computedRefEarnings,
+              lastProcessedRefEarnings: computedRefEarnings,
+              referralBalanceSynced: true,
+            }
+          : null
+      );
+
+      const successMsg = language === 'bn'
+        ? `সফলভাবে ৳${addAmount} মেইন ব্যালেন্সে যোগ হয়েছে!`
+        : `Successfully added ৳${addAmount} to main balance!`;
+
+      return { success: true, addedAmount: addAmount, message: successMsg };
+    } catch (e) {
+      console.error('Failed to claim referral earnings:', e);
+      return { success: false, addedAmount: 0, message: 'Failed to claim referral earnings.' };
+    }
+  };
+
   // Submit Gmail Exchange
   
   // --- Client-Side Real-Time Syncing (Self-Healing Balances) ---
@@ -1342,7 +1521,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const computedRefEarnings = Math.max(existingReferralEarnings, totalComputedEarnings);
 
     const lastProcessed = Number(profile.lastProcessedRefEarnings) || 0;
-    const delta = computedRefEarnings > lastProcessed ? computedRefEarnings - lastProcessed : 0;
+    const delta = Math.max(
+      computedRefEarnings > lastProcessed ? computedRefEarnings - lastProcessed : 0,
+      computedRefEarnings > existingReferralEarnings ? computedRefEarnings - existingReferralEarnings : 0
+    );
 
     if (delta > 0 || computedRefEarnings !== existingReferralEarnings) {
       const syncRefEarnings = async () => {
@@ -1363,11 +1545,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           updates[`users/${user.uid}/referralBalanceSynced`] = true;
           
           await update(ref(db), updates);
+
+          setProfile((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  balance: currentBalance,
+                  totalEarnings: currentTotalEarnings,
+                  referralEarnings: computedRefEarnings,
+                  lastProcessedRefEarnings: computedRefEarnings,
+                  referralBalanceSynced: true,
+                }
+              : null
+          );
         } catch (e) {
           console.error('Failed to sync referral earnings to balance:', e);
         }
       };
-      // syncRefEarnings(); // Disabled to prevent double-crediting
+      syncRefEarnings();
     }
   }, [user, profile, allUsers, allSubmissions, commissionPercent, signupBonusUser]);
   // -----------------------------------------------------------
@@ -1653,6 +1848,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     isRateModalOpen,
     setRateModalOpen,
     claimDailyStreak,
+    claimReferralEarnings,
     appLogo,
     copyText,
   }), [
@@ -1707,6 +1903,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     isRateModalOpen,
     setRateModalOpen,
     claimDailyStreak,
+    claimReferralEarnings,
     appLogo,
     copyText,
   ]);

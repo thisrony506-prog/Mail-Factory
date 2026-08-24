@@ -74,6 +74,7 @@ export const ReferralLeaderboard: React.FC = () => {
     withdrawRequests,
     submissions,
     allSubmissions,
+    claimReferralEarnings,
   } = useApp();
 
   const isRefUserVerified = (item: ReferralLeaderboardItem): boolean => {
@@ -727,6 +728,25 @@ const drawRoundedRect = (
               {commissionPercent || 10}% Lifetime
             </span>
           </div>
+        </div>
+
+        {/* Claim Referral Balance to Main Wallet Button */}
+        <div className="mt-3 pt-3 border-t border-indigo-800/80">
+          <button
+            onClick={async () => {
+              hapticFeedback.medium();
+              const res = await claimReferralEarnings();
+              if (res.success) {
+                addNotification('সফল! 🎉', res.message, 'success');
+              } else {
+                addNotification('নোটিশ', res.message, 'info');
+              }
+            }}
+            className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs shadow-lg shadow-emerald-950/40 transition-all flex items-center justify-center gap-2 cursor-pointer border border-emerald-400/40 active:scale-95"
+          >
+            <Sparkles className="w-4 h-4 text-amber-300 animate-spin" />
+            <span>{language === 'bn' ? 'রেফারেল ইনকাম মেইন ব্যালেন্সে যোগ করুন' : 'Claim Referral Earnings to Main Balance'}</span>
+          </button>
         </div>
       </motion.div>
 
