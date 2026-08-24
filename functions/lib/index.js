@@ -288,6 +288,35 @@ exports.onSubmissionStatusChange = functions.database
             catch (err) {
                 console.error(`Failed to deduct balance for rejected submission for user ${userId}:`, err);
             }
+            // Deduct referral commission if applicable
+            try {
+                const userSnap = await db.ref(`users/${userId}`).once("value");
+                const userData = userSnap.val();
+                if (userData && userData.referredBy) {
+                    const referrerId = userData.referredBy;
+                    if (referrerId !== userId) {
+                        const settingsSnap = await db.ref("settings").once("value");
+                        const settingsVal = settingsSnap.val() || {};
+                        const commissionPercent = Number(settingsVal.commission_percent) || 10;
+                        const commissionAmount = (totalAmount * commissionPercent) / 100;
+                        if (commissionAmount > 0) {
+                            await db.ref(`users/${referrerId}`).transaction((refUser) => {
+                                if (!refUser)
+                                    return refUser;
+                                return {
+                                    ...refUser,
+                                    balance: Math.max(0, (Number(refUser.balance) || 0) - commissionAmount),
+                                    referralEarnings: Math.max(0, (Number(refUser.referralEarnings) || 0) - commissionAmount),
+                                };
+                            });
+                            console.log(`Deducted ৳${commissionAmount} commission from referrer ${referrerId} due to rejection`);
+                        }
+                    }
+                }
+            }
+            catch (err) {
+                console.error("Failed to deduct referral commission:", err);
+            }
             await change.after.ref.child("balanceCredited").set(false);
         }
         // Push notification

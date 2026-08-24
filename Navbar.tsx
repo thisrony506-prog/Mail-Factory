@@ -146,10 +146,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span className="text-[8px] sm:text-[9px] md:text-[10px] font-bold tracking-wider text-amber-300 uppercase truncate max-w-[120px] xs:max-w-[150px] sm:max-w-none">
                     ★ FAST & TRUSTED ★
                   </span>
-                  <div className="hidden md:flex items-center gap-1 bg-black/20 px-1.5 py-0.5 rounded-full border border-white/10 shrink-0">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-[8px] font-mono text-emerald-300">SERVER ONLINE (45ms)</span>
-                  </div>
                 </div>
               </div>
             </button>
