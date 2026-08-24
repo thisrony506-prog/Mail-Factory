@@ -107,8 +107,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   } = useUserStats();
 
   // Level progress percentage
-  const currentReq = currentLevel.approved;
-  const nextReq = nextLevel ? nextLevel.approved : currentReq + 100;
+  const currentReq = currentLevel?.approved || 0;
+  const nextReq = nextLevel?.approved || (currentReq + 100);
   const levelProgress = nextLevel
     ? Math.min(100, Math.max(0, ((approvedCount - currentReq) / (nextReq - currentReq)) * 100))
     : 100;

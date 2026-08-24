@@ -1,8 +1,28 @@
+export const safeStorage = {
+  getItem(key: string): string | null {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  },
+  setItem(key: string, value: string): void {
+    try {
+      localStorage.setItem(key, value);
+    } catch {}
+  },
+  removeItem(key: string): void {
+    try {
+      localStorage.removeItem(key);
+    } catch {}
+  }
+};
+
 export async function getClientFingerprint(): Promise<{ deviceId: string; ipAddress: string }> {
-  let deviceId = localStorage.getItem('mf_device_id');
+  let deviceId = safeStorage.getItem('mf_device_id');
   if (!deviceId) {
     deviceId = 'dev_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    localStorage.setItem('mf_device_id', deviceId);
+    safeStorage.setItem('mf_device_id', deviceId);
   }
 
   let ipAddress = '';
