@@ -53,7 +53,7 @@ export const SellersView: React.FC = () => {
         photoURL: u.photoURL || '',
         totalEarnings: Number(u.totalEarnings) || (Number(u.balance || 0) + Number(u.total_withdrawn || 0)) || Number(u.balance || 0),
         balance: Number(u.balance) || 0,
-        manual_approved_count: Number(u.manual_approved_count) || Number(u.total_submitted) || 0,
+        manual_approved_count: u.manual_approved_count !== undefined ? Number(u.manual_approved_count) : (Number(u.total_submitted) || 0),
         total_submitted: Number(u.total_submitted) || 0,
         badge: 'Gold Partner',
         rank: 0,
@@ -80,7 +80,7 @@ export const SellersView: React.FC = () => {
       listMap.set(item.username.toLowerCase(), {
         ...item,
         totalEarnings: Number(item.totalEarnings) || 0,
-        manual_approved_count: Number(item.manual_approved_count) || Number(item.total_submitted) || 0,
+        manual_approved_count: item.manual_approved_count !== undefined ? Number(item.manual_approved_count) : (Number(item.total_submitted) || 0),
       });
     });
 
@@ -100,7 +100,7 @@ export const SellersView: React.FC = () => {
   };
 
   const getApprovedCount = (seller: TopSellerItem): number => {
-    return Number(seller.manual_approved_count) || Number(seller.total_submitted) || 0;
+    return seller.manual_approved_count !== undefined ? Number(seller.manual_approved_count) : (Number(seller.total_submitted) || 0);
   };
 
   const isSellerVerified = (seller: TopSellerItem): boolean => {

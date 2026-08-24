@@ -714,7 +714,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 photoURL: s.photoURL || '',
                 totalEarnings: Number(s.totalEarnings) || Number(s.balance) || 0,
                 balance: Number(s.balance) || 0,
-                manual_approved_count: Number(s.manual_approved_count) || Number(s.total_submitted) || 0,
+                manual_approved_count: s.manual_approved_count !== undefined ? Number(s.manual_approved_count) : (Number(s.total_submitted) || 0),
                 total_submitted: Number(s.total_submitted) || 0,
                 badge: s.badge || (idx === 0 ? 'VIP Champion' : idx < 3 ? 'Diamond VIP' : 'Gold Partner'),
                 rank: s.rank || idx + 1,
@@ -1276,7 +1276,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           console.error('Failed to sync referral earnings to balance:', e);
         }
       };
-      syncRefEarnings();
+      // syncRefEarnings(); // Disabled to prevent double-crediting
     }
   }, [user, profile, allUsers, allSubmissions, commissionPercent, signupBonusUser]);
   // -----------------------------------------------------------
@@ -1488,7 +1488,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         photoURL: u.photoURL || '',
         totalEarnings: Number(u.totalEarnings) || (Number(u.balance || 0) + Number(u.total_withdrawn || 0)) || Number(u.balance || 0),
         balance: Number(u.balance) || 0,
-        manual_approved_count: Number(u.manual_approved_count) || Number(u.total_submitted) || 0,
+        manual_approved_count: u.manual_approved_count !== undefined ? Number(u.manual_approved_count) : (Number(u.total_submitted) || 0),
         total_submitted: Number(u.total_submitted) || 0,
         badge: idx === 0 ? 'VIP Champion' : idx < 3 ? 'Diamond VIP' : 'Gold Partner',
         rank: idx + 1,

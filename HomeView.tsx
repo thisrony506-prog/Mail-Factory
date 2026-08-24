@@ -313,7 +313,7 @@ export const HomeView: React.FC = () => {
                 photoURL: u.photoURL || '',
                 totalEarnings: Number(u.totalEarnings) || (Number(u.balance || 0) + Number(u.total_withdrawn || 0)) || Number(u.balance || 0),
                 balance: Number(u.balance) || 0,
-                manual_approved_count: Number(u.manual_approved_count) || Number(u.total_submitted) || 0,
+                manual_approved_count: u.manual_approved_count !== undefined ? Number(u.manual_approved_count) : (Number(u.total_submitted) || 0),
                 total_submitted: Number(u.total_submitted) || 0,
                 badge: 'Gold Partner',
                 rank: 0,

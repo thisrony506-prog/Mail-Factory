@@ -158,7 +158,7 @@ export const GuestLandingView: React.FC = () => {
     const realUsersMapped: TopSellerItem[] = (allUsers || [])
       .filter((u) => u && !isExcludedSeller(u.username, u.email, u.uid))
       .map((u, idx) => {
-        const approved = Number(u.manual_approved_count) || Number(u.total_submitted) || 0;
+        const approved = u.manual_approved_count !== undefined ? Number(u.manual_approved_count) : (Number(u.total_submitted) || 0);
         const earnings = Number(u.totalEarnings) || (Number(u.balance || 0) + Number(u.total_withdrawn || 0)) || Number(u.balance || 0);
         return {
           uid: u.uid || `user_${idx}`,
@@ -195,7 +195,7 @@ export const GuestLandingView: React.FC = () => {
       listMap.set(item.username.toLowerCase(), {
         ...item,
         totalEarnings: Number(item.totalEarnings) || 0,
-        manual_approved_count: Number(item.manual_approved_count) || Number(item.total_submitted) || 0,
+        manual_approved_count: item.manual_approved_count !== undefined ? Number(item.manual_approved_count) : (Number(item.total_submitted) || 0),
       });
     });
 
@@ -546,7 +546,7 @@ export const GuestLandingView: React.FC = () => {
           {sellersList && sellersList.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {sellersList.map((seller, idx) => {
-                const approvedCount = Number(seller.manual_approved_count) || Number(seller.total_submitted) || 0;
+                const approvedCount = seller.manual_approved_count !== undefined ? Number(seller.manual_approved_count) : (Number(seller.total_submitted) || 0);
                 const totalEarnings = Number(seller.totalEarnings) || Number(seller.balance) || 0;
                 const rank = seller.rank || idx + 1;
 
