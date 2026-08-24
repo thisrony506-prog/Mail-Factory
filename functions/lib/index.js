@@ -266,11 +266,35 @@ exports.onSubmissionStatusChange = functions.database
     const wasApproved = beforeStatus === "approved";
     const isNowRejected = afterStatus === "rejected";
     const wasRejected = beforeStatus === "rejected";
+    // Check individual items if available
+    let actualApprovedCount = 0;
+    let actualRejectedCount = 0;
+    let hasIndividualStatus = false;
+    if (after.gmails && Array.isArray(after.gmails)) {
+        after.gmails.forEach((g) => {
+            const gs = (g.status || '').toLowerCase();
+            if (gs === 'approved')
+                actualApprovedCount++;
+            else if (gs === 'rejected')
+                actualRejectedCount++;
+            if (gs)
+                hasIndividualStatus = true;
+        });
+    }
+    const rate = Number(after.rate) || 0;
+    const parentCount = Number(after.count) || Number(after.quantity) || 1;
+    let totalAmount = Number(after.totalAmount) || 0;
+    let count = parentCount;
+    // If admin set individual status, override parent amounts
+    if (hasIndividualStatus) {
+        count = actualApprovedCount;
+        totalAmount = count * rate;
+    }
     if (isNowRejected && !wasRejected) {
         const userId = after.userId;
-        const totalAmount = Number(after.totalAmount) || 0;
-        const count = Number(after.count) || Number(after.quantity) || 1;
-        // If it was previously credited or approved, deduct from balance & totalEarnings
+        // If it was previously credited, we need to deduct the previously credited amount
+        const prevCreditedAmount = Number(before.creditedAmount) || (hasIndividualStatus ? (actualApprovedCount * rate) : totalAmount);
+        const prevCreditedCount = Number(before.creditedCount) || (hasIndividualStatus ? actualApprovedCount : count);
         if (after.balanceCredited || wasApproved) {
             try {
                 await db.ref(`users/${userId}`).transaction((user) => {
@@ -278,12 +302,12 @@ exports.onSubmissionStatusChange = functions.database
                         return user;
                     return {
                         ...user,
-                        balance: Math.max(0, (Number(user.balance) || 0) - totalAmount),
-                        totalEarnings: Math.max(0, (Number(user.totalEarnings) || 0) - totalAmount),
-                        manual_approved_count: Math.max(0, (Number(user.manual_approved_count) || 0) - count),
+                        balance: Math.max(0, (Number(user.balance) || 0) - prevCreditedAmount),
+                        totalEarnings: Math.max(0, (Number(user.totalEarnings) || 0) - prevCreditedAmount),
+                        manual_approved_count: Math.max(0, (Number(user.manual_approved_count) || 0) - prevCreditedCount),
                     };
                 });
-                console.log(`Deducted ৳${totalAmount} from user ${userId} for rejected submission`);
+                console.log(`Deducted ৳${prevCreditedAmount} from user ${userId} for rejected submission`);
             }
             catch (err) {
                 console.error(`Failed to deduct balance for rejected submission for user ${userId}:`, err);
@@ -298,7 +322,7 @@ exports.onSubmissionStatusChange = functions.database
                         const settingsSnap = await db.ref("settings").once("value");
                         const settingsVal = settingsSnap.val() || {};
                         const commissionPercent = Number(settingsVal.commission_percent) || 10;
-                        const commissionAmount = (totalAmount * commissionPercent) / 100;
+                        const commissionAmount = (prevCreditedAmount * commissionPercent) / 100;
                         if (commissionAmount > 0) {
                             await db.ref(`users/${referrerId}`).transaction((refUser) => {
                                 if (!refUser)
@@ -309,7 +333,6 @@ exports.onSubmissionStatusChange = functions.database
                                     referralEarnings: Math.max(0, (Number(refUser.referralEarnings) || 0) - commissionAmount),
                                 };
                             });
-                            console.log(`Deducted ৳${commissionAmount} commission from referrer ${referrerId} due to rejection`);
                         }
                     }
                 }
@@ -317,14 +340,18 @@ exports.onSubmissionStatusChange = functions.database
             catch (err) {
                 console.error("Failed to deduct referral commission:", err);
             }
-            await change.after.ref.child("balanceCredited").set(false);
+            await change.after.ref.update({
+                balanceCredited: false,
+                creditedAmount: 0,
+                creditedCount: 0
+            });
         }
         // Push notification
         const reason = after.adminNote || after.rejectReason || "Submission did not meet quality guidelines.";
         try {
             await db.ref(`users/${userId}/notifications`).push({
                 title: "Submission Rejected ❌",
-                desc: `Your submission for ${count} Gmail(s) was rejected. Reason: ${reason}`,
+                desc: `Your submission for ${parentCount} Gmail(s) was rejected. Reason: ${reason}`,
                 type: "error",
                 read: false,
                 timestamp: Date.now(),
@@ -336,11 +363,22 @@ exports.onSubmissionStatusChange = functions.database
         }
     }
     if (isNowApproved && !wasApproved && !after.balanceCredited) {
+        if (count <= 0) {
+            // Parent marked as approved, but all actual items rejected
+            await change.after.ref.update({
+                balanceCredited: true,
+                creditedAmount: 0,
+                creditedCount: 0
+            });
+            return null;
+        }
         // Mark credited immediately
-        await change.after.ref.child("balanceCredited").set(true);
+        await change.after.ref.update({
+            balanceCredited: true,
+            creditedAmount: totalAmount,
+            creditedCount: count
+        });
         const userId = after.userId;
-        const totalAmount = Number(after.totalAmount) || 0;
-        const count = Number(after.count) || Number(after.quantity) || 1;
         // Safe Server-Side Balance & Earnings Credit Transaction
         try {
             await db.ref(`users/${userId}`).transaction((user) => {
@@ -353,19 +391,18 @@ exports.onSubmissionStatusChange = functions.database
                     manual_approved_count: (Number(user.manual_approved_count) || 0) + count,
                 };
             });
-            console.log(`Credited ৳${totalAmount} to user ${userId} for approved submission`);
+            console.log(`Credited ৳${totalAmount} to user ${userId} for approved submission (${count} approved)`);
         }
         catch (err) {
             console.error(`Failed to credit balance for user ${userId}:`, err);
         }
-        // Check if user was referred by someone to credit commission based on Admin Settings
+        // Check if user was referred by someone to credit commission
         try {
             const userSnap = await db.ref(`users/${userId}`).once("value");
             const userData = userSnap.val();
             if (userData && userData.referredBy) {
                 const referrerId = userData.referredBy;
                 if (referrerId !== userId) {
-                    // Fetch dynamic commission percent from settings
                     const settingsSnap = await db.ref("settings").once("value");
                     const settingsVal = settingsSnap.val() || {};
                     const commissionPercent = Number(settingsVal.commission_percent) || 10;
@@ -384,7 +421,7 @@ exports.onSubmissionStatusChange = functions.database
                         });
                         await db.ref(`users/${referrerId}/notifications`).push({
                             title: "Referral Commission Earned! 🎁",
-                            desc: `You received ৳${commissionAmount.toFixed(2)} (${commissionPercent}%) commission from your referred friend's approved submission.`,
+                            desc: `You received ৳${commissionAmount.toFixed(2)} (${commissionPercent}%) commission from your referred friend's approved ${count} Gmail(s).`,
                             type: "success",
                             read: false,
                             timestamp: Date.now(),
@@ -399,9 +436,10 @@ exports.onSubmissionStatusChange = functions.database
         }
         // Push notification
         try {
+            const rejectedStr = actualRejectedCount > 0 ? ` (${actualRejectedCount} rejected)` : '';
             await db.ref(`users/${userId}/notifications`).push({
                 title: "Submission Approved! ✅",
-                desc: `Your submission for ${count} Gmail(s) has been approved. ৳${totalAmount.toFixed(2)} added to your balance.`,
+                desc: `${count} Gmail(s) from your submission have been approved${rejectedStr}. ৳${totalAmount.toFixed(2)} added to your balance.`,
                 type: "success",
                 read: false,
                 timestamp: Date.now(),
@@ -416,6 +454,7 @@ exports.onSubmissionStatusChange = functions.database
 });
 /**
  * 3. Fraud Detection for Referral Registrations
+
  * Automatically checks for duplicate IP addresses or device IDs upon referral account creation
  * to flag and prevent potential fraudulent signups before admin review.
  */
