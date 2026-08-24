@@ -2,6 +2,35 @@ export type GmailType = 'new' | 'old';
 
 export type SubmissionStatus = 'pending' | 'checking' | 'approved' | 'rejected';
 
+export function normalizeSubmissionStatus(status?: string | null): SubmissionStatus {
+  if (!status) return 'pending';
+  const s = String(status).trim().toLowerCase().replace(/[\s_-]+/g, '');
+  if (['approved', 'approve', 'completed', 'complete', 'success', 'passed', 'accepted'].includes(s)) {
+    return 'approved';
+  }
+  if (['rejected', 'reject', 'declined', 'decline', 'failed', 'fail', 'cancelled', 'canceled'].includes(s)) {
+    return 'rejected';
+  }
+  if ([
+    'checking',
+    'check',
+    'reviewing',
+    'review',
+    'inprogress',
+    'audit',
+    'auditing',
+    'underreview',
+    'processing',
+    'verifying',
+    'verification',
+    'testing',
+    'working'
+  ].includes(s)) {
+    return 'checking';
+  }
+  return 'pending';
+}
+
 export interface GmailItem {
   email: string;
   password: string;
@@ -75,6 +104,9 @@ export interface UserProfile {
   referralCode: string;
   referredBy?: string;
   referralEarnings: number;
+  creditedReferralEarnings?: number;
+  lastProcessedRefEarnings?: number;
+  referralBalanceSynced?: boolean;
   last_login: number;
   last_login_date?: string;
   login_streak: number;

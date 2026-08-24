@@ -12,7 +12,7 @@ import {
   Layers,
   AlertCircle,
 } from 'lucide-react';
-import { Submission, WithdrawRequest } from './types';
+import { Submission, WithdrawRequest, normalizeSubmissionStatus } from './types';
 
 export const HistoryView: React.FC = () => {
   const { language, submissions, withdrawRequests, setWithdrawModalOpen, setActiveTab } = useApp();
@@ -24,8 +24,16 @@ export const HistoryView: React.FC = () => {
 
   // Filter Submissions
   const filteredSubmissions = submissions.filter((sub) => {
-    const subStatus = (sub.status || '').toLowerCase();
-    if (filterStatus !== 'all' && subStatus !== filterStatus) return false;
+    const parentNorm = normalizeSubmissionStatus(sub.status);
+    if (filterStatus !== 'all') {
+      const filterNorm = normalizeSubmissionStatus(filterStatus);
+      const parentMatches = parentNorm === filterNorm;
+      const anyGmailMatches = sub.gmails?.some((g) => {
+        const gNorm = g.status && g.status !== 'pending' ? normalizeSubmissionStatus(g.status) : parentNorm;
+        return gNorm === filterNorm;
+      });
+      if (!parentMatches && !anyGmailMatches) return false;
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const hasMatchingEmail = sub.gmails?.some((g) => g.email.toLowerCase().includes(q));
@@ -34,10 +42,10 @@ export const HistoryView: React.FC = () => {
     return true;
   });
 
-  const getStatusBadge = (status: string) => {
-    switch ((status || '').toLowerCase()) {
+  const getStatusBadge = (status?: string) => {
+    const norm = normalizeSubmissionStatus(status);
+    switch (norm) {
       case 'approved':
-      case 'completed':
         return (
           <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full">
             <CheckCircle className="w-3 h-3" />
@@ -55,7 +63,7 @@ export const HistoryView: React.FC = () => {
         return (
           <span className="inline-flex items-center gap-1 text-[11px] font-bold text-sky-700 bg-sky-100 px-2.5 py-0.5 rounded-full">
             <Clock className="w-3 h-3 animate-spin" />
-            <span>{t.checking}</span>
+            <span>{t.checking || 'Checking'}</span>
           </span>
         );
       default:

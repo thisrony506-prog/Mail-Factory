@@ -566,7 +566,7 @@ export const AuthPageView: React.FC<AuthPageViewProps> = ({
                       required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder={language === 'bn' ? 'যেমন: মোহাম্মদ তানভীর' : 'e.g. Tanvir Ahmed'}
+                      placeholder={language === 'bn' ? 'নাম লিখুন' : 'Enter Name'}
                       className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-900/80 border border-slate-700 text-xs font-semibold text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
                     />
                   </div>
@@ -585,7 +585,7 @@ export const AuthPageView: React.FC<AuthPageViewProps> = ({
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="user@gmail.com"
+                    placeholder="example@gmail.com"
                     className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-900/80 border border-slate-700 text-xs font-semibold text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
                   />
                 </div>

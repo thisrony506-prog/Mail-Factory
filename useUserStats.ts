@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useApp } from './AppContext';
+import { normalizeSubmissionStatus } from './types';
 
 export function useUserStats() {
   const { submissions, withdrawRequests, profile } = useApp();
@@ -16,48 +17,62 @@ export function useUserStats() {
     const earningsMap: Record<string, number> = {};
 
     submissions.forEach((s) => {
-      const parentStatus = (s.status || '').toLowerCase();
-      let hasIndividualStatus = false;
+      const parentNorm = normalizeSubmissionStatus(s.status);
       let sApprovedCount = 0;
       let sTotalAmount = Number(s.totalAmount) || 0;
       const rate = Number(s.rate) || 0;
+      let hasIndividualSpecificStatus = false;
       
       if (s.gmails && Array.isArray(s.gmails) && s.gmails.length > 0) {
         s.gmails.forEach((g) => {
           totalSubCount += 1;
-          const gStatus = (g.status || parentStatus || 'pending').toLowerCase();
-          if (gStatus === 'approved') {
-             approvedCount += 1;
-             sApprovedCount += 1;
-          }
-          else if (gStatus === 'rejected') rejectedCount += 1;
-          else if (gStatus === 'checking') checkingCount += 1;
-          else pendingCount += 1;
           
-          if (g.status) hasIndividualStatus = true;
+          // Determine individual effective status
+          let effectiveStatus: 'approved' | 'rejected' | 'checking' | 'pending';
+          if (g.status && g.status !== 'pending') {
+            effectiveStatus = normalizeSubmissionStatus(g.status);
+            hasIndividualSpecificStatus = true;
+          } else {
+            // Fallback to parent submission status if individual is 'pending' or unset
+            effectiveStatus = parentNorm;
+          }
+
+          if (effectiveStatus === 'approved') {
+            approvedCount += 1;
+            sApprovedCount += 1;
+          } else if (effectiveStatus === 'rejected') {
+            rejectedCount += 1;
+          } else if (effectiveStatus === 'checking') {
+            checkingCount += 1;
+          } else {
+            pendingCount += 1;
+          }
         });
       } else {
         const c = Number(s.count) || Number(s.quantity) || 1;
         totalSubCount += c;
-        if (parentStatus === 'approved') {
-            approvedCount += c;
-            sApprovedCount += c;
+        if (parentNorm === 'approved') {
+          approvedCount += c;
+          sApprovedCount += c;
+        } else if (parentNorm === 'rejected') {
+          rejectedCount += c;
+        } else if (parentNorm === 'checking') {
+          checkingCount += c;
+        } else {
+          pendingCount += c;
         }
-        else if (parentStatus === 'rejected') rejectedCount += c;
-        else if (parentStatus === 'checking') checkingCount += c;
-        else pendingCount += c;
       }
 
       // Calculate Earnings and Chart Data
       if (sApprovedCount > 0) {
-         const earnedAmount = hasIndividualStatus ? (sApprovedCount * rate) : sTotalAmount;
-         if (parentStatus === 'approved') {
-            realTotalEarnings += earnedAmount;
-            if (s.submittedAt) {
-              const d = new Date(s.submittedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-              earningsMap[d] = (earningsMap[d] || 0) + earnedAmount;
-            }
-         }
+        const earnedAmount = hasIndividualSpecificStatus ? (sApprovedCount * rate) : sTotalAmount;
+        if (parentNorm === 'approved' || sApprovedCount > 0) {
+          realTotalEarnings += earnedAmount;
+          if (s.submittedAt) {
+            const d = new Date(s.submittedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            earningsMap[d] = (earningsMap[d] || 0) + earnedAmount;
+          }
+        }
       }
     });
 
@@ -65,11 +80,17 @@ export function useUserStats() {
 
     // Withdrawn Data
     const realTotalWithdrawn = withdrawRequests
-      .filter((w) => (w.status || '').toLowerCase() === 'approved')
+      .filter((w) => normalizeSubmissionStatus(w.status) === 'approved')
       .reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
     const displayWithdrawn = Math.max(Number(profile?.total_withdrawn) || 0, realTotalWithdrawn);
 
-    const hasWithdrawn = Boolean(withdrawRequests && withdrawRequests.some((w) => (w.status || '').toLowerCase() === 'approved' || (w.status || '').toLowerCase() === 'pending'));
+    const hasWithdrawn = Boolean(
+      withdrawRequests &&
+        withdrawRequests.some((w) => {
+          const st = normalizeSubmissionStatus(w.status);
+          return st === 'approved' || st === 'pending' || st === 'checking';
+        })
+    );
 
     // Chart Data & Peak Earning
     const chartDays: string[] = [];
