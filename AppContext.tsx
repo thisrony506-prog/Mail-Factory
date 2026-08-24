@@ -1030,6 +1030,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setProfile(null);
         setSubmissions([]);
         setWithdrawRequests([]);
+        setNotifications([]);
+        localStorage.removeItem('mf_notifications_v2');
         setLoading(false);
       }
     });
@@ -1148,8 +1150,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const updates = {};
 
     submissions.forEach(sub => {
+        if (sub.userId !== user.uid) return;
         if (sub.status === 'approved' && !sub.processedForBalance) {
-            balanceDelta += sub.totalAmount;
+            // Admin panel and Cloud Functions already credit the balance on server-side.
+            // Client-side only clears hold balance to prevent double crediting.
             holdDelta -= sub.totalAmount;
             updates[`submissions/${sub.key}/processedForBalance`] = true;
             addNotification('জিমেইল সাবমিশন অনুমোদিত! 🎉', `আপনার ${sub.count || sub.quantity || 1} টি জিমেইল সাবমিশন সফলভাবে অনুমোদিত হয়েছে এবং ৳${sub.totalAmount} ব্যালেন্সে যোগ হয়েছে।`, 'success');
@@ -1161,6 +1165,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
 
     withdrawRequests.forEach(wd => {
+        if (wd.userId !== user.uid) return;
         if (wd.status === 'rejected' && !wd.processedForBalance) {
             // Admin panel already refunds the balance, so we only mark it as processed locally
             // to avoid double refunding the user.

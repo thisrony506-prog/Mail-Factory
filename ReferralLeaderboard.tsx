@@ -272,6 +272,7 @@ export const ReferralLeaderboard: React.FC = () => {
 
       const commission = Math.round((friendTotalEarnings * (commissionPercent || 10)) / 100);
       const bonus = signupBonusUser || 5;
+
       return {
         uid: f.uid || `ref_friend_${i}`,
         username: f.username || (f.email ? f.email.split('@')[0] : 'Friend'),
@@ -678,8 +679,8 @@ const drawRoundedRect = (
             </h1>
             <p className="text-xs text-indigo-200 mt-1 font-medium max-w-md">
               {language === 'bn'
-                ? `বন্ধুদের ইনভাইট করলেই পাবেন ৳${signupBonusUser || 5} ফ্রি বোনাস এবং তাদের প্রতি সেলে ১০% লাইফটাইম কমিশন!`
-                : `Earn ৳${signupBonusUser || 5} instant bonus + 10% lifetime commission on every friend sale.`}
+                ? `বন্ধুদের ইনভাইট করুন এবং তাদের প্রতি সেলে ১০% লাইফটাইম কমিশন জিতে নিন!`
+                : `Earn 10% lifetime commission on every friend sale.`}
             </p>
           </div>
 
@@ -807,7 +808,6 @@ const drawRoundedRect = (
               )}
             </div>
           </div>
-
           {/* FRIENDS DETAILED LOG LIST */}
           <div className="space-y-2.5">
             {filteredReferredFriends.map((friend, idx) => (
@@ -839,7 +839,6 @@ const drawRoundedRect = (
                       </div>
                     </div>
                   </div>
-
                   <div className="text-right shrink-0">
                     <div className="text-sm font-black text-emerald-600 font-mono">
                       +৳{friend.totalIncome.toFixed(2)}
@@ -858,7 +857,6 @@ const drawRoundedRect = (
                       ৳{friend.signupBonus.toFixed(2)}
                     </span>
                   </div>
-
                   <div>
                     <span className="text-[9px] font-bold text-slate-400 uppercase block">
                       {language === 'bn' ? '১০% সেলস কমিশন' : 'Sales Comm.'}
@@ -867,7 +865,6 @@ const drawRoundedRect = (
                       ৳{friend.salesCommission.toFixed(2)}
                     </span>
                   </div>
-
                   <div>
                     <span className="text-[9px] font-bold text-slate-400 uppercase block">
                       {language === 'bn' ? 'জিমেইল সেল' : 'Gmails Sold'}
@@ -879,7 +876,6 @@ const drawRoundedRect = (
                 </div>
               </motion.div>
             ))}
-
             {filteredReferredFriends.length === 0 && (
               <div className="bg-white rounded-3xl p-8 text-center text-slate-400 border border-slate-200">
                 <Users className="w-10 h-10 mx-auto mb-2 text-slate-300" />
@@ -891,7 +887,6 @@ const drawRoundedRect = (
           </div>
         </div>
       )}
-
       {/* TAB 1: PROMO CARD & POSTER DOWNLOADER */}
       {viewTab === 'poster' && (
         <div className="space-y-4">
@@ -966,6 +961,7 @@ const drawRoundedRect = (
                     {language === 'bn' ? 'অফিসিয়াল সেলার ও রেফারার' : 'Official Seller & Referrer'}
                   </span>
                 </div>
+ 
               </div>
 
               <div className="text-center sm:text-right bg-white/10 px-3.5 py-2 rounded-xl border border-white/10 w-full sm:w-auto">
@@ -1091,8 +1087,8 @@ const drawRoundedRect = (
             </h2>
             <p className="text-xs text-amber-100 mt-0.5 max-w-sm">
               {language === 'bn'
-                ? `প্রতিটি সফল রেফারেলের জন্য পান ৳${signupBonusUser || 5} ইনস্ট্যান্ট বোনাস এবং তাদের প্রতি সেলস থেকে ১০% আজীবন কমিশন।`
-                : `Earn ৳${signupBonusUser || 5} instant bonus + 10% lifetime commission on every friend sell.`}
+                ? `বন্ধুদের ইনভাইট করুন এবং তাদের প্রতি সেলস থেকে ১০% আজীবন কমিশন উপভোগ করুন।`
+                : `Earn 10% lifetime commission on every friend sell.`}
             </p>
           </div>
 
@@ -1231,6 +1227,7 @@ const drawRoundedRect = (
                     <div className="p-3 bg-white rounded-xl shadow-sm border border-slate-100">
                       <QRCode value={referralLink} size={150} fgColor="#4f46e5" />
                     </div>
+     
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                       Scan to register via camera
                     </p>

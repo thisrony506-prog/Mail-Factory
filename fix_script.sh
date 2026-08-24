@@ -1,0 +1,78 @@
+#!/bin/bash
+cat << 'INNER_EOF' > temp_replace.txt
+          {/* FRIENDS DETAILED LOG LIST */}
+          <div className="space-y-2.5">
+            {filteredReferredFriends.map((friend, idx) => (
+              <motion.div
+                key={friend.uid || idx}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, delay: idx * 0.04 }}
+                className="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs hover:shadow-md transition-all space-y-3"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 text-white font-black text-sm flex items-center justify-center shadow-xs shrink-0">
+                      {friend.username.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-black text-slate-900">{friend.username}</span>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[9px] font-black border border-emerald-200">
+                          {friend.status}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-slate-500 block font-mono">
+                        {friend.email.replace(/(?<=.{2}).(?=.*@)/g, '*')}
+                      </span>
+                      <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium mt-0.5">
+                        <Clock className="w-3 h-3 text-slate-400" />
+                        <span>রেজিস্ট্রেশন: {friend.registeredAt}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-sm font-black text-emerald-600 font-mono">
+                      +৳{friend.totalIncome.toFixed(2)}
+                    </div>
+                    <span className="text-[9px] text-slate-400 font-bold uppercase block">মোট আয়</span>
+                  </div>
+                </div>
+
+                {/* EARNING BREAKDOWN MINI GRID */}
+                <div className="grid grid-cols-3 gap-2 pt-2.5 border-t border-slate-100 bg-slate-50/70 p-2.5 rounded-xl text-center">
+                  <div>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase block">
+                      {language === 'bn' ? 'সাইনআপ বোনাস' : 'Signup Bonus'}
+                    </span>
+                    <span className="text-xs font-black text-indigo-700 font-mono">
+                      ৳{friend.signupBonus.toFixed(2)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase block">
+                      {language === 'bn' ? '১০% সেলস কমিশন' : 'Sales Comm.'}
+                    </span>
+                    <span className="text-xs font-black text-purple-700 font-mono">
+                      ৳{friend.salesCommission.toFixed(2)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase block">
+                      {language === 'bn' ? 'জিমেইল সেল' : 'Gmails Sold'}
+                    </span>
+                    <span className="text-xs font-black text-slate-800 font-mono">
+                      {friend.gmailsSold} টি
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+            {filteredReferredFriends.length === 0 && (
+INNER_EOF
+
+# Remove lines from 811 to 878
+sed -i '811,878d' ReferralLeaderboard.tsx
+
+# Insert new text
+sed -i '810r temp_replace.txt' ReferralLeaderboard.tsx
