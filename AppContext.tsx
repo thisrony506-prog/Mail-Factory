@@ -1419,15 +1419,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Send Chat message
   const sendChatMessage = async (text: string) => {
     if (!text.trim()) return;
-    const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    const userMsg: ChatMessage = {
-      id: `local_${Date.now()}`,
-      from: 'user',
-      message: text.trim(),
-      timestamp: Date.now(),
-      username: profile?.username || 'User',
-    };
-    setChatMessages((prev) => [...prev, userMsg]);
 
     if (user) {
       try {
@@ -1442,6 +1433,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } catch (e) {
         console.warn('Chat sync error:', e);
       }
+    } else {
+      const userMsg: ChatMessage = {
+        id: `local_${Date.now()}`,
+        from: 'user',
+        message: text.trim(),
+        timestamp: Date.now(),
+        username: profile?.username || 'User',
+      };
+      setChatMessages((prev) => [...prev, userMsg]);
     }
   };
 
