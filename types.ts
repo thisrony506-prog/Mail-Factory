@@ -25,6 +25,7 @@ export interface Submission {
   count: number;
   commission_percent?: number;
   processedForBalance?: boolean;
+  notifiedChecking?: boolean;
   rejectReason?: string;
   rejectionReason?: string;
   reason?: string;
@@ -53,6 +54,7 @@ export interface WithdrawRequest {
   reason?: string;
   adminNote?: string;
   processedForBalance?: boolean;
+  notifiedChecking?: boolean;
 }
 
 export interface UserProfile {

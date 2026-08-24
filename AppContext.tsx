@@ -1172,13 +1172,71 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (sub.userId !== user.uid) return;
         const sStatus = (sub.status || '').toLowerCase();
         
-        // Let Cloud Functions handle all logic (push notifications + balance)
-        // Client-side only tracks state
+        // Generate checking notification
+        if (sStatus === 'checking' && !sub.notifiedChecking) {
+            updates[`submissions/${sub.key}/notifiedChecking`] = true;
+            const nKey = push(ref(db, `users/${user.uid}/notifications`)).key;
+            updates[`users/${user.uid}/notifications/${nKey}`] = {
+                title: 'Review Started 🔍',
+                desc: `Your submission of ${sub.count || sub.quantity || (sub.gmails ? sub.gmails.length : 1)} Gmails is now being checked.`,
+                type: 'info',
+                read: false,
+                time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                timestamp: Date.now()
+            };
+        }
+
         if ((sStatus === 'approved' || sStatus === 'rejected') && !sub.processedForBalance) {
             updates[`submissions/${sub.key}/processedForBalance`] = true;
-            // holdDelta handling is done via submission creation and client-side reconciliation.
             if (sStatus === 'approved' || sStatus === 'rejected') {
                 holdDelta -= sub.totalAmount;
+            }
+            
+            let totalSubmitted = sub.count || sub.quantity || (sub.gmails ? sub.gmails.length : 1);
+            let approvedCount = 0;
+            let rejectedCount = 0;
+            
+            if (sub.gmails && sub.gmails.length > 0) {
+                sub.gmails.forEach((g) => {
+                    const iStatus = (g.status === 'pending' || !g.status ? sStatus : g.status).toLowerCase();
+                    if (iStatus === 'approved' || iStatus === 'completed') approvedCount++;
+                    if (iStatus === 'rejected') rejectedCount++;
+                });
+            } else {
+                if (sStatus === 'approved' || sStatus === 'completed') approvedCount = totalSubmitted;
+                if (sStatus === 'rejected') rejectedCount = totalSubmitted;
+            }
+            
+            const nKey = push(ref(db, `users/${user.uid}/notifications`)).key;
+            const reason = sub.rejectReason || sub.rejectionReason || sub.reason || sub.adminNote || sub.note || 'Not specified';
+            
+            if (approvedCount > 0 && rejectedCount > 0) {
+                updates[`users/${user.uid}/notifications/${nKey}`] = {
+                    title: 'Submission Processed 📝',
+                    desc: `${totalSubmitted} Gmails processed: ${approvedCount} Approved (৳${sub.totalAmount} added), ${rejectedCount} Rejected.`,
+                    type: 'success',
+                    read: false,
+                    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                    timestamp: Date.now()
+                };
+            } else if (sStatus === 'approved' || sStatus === 'completed') {
+                updates[`users/${user.uid}/notifications/${nKey}`] = {
+                    title: 'Submission Approved 🎉',
+                    desc: `${totalSubmitted} Gmails approved! ৳${sub.totalAmount} added to your balance.`,
+                    type: 'success',
+                    read: false,
+                    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                    timestamp: Date.now()
+                };
+            } else if (sStatus === 'rejected') {
+                updates[`users/${user.uid}/notifications/${nKey}`] = {
+                    title: 'Submission Rejected ❌',
+                    desc: `${totalSubmitted} Gmails rejected. Reason: ${reason}.`,
+                    type: 'danger',
+                    read: false,
+                    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                    timestamp: Date.now()
+                };
             }
         }
     });
@@ -1189,6 +1247,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         
         if ((wStatus === 'approved' || wStatus === 'rejected') && !wd.processedForBalance) {
             updates[`withdraw_requests/${wd.key}/processedForBalance`] = true;
+            const nKey = push(ref(db, `users/${user.uid}/notifications`)).key;
+            if (wStatus === 'approved') {
+                updates[`users/${user.uid}/notifications/${nKey}`] = {
+                    title: 'Withdrawal Approved 💸',
+                    desc: `Your withdrawal of ৳${wd.amount} via ${wd.paymentMethod || wd.method || 'System'} has been successfully paid out!`,
+                    type: 'success',
+                    read: false,
+                    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                    timestamp: Date.now()
+                };
+            } else if (wStatus === 'rejected') {
+                const reason = wd.rejectReason || wd.rejectionReason || wd.reason || wd.adminNote || wd.transactionNote || 'Not specified';
+                updates[`users/${user.uid}/notifications/${nKey}`] = {
+                    title: 'Withdrawal Rejected ❌',
+                    desc: `Your withdrawal of ৳${wd.amount} was rejected. Reason: ${reason}. The funds have been refunded to your balance.`,
+                    type: 'danger',
+                    read: false,
+                    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                    timestamp: Date.now()
+                };
+            }
         }
     });
 

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import confetti from 'canvas-confetti';
 import { useApp } from './AppContext';
+import { useUserStats } from './useUserStats';
 import { useUserBalance } from './useUserBalance';
 import { translations } from './i18n';
 import { auth, signOut } from './firebase';
@@ -82,80 +83,28 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     return found ? found.username || found.email?.split('@')[0] || profile.referredBy : profile.referredBy;
   }, [profile?.referredBy, allUsers]);
 
-  const hasWithdrawn = Boolean(
-    (Number(profile?.total_withdrawn) > 0) ||
-    (withdrawRequests && withdrawRequests.some((w) => w.status === 'approved' || w.status === 'pending'))
-  );
-
+  
   const t = translations[language];
 
   const [claimingStreak, setClaimingStreak] = useState<boolean>(false);
   const [chartRange, setChartRange] = useState<7 | 14 | 30>(30);
 
   // Recharts: Dynamic Earnings Trend Chart Data
-  const chartDays = useMemo(() => {
-    const days: string[] = [];
-    for (let i = chartRange - 1; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      days.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-    }
-    return days;
-  }, [chartRange]);
-
-  const chartData = useMemo(() => {
-    const earningsMap: Record<string, number> = {};
-    submissions
-      .filter((s) => (s.status || '').toLowerCase() === 'approved' || s.status === undefined)
-      .forEach((s) => {
-        const d = new Date(s.submittedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        earningsMap[d] = (earningsMap[d] || 0) + (s.totalAmount || 0);
-      });
-    return chartDays.map((date) => ({
-      date,
-      amount: earningsMap[date] || 0,
-    }));
-  }, [submissions, chartDays]);
-
-  // Calculate range total & peak for chart header
-  const rangeTotal = useMemo(() => {
-    return chartData.reduce((acc, curr) => acc + curr.amount, 0);
-  }, [chartData]);
-
-  const rangePeak = useMemo(() => {
-    return Math.max(...chartData.map((d) => d.amount), 0);
-  }, [chartData]);
-
-  const alreadyClaimed = profile?.last_login_date === new Date().toDateString();
-
-  const { balance: realTimeBalance, loading: balanceLoading } = useUserBalance(user);
-
-  const mainBalance = (Number(profile?.balance) || 0).toFixed(2);
-  const holdBalance = (Number(profile?.hold) || 0).toFixed(2);
-
-  const [wonBonus, setWonBonus] = useState<number | null>(null);
-
-  const handleClaimStreak = async () => {
-    hapticFeedback.medium();
-    setClaimingStreak(true);
-    const res = await claimDailyStreak();
-    if (res.success && res.bonusAmount) {
-      setWonBonus(res.bonusAmount);
-      confetti({
-        particleCount: 70,
-        spread: 60,
-        origin: { y: 0.6 },
-      });
-    }
-    setClaimingStreak(false);
-  };
-
-  // Submissions stats
-  const totalSubCount = profile?.total_submitted || submissions.length;
-  const approvedCount = profile?.manual_approved_count || 0;
-  const pendingCount = submissions.filter((s) => (s.status || '').toLowerCase() === 'pending' || !s.status).reduce((acc, s) => acc + (Number(s.count) || Number(s.quantity) || 1), 0);
-  const checkingCount = submissions.filter((s) => (s.status || '').toLowerCase() === 'checking').reduce((acc, s) => acc + (Number(s.count) || Number(s.quantity) || 1), 0);
-  const rejectedCount = submissions.filter((s) => (s.status || '').toLowerCase() === 'rejected').reduce((acc, s) => acc + (Number(s.count) || Number(s.quantity) || 1), 0);
+  const {
+    totalSubCount,
+    approvedCount,
+    pendingCount,
+    checkingCount,
+    rejectedCount,
+    realTotalEarnings,
+    displayEarnings,
+    realTotalWithdrawn,
+    displayWithdrawn,
+    hasWithdrawn,
+    chartData,
+    rangeTotal,
+    rangePeak,
+  } = useUserStats();
 
   // Level progress percentage
   const currentReq = currentLevel.approved;
@@ -634,7 +583,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               {language === 'bn' ? 'মোট পে-আউট (উত্তোলন)' : 'Total Payout (Withdrawn)'}
             </span>
             <span className="text-xl font-black text-sky-400 font-mono block">
-              ৳{(Number(profile?.total_withdrawn) || 0).toFixed(2)}
+              ৳{realTotalWithdrawn.toFixed(2)}
             </span>
           </div>
         </div>
