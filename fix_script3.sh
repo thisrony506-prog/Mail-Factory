@@ -1,2 +1,1 @@
-sed -i '948d' ReferralLeaderboard.tsx
-sed -i '964d' ReferralLeaderboard.tsx
+cat firebase.ts | grep -n "export const googleProvider = new GoogleAuthProvider();"

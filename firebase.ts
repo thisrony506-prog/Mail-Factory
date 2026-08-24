@@ -50,7 +50,7 @@ export const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:889959520630:web:f4cbf82f236b616e1f8257"
 };
 
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+export const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 let authInstance;
 try {
   authInstance = initializeAuth(app, {
@@ -63,15 +63,6 @@ try {
 export const auth = authInstance;
 export const db: Database = getDatabase(app);
 export const googleProvider = new GoogleAuthProvider();
-
-export let messaging: any = null;
-if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-  try {
-    messaging = getMessaging(app);
-  } catch (e) {
-    console.warn('Firebase Messaging not supported', e);
-  }
-}
 
 export {
   createUserWithEmailAndPassword,
