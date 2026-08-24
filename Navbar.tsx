@@ -31,6 +31,7 @@ import {
   Gift,
   Info,
   Lock,
+  Shield,
 } from 'lucide-react';
 import { usePWAInstall } from './usePWAInstall';
 import { hapticFeedback } from './haptics';

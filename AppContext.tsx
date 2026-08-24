@@ -193,6 +193,8 @@ export const PATH_TO_TAB: Record<string, ActiveTab> = {
   '/register': 'home',
   '/signup': 'home',
   '/login': 'home',
+  '/admin': 'home',
+  '/admin-panel': 'home',
 };
 
 const getInitialTabFromUrl = (): ActiveTab => {
@@ -979,7 +981,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const userRef = ref(db, `users/${currUser.uid}`);
           const notifsRef = ref(db, `users/${currUser.uid}/notifications`);
           const isAdminUser = Boolean(
-            currUser.email && (currUser.email === 'gmrony135@gmail.com' || currUser.email === 'mailfactorybd@gmail.com')
+            currUser.email && (
+              currUser.email === 'gmrony135@gmail.com' ||
+              currUser.email === 'mailfactorybd@gmail.com' ||
+              currUser.email === 'iamronyofficial1@gmail.com'
+            )
           );
           
           unsubNotifs = onValue(
@@ -1495,118 +1501,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [submissions, withdrawRequests, profile?.balance, profile?.hold, profile?.totalEarnings, user]);
   // -----------------------------------------------------------
 
-  // --- Self-Healing Referral Earnings to Main Balance Sync ---
-  useEffect(() => {
-    if (!user || !profile || (!profile.referralCode && !profile.uid)) return;
-
-    const userRefCode = (profile.referralCode || '').trim().toUpperCase();
-    const profileUid = (profile.uid || '').trim();
-    const shortUid = profileUid.slice(0, 8).toUpperCase();
-
-    const myReferred = (allUsers || []).filter((u) => {
-      if (!u || u.uid === profile.uid || !u.referredBy) return false;
-      const refBy = u.referredBy.trim().toUpperCase();
-      return (
-        (userRefCode && refBy === userRefCode) ||
-        (profileUid && u.referredBy === profileUid) ||
-        (shortUid && refBy === shortUid)
-      );
-    });
-
-    
-    let friendCommissionsTotal = 0;
-    myReferred.forEach((f) => {
-      const friendSubs = (allSubmissions || []).filter(
-        (sub) => sub.userId === f.uid && (sub.status === 'approved' || sub.status?.toLowerCase() === 'approved')
-      );
-      
-      let approvedEarningsFromSubs = 0;
-      let approvedCountFromSubs = 0;
-      
-      friendSubs.forEach(sub => {
-          let hasIndividualStatus = false;
-          let sApprovedCount = 0;
-          const rate = Number(sub.rate) || 0;
-          
-          if (sub.gmails && Array.isArray(sub.gmails)) {
-              sub.gmails.forEach((g: any) => {
-                  const gs = (g.status || '').toLowerCase();
-                  if (gs === 'approved' || gs === 'Approved') sApprovedCount++;
-                  if (gs) hasIndividualStatus = true;
-              });
-          }
-          
-          if (hasIndividualStatus) {
-              approvedCountFromSubs += sApprovedCount;
-              approvedEarningsFromSubs += (sApprovedCount * rate);
-          } else {
-              const c = Number(sub.count) || Number(sub.quantity) || (sub.gmails ? sub.gmails.length : 1);
-              approvedCountFromSubs += c;
-              approvedEarningsFromSubs += (Number(sub.totalAmount) || Number(sub.amount) || (c * 10));
-          }
-      });
-
-      const manualApprovedCount = Number(f.manual_approved_count) || 0;
-      const totalApprovedCount = Math.max(approvedCountFromSubs, manualApprovedCount);
-
-      const friendTotalEarnings = Math.max(approvedEarningsFromSubs, totalApprovedCount * 10);
-      const commission = Math.round((friendTotalEarnings * (commissionPercent || 10)) / 100);
-      friendCommissionsTotal += commission;
-    });
-
-
-    const signupBonusesTotal = myReferred.length * (signupBonusUser || 5);
-    const totalComputedEarnings = signupBonusesTotal + friendCommissionsTotal;
-
-    const existingReferralEarnings = Number(profile.referralEarnings || 0);
-    const computedRefEarnings = Math.max(existingReferralEarnings, totalComputedEarnings);
-
-    const lastProcessed = Number(profile.lastProcessedRefEarnings) || 0;
-    const delta = Math.max(
-      computedRefEarnings > lastProcessed ? computedRefEarnings - lastProcessed : 0,
-      computedRefEarnings > existingReferralEarnings ? computedRefEarnings - existingReferralEarnings : 0
-    );
-
-    if (delta > 0 || computedRefEarnings !== existingReferralEarnings) {
-      const syncRefEarnings = async () => {
-        try {
-          const updates: any = {};
-          let currentBalance = Number(profile.balance || 0);
-          let currentTotalEarnings = Number(profile.totalEarnings || 0);
-
-          if (delta > 0) {
-            currentBalance += delta;
-            currentTotalEarnings += delta;
-            updates[`users/${user.uid}/balance`] = currentBalance;
-            updates[`users/${user.uid}/totalEarnings`] = currentTotalEarnings;
-          }
-
-          updates[`users/${user.uid}/referralEarnings`] = computedRefEarnings;
-          updates[`users/${user.uid}/lastProcessedRefEarnings`] = computedRefEarnings;
-          updates[`users/${user.uid}/referralBalanceSynced`] = true;
-          
-          await update(ref(db), updates);
-
-          setProfile((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  balance: currentBalance,
-                  totalEarnings: currentTotalEarnings,
-                  referralEarnings: computedRefEarnings,
-                  lastProcessedRefEarnings: computedRefEarnings,
-                  referralBalanceSynced: true,
-                }
-              : null
-          );
-        } catch (e) {
-          console.error('Failed to sync referral earnings to balance:', e);
-        }
-      };
-      syncRefEarnings();
-    }
-  }, [user, profile, allUsers, allSubmissions, commissionPercent, signupBonusUser]);
-  // -----------------------------------------------------------
+  // Referral Commissions are now exclusively handled automatically via Firebase Cloud Functions.\n  // -----------------------------------------------------------
 
   const submitGmails = async (data: {
     gmails: Array<{ email: string; password: string; recoveryEmail?: string }>;

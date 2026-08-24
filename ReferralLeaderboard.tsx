@@ -166,8 +166,7 @@ export const ReferralLeaderboard: React.FC = () => {
       });
 
       const signupBonusTotal = referredFriends.length * (signupBonusUser || 5);
-      const computedRefEarnings =
-        Number(u.referralEarnings || 0) + signupBonusTotal + friendTotalCommission;
+      const computedRefEarnings = signupBonusTotal + friendTotalCommission;
 
       const refEarnings = Math.max(computedRefEarnings, Number(u.referralEarnings || 0));
       const refCount = referredFriends.length;
@@ -210,7 +209,7 @@ export const ReferralLeaderboard: React.FC = () => {
       });
 
       const signupBonusTotal = referredFriends.length * (signupBonusUser || 5);
-      const computedRefEarnings = Number(profile.referralEarnings || 0) + signupBonusTotal + friendTotalCommission;
+      const computedRefEarnings = signupBonusTotal + friendTotalCommission;
       const refEarnings = Math.max(computedRefEarnings, Number(profile.referralEarnings || 0));
 
       list.push({
@@ -253,30 +252,52 @@ export const ReferralLeaderboard: React.FC = () => {
       (u) => profile && u.uid !== profile.uid && isReferredBy(u, profile.uid, profile.referralCode || '')
     );
 
+    
     const friendsList: ReferredFriendItem[] = myRealReferred.map((f, i) => {
-      const friendApprovedSubs = (allSubmissions || []).filter(
+      const friendSubs = (allSubmissions || []).filter(
         (sub) => sub.userId === f.uid && (sub.status === 'approved' || sub.status?.toLowerCase() === 'approved')
       );
-      const approvedCountFromSubs = friendApprovedSubs.reduce(
-        (acc, sub) => acc + (Number(sub.count) || Number(sub.quantity) || 1),
-        0
-      );
+      
+      let approvedEarningsFromSubs = 0;
+      let approvedCountFromSubs = 0;
+      
+      friendSubs.forEach(sub => {
+          let hasIndividualStatus = false;
+          let sApprovedCount = 0;
+          const parentCount = Number(sub.count) || Number(sub.quantity) || (sub.gmails ? sub.gmails.length : 1);
+          const parentTotal = Number(sub.totalAmount) || Number(sub.amount) || (parentCount * 10);
+          const rate = Number(sub.rate) || (parentCount > 0 ? parentTotal / parentCount : 10);
+          
+          if (sub.gmails && Array.isArray(sub.gmails)) {
+              sub.gmails.forEach((g: any) => {
+                  const gs = (g.status || '').toLowerCase();
+                  if (gs === 'approved' || gs === 'Approved') sApprovedCount++;
+                  if (gs) hasIndividualStatus = true;
+              });
+          }
+          
+          if (hasIndividualStatus) {
+              approvedCountFromSubs += sApprovedCount;
+              approvedEarningsFromSubs += (sApprovedCount * rate);
+          } else {
+              const c = Number(sub.count) || Number(sub.quantity) || (sub.gmails ? sub.gmails.length : 1);
+              approvedCountFromSubs += c;
+              approvedEarningsFromSubs += (Number(sub.totalAmount) || Number(sub.amount) || (c * 10));
+          }
+      });
+
       const manualApprovedCount = Number(f.manual_approved_count) || 0;
       const totalApprovedCount = Math.max(approvedCountFromSubs, manualApprovedCount);
-
-      const approvedEarningsFromSubs = friendApprovedSubs.reduce(
-        (acc, sub) => acc + (Number(sub.totalAmount) || Number(sub.amount) || (Number(sub.count || sub.quantity || 1) * 10)),
-        0
-      );
       const totalGmails = totalApprovedCount;
-      const friendTotalEarnings = Math.max(approvedEarningsFromSubs, totalApprovedCount * 10);
 
-      const commission = Math.round((friendTotalEarnings * (commissionPercent || 10)) / 100);
+      const friendTotalEarnings = Math.max(approvedEarningsFromSubs, totalApprovedCount * 10);
+      const commission = (friendTotalEarnings * (commissionPercent || 10)) / 100;
       const bonus = signupBonusUser || 5;
 
       return {
         uid: f.uid || `ref_friend_${i}`,
         username: f.username || (f.email ? f.email.split('@')[0] : 'Friend'),
+
         email: f.email || '',
         registeredAt: f.createdAt
           ? new Date(f.createdAt).toLocaleString('en-US', {

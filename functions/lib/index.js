@@ -362,6 +362,76 @@ exports.onSubmissionStatusChange = functions.database
             console.error("Error pushing submission rejection notification:", err);
         }
     }
+    // Handle partial item updates AFTER parent is already approved
+    if (isNowApproved && wasApproved) {
+        // Calculate what the totalAmount SHOULD be now
+        let newTotalAmount = Number(after.totalAmount) || 0;
+        let newCount = parentCount;
+        if (hasIndividualStatus) {
+            newCount = actualApprovedCount;
+            newTotalAmount = newCount * rate;
+        }
+        const prevCreditedAmount = Number(before.creditedAmount) || 0;
+        const prevCreditedCount = Number(before.creditedCount) || 0;
+        const amountDelta = newTotalAmount - prevCreditedAmount;
+        const countDelta = newCount - prevCreditedCount;
+        if (amountDelta !== 0 || countDelta !== 0) {
+            const userId = after.userId;
+            // Adjust balance for the user
+            try {
+                await db.ref(`users/${userId}`).transaction((user) => {
+                    if (!user)
+                        return user;
+                    return {
+                        ...user,
+                        balance: Math.max(0, (Number(user.balance) || 0) + amountDelta),
+                        totalEarnings: Math.max(0, (Number(user.totalEarnings) || 0) + amountDelta),
+                        manual_approved_count: Math.max(0, (Number(user.manual_approved_count) || 0) + countDelta),
+                    };
+                });
+                console.log(`Adjusted user ${userId} balance by ৳${amountDelta} due to individual item status change.`);
+            }
+            catch (err) {
+                console.error(`Failed to adjust balance for user ${userId}:`, err);
+            }
+            // Adjust referral commission
+            if (amountDelta !== 0) {
+                try {
+                    const userSnap = await db.ref(`users/${userId}`).once("value");
+                    const userData = userSnap.val();
+                    if (userData && userData.referredBy) {
+                        const referrerId = userData.referredBy;
+                        if (referrerId !== userId) {
+                            const settingsSnap = await db.ref("settings").once("value");
+                            const settingsVal = settingsSnap.val() || {};
+                            const commissionPercent = Number(settingsVal.commission_percent) || 10;
+                            const commissionDelta = (amountDelta * commissionPercent) / 100;
+                            if (commissionDelta !== 0) {
+                                await db.ref(`users/${referrerId}`).transaction((refUser) => {
+                                    if (!refUser)
+                                        return refUser;
+                                    return {
+                                        ...refUser,
+                                        balance: Math.max(0, (Number(refUser.balance) || 0) + commissionDelta),
+                                        referralEarnings: Math.max(0, (Number(refUser.referralEarnings) || 0) + commissionDelta),
+                                    };
+                                });
+                                console.log(`Adjusted referrer ${referrerId} commission by ৳${commissionDelta}.`);
+                            }
+                        }
+                    }
+                }
+                catch (err) {
+                    console.error("Failed to adjust referral commission:", err);
+                }
+            }
+            // Update creditedAmount in submission
+            await change.after.ref.update({
+                creditedAmount: newTotalAmount,
+                creditedCount: newCount
+            });
+        }
+    }
     if (isNowApproved && !wasApproved && !after.balanceCredited) {
         if (count <= 0) {
             // Parent marked as approved, but all actual items rejected

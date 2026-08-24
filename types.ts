@@ -25,6 +25,10 @@ export interface Submission {
   count: number;
   commission_percent?: number;
   processedForBalance?: boolean;
+  balanceCredited?: boolean;
+  creditedAmount?: number;
+  approvedCount?: number;
+  rejectedCount?: number;
   notifiedChecking?: boolean;
   rejectReason?: string;
   rejectionReason?: string;
