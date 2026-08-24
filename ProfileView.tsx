@@ -71,6 +71,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     allUsers,
   } = useApp();
 
+  const { balance: realTimeBalance, loading: balanceLoading } = useUserBalance(user);
+
   const referrerName = useMemo(() => {
     if (!profile?.referredBy) return null;
     const found = allUsers.find(
