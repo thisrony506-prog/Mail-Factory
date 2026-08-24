@@ -106,7 +106,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const chartData = useMemo(() => {
     const earningsMap: Record<string, number> = {};
     submissions
-      .filter((s) => s.status === 'approved')
+      .filter((s) => (s.status || '').toLowerCase() === 'approved' || s.status === undefined)
       .forEach((s) => {
         const d = new Date(s.submittedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         earningsMap[d] = (earningsMap[d] || 0) + (s.totalAmount || 0);
@@ -153,9 +153,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   // Submissions stats
   const totalSubCount = profile?.total_submitted || submissions.length;
   const approvedCount = profile?.manual_approved_count || 0;
-  const pendingCount = submissions.filter((s) => (s.status || '').toLowerCase() === 'pending').length;
-  const checkingCount = submissions.filter((s) => (s.status || '').toLowerCase() === 'checking').length;
-  const rejectedCount = submissions.filter((s) => (s.status || '').toLowerCase() === 'rejected').length;
+  const pendingCount = submissions.filter((s) => (s.status || '').toLowerCase() === 'pending' || !s.status).reduce((acc, s) => acc + (Number(s.count) || Number(s.quantity) || 1), 0);
+  const checkingCount = submissions.filter((s) => (s.status || '').toLowerCase() === 'checking').reduce((acc, s) => acc + (Number(s.count) || Number(s.quantity) || 1), 0);
+  const rejectedCount = submissions.filter((s) => (s.status || '').toLowerCase() === 'rejected').reduce((acc, s) => acc + (Number(s.count) || Number(s.quantity) || 1), 0);
 
   // Level progress percentage
   const currentReq = currentLevel.approved;
@@ -617,8 +617,30 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </div>
         </div>
 
+        {/* Lifetime Earnings & Payout Summary */}
+        <div className="grid grid-cols-2 gap-3 mt-4">
+          <div className="p-4 rounded-2xl bg-slate-900 text-white shadow-md relative overflow-hidden">
+            <div className="absolute -right-4 -top-4 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl" />
+            <span className="text-[11px] text-slate-400 font-bold block mb-1 uppercase tracking-wider">
+              {language === 'bn' ? 'মোট উপার্জন (লাইফটাইম)' : 'Total Earnings (Lifetime)'}
+            </span>
+            <span className="text-xl font-black text-emerald-400 font-mono block">
+              ৳{(Number(profile?.totalEarnings) || 0).toFixed(2)}
+            </span>
+          </div>
+          <div className="p-4 rounded-2xl bg-slate-900 text-white shadow-md relative overflow-hidden">
+            <div className="absolute -right-4 -top-4 w-16 h-16 bg-sky-500/10 rounded-full blur-xl" />
+            <span className="text-[11px] text-slate-400 font-bold block mb-1 uppercase tracking-wider">
+              {language === 'bn' ? 'মোট পে-আউট (উত্তোলন)' : 'Total Payout (Withdrawn)'}
+            </span>
+            <span className="text-xl font-black text-sky-400 font-mono block">
+              ৳{(Number(profile?.total_withdrawn) || 0).toFixed(2)}
+            </span>
+          </div>
+        </div>
+
         {/* Financial Summary Highlight Banner */}
-        <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-900 to-indigo-950 text-white flex items-center justify-between shadow-md">
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-900 to-indigo-950 text-white flex items-center justify-between shadow-md mt-2 mb-2">
           <div className="flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-emerald-400" />
             <div>
@@ -630,7 +652,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               </span>
             </div>
           </div>
-
           <div className="text-right">
             <span className="text-[11px] text-slate-300 font-bold block">
               {t.peakSingleEarn}
@@ -640,7 +661,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </span>
           </div>
         </div>
-
         {/* Dynamic Recharts Area Chart with Gradient Fill */}
         <div className="pt-2">
           <div className="h-52 w-full">

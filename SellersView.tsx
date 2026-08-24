@@ -96,7 +96,7 @@ export const SellersView: React.FC = () => {
 
   // Helper to compute payout/earnings from seller item
   const getEarning = (seller: TopSellerItem): number => {
-    return Number(seller.totalEarnings) || Number(seller.balance || 0) || 0;
+    return Number(seller.totalEarnings) || (Number(seller.balance || 0) + Number(seller.total_withdrawn || 0)) || 0;
   };
 
   const getApprovedCount = (seller: TopSellerItem): number => {

@@ -117,9 +117,11 @@ export const NotificationDrawer: React.FC = () => {
                         <CheckCircle className="w-4 h-4 text-emerald-500" />
                       ) : notif.type === 'warning' ? (
                         <AlertTriangle className="w-4 h-4 text-amber-500" />
-                      ) : (
-                        <Info className="w-4 h-4 text-indigo-500" />
-                      )}
+                      ) : (notif.type === 'error' || notif.type === 'danger') ? (
+                          <AlertTriangle className="w-4 h-4 text-rose-500" />
+                        ) : (
+                          <Info className="w-4 h-4 text-indigo-500" />
+                        )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">

@@ -922,6 +922,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                   if (newNotifs.length > 0) {
                     const updated = [...newNotifs, ...prev].sort((a, b) => b.timestamp - a.timestamp).slice(0, 50);
                     localStorage.setItem('mf_notifications_v2', JSON.stringify(updated));
+                    
+                    // Trigger web push for real-time notifications
+                    try {
+                      if ('Notification' in window && (window as any).Notification.permission === 'granted') {
+                        if ('serviceWorker' in navigator) {
+                          navigator.serviceWorker.ready.then((registration) => {
+                            if (registration && registration.showNotification) {
+                              newNotifs.forEach(n => {
+                                // Only show push for recent notifications (last 2 minutes)
+                                if (Date.now() - (n.timestamp || 0) < 120000) {
+                                  registration.showNotification('Mail Factory', { body: `${n.title}: ${n.desc}`, icon: appLogo }).catch(console.error);
+                                }
+                              });
+                            }
+                          }).catch(console.error);
+                        }
+                      }
+                    } catch (e) { console.error('Push err', e); }
+                    
                     return updated;
                   }
                   return prev;
@@ -1152,31 +1171,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     submissions.forEach(sub => {
         if (sub.userId !== user.uid) return;
         const sStatus = (sub.status || '').toLowerCase();
-        if (sStatus === 'approved' && !sub.processedForBalance) {
-            // Admin panel and Cloud Functions already credit the balance on server-side.
-            // Client-side only clears hold balance to prevent double crediting.
-            holdDelta -= sub.totalAmount;
+        
+        // Let Cloud Functions handle all logic (push notifications + balance)
+        // Client-side only tracks state
+        if ((sStatus === 'approved' || sStatus === 'rejected') && !sub.processedForBalance) {
             updates[`submissions/${sub.key}/processedForBalance`] = true;
-            addNotification('জিমেইল সাবমিশন অনুমোদিত! 🎉', `আপনার ${sub.count || sub.quantity || 1} টি জিমেইল সাবমিশন সফলভাবে অনুমোদিত হয়েছে এবং ৳${sub.totalAmount} ব্যালেন্সে যোগ হয়েছে।`, 'success');
-        } else if (sStatus === 'rejected' && !sub.processedForBalance) {
-            holdDelta -= sub.totalAmount;
-            updates[`submissions/${sub.key}/processedForBalance`] = true;
-            addNotification('সাবমিশন রিজেক্ট করা হয়েছে ⚠️', `দুঃখিত, আপনার সাবমিশনটি যাচাইয়ে রিজেক্ট করা হয়েছে।`, 'danger');
+            // holdDelta handling is done via submission creation and client-side reconciliation.
+            if (sStatus === 'approved' || sStatus === 'rejected') {
+                holdDelta -= sub.totalAmount;
+            }
         }
     });
 
     withdrawRequests.forEach(wd => {
         if (wd.userId !== user.uid) return;
         const wStatus = (wd.status || '').toLowerCase();
-        if (wStatus === 'rejected' && !wd.processedForBalance) {
-            // Admin panel already refunds the balance, so we only mark it as processed locally
-            // to avoid double refunding the user.
+        
+        if ((wStatus === 'approved' || wStatus === 'rejected') && !wd.processedForBalance) {
             updates[`withdraw_requests/${wd.key}/processedForBalance`] = true;
-            addNotification('উত্তোলন বাতিল ⚠️', `আপনার ৳${wd.amount} এর উত্তোলন রিকোয়েস্ট রিজেক্ট করা হয়েছে।`, 'danger');
-        } else if (wStatus === 'approved' && !wd.processedForBalance) {
-            // Already deducted upon request
-            updates[`withdraw_requests/${wd.key}/processedForBalance`] = true;
-            addNotification('উত্তোলন সফল 🎉', `আপনার ৳${wd.amount} এর উত্তোলন সফলভাবে সম্পন্ন হয়েছে।`, 'success');
         }
     });
 
