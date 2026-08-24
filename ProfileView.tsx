@@ -88,8 +88,29 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   
   const t = translations[language];
 
+  const holdBalance = (profile?.hold || 0).toFixed(2);
+
   const [claimingStreak, setClaimingStreak] = useState<boolean>(false);
+  const [wonBonus, setWonBonus] = useState<number | null>(null);
   const [chartRange, setChartRange] = useState<7 | 14 | 30>(30);
+
+  const todayStr = new Date().toDateString();
+  const alreadyClaimed = profile?.last_login_date === todayStr;
+
+  const handleClaimStreak = async () => {
+    if (alreadyClaimed || claimingStreak) return;
+    setClaimingStreak(true);
+    try {
+      const res = await claimDailyStreak();
+      if (res.success && res.bonusAmount) {
+        setWonBonus(res.bonusAmount);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setClaimingStreak(false);
+    }
+  };
 
   // Recharts: Dynamic Earnings Trend Chart Data
   const {
