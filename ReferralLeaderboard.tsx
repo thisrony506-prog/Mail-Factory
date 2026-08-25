@@ -5,7 +5,7 @@ import { translations } from './i18n';
 import { hapticFeedback } from './haptics';
 import { SEO } from './SEO';
 import QRCode from 'react-qr-code';
-import { isExcludedSeller } from './types';
+import { isExcludedSeller, calculateFriendApprovedStats } from './types';
 import {
   Trophy,
   Gift,
@@ -146,26 +146,18 @@ export const ReferralLeaderboard: React.FC = () => {
       );
       
       let friendTotalCommission = 0;
+      const commRate = Number(commissionPercent) || 10;
       referredFriends.forEach((f) => {
-        const friendSubs = (allSubmissions || []).filter(
-          (sub) => sub.userId === f.uid && (sub.status === 'approved' || sub.status?.toLowerCase() === 'approved')
+        const { approvedEarnings } = calculateFriendApprovedStats(
+          f.uid,
+          allSubmissions || [],
+          Number(f.manual_approved_count) || 0
         );
-        const approvedEarnings = friendSubs.reduce(
-          (acc, sub) => acc + (Number(sub.totalAmount) || Number(sub.amount) || (Number(sub.count || sub.quantity || 1) * 10)),
-          0
-        );
-        const approvedCount = friendSubs.reduce(
-          (acc, sub) => acc + (Number(sub.count) || Number(sub.quantity) || 1),
-          0
-        );
-        const manualApprovedCount = Number(f.manual_approved_count) || 0;
-        const totalApprovedCount = Math.max(approvedCount, manualApprovedCount);
-        const friendEarnings = Math.max(approvedEarnings, totalApprovedCount * 10);
-        friendTotalCommission += (friendEarnings * (commissionPercent || 10)) / 100;
+        friendTotalCommission += (approvedEarnings * commRate) / 100;
       });
 
       const signupBonusTotal = referredFriends.length * (signupBonusUser || 5);
-      const computedRefEarnings = signupBonusTotal + friendTotalCommission;
+      const computedRefEarnings = Number((signupBonusTotal + friendTotalCommission).toFixed(2));
 
       const refEarnings = Math.max(computedRefEarnings, Number(u.referralEarnings || 0));
       const refCount = referredFriends.length;
@@ -189,26 +181,18 @@ export const ReferralLeaderboard: React.FC = () => {
       );
 
       let friendTotalCommission = 0;
+      const commRate = Number(commissionPercent) || 10;
       referredFriends.forEach((f) => {
-        const friendSubs = (allSubmissions || []).filter(
-          (sub) => sub.userId === f.uid && (sub.status === 'approved' || sub.status?.toLowerCase() === 'approved')
+        const { approvedEarnings } = calculateFriendApprovedStats(
+          f.uid,
+          allSubmissions || [],
+          Number(f.manual_approved_count) || 0
         );
-        const approvedEarnings = friendSubs.reduce(
-          (acc, sub) => acc + (Number(sub.totalAmount) || Number(sub.amount) || (Number(sub.count || sub.quantity || 1) * 10)),
-          0
-        );
-        const approvedCount = friendSubs.reduce(
-          (acc, sub) => acc + (Number(sub.count) || Number(sub.quantity) || 1),
-          0
-        );
-        const manualApprovedCount = Number(f.manual_approved_count) || 0;
-        const totalApprovedCount = Math.max(approvedCount, manualApprovedCount);
-        const friendEarnings = Math.max(approvedEarnings, totalApprovedCount * 10);
-        friendTotalCommission += (friendEarnings * (commissionPercent || 10)) / 100;
+        friendTotalCommission += (approvedEarnings * commRate) / 100;
       });
 
       const signupBonusTotal = referredFriends.length * (signupBonusUser || 5);
-      const computedRefEarnings = signupBonusTotal + friendTotalCommission;
+      const computedRefEarnings = Number((signupBonusTotal + friendTotalCommission).toFixed(2));
       const refEarnings = Math.max(computedRefEarnings, Number(profile.referralEarnings || 0));
 
       list.push({
@@ -251,47 +235,17 @@ export const ReferralLeaderboard: React.FC = () => {
       (u) => profile && u.uid !== profile.uid && isReferredBy(u, profile.uid, profile.referralCode || '')
     );
 
-    
+    const commRate = Number(commissionPercent) || 10;
+    const bonus = signupBonusUser || 5;
+
     const friendsList: ReferredFriendItem[] = myRealReferred.map((f, i) => {
-      const friendSubs = (allSubmissions || []).filter(
-        (sub) => sub.userId === f.uid && (sub.status === 'approved' || sub.status?.toLowerCase() === 'approved')
+      const { approvedCount, approvedEarnings } = calculateFriendApprovedStats(
+        f.uid,
+        allSubmissions || [],
+        Number(f.manual_approved_count) || 0
       );
-      
-      let approvedEarningsFromSubs = 0;
-      let approvedCountFromSubs = 0;
-      
-      friendSubs.forEach(sub => {
-          let hasIndividualStatus = false;
-          let sApprovedCount = 0;
-          const parentCount = Number(sub.count) || Number(sub.quantity) || (sub.gmails ? sub.gmails.length : 1);
-          const parentTotal = Number(sub.totalAmount) || Number(sub.amount) || (parentCount * 10);
-          const rate = Number(sub.rate) || (parentCount > 0 ? parentTotal / parentCount : 10);
-          
-          if (sub.gmails && Array.isArray(sub.gmails)) {
-              sub.gmails.forEach((g: any) => {
-                  const gs = (g.status || '').toLowerCase();
-                  if (gs === 'approved' || gs === 'Approved') sApprovedCount++;
-                  if (gs) hasIndividualStatus = true;
-              });
-          }
-          
-          if (hasIndividualStatus) {
-              approvedCountFromSubs += sApprovedCount;
-              approvedEarningsFromSubs += (sApprovedCount * rate);
-          } else {
-              const c = Number(sub.count) || Number(sub.quantity) || (sub.gmails ? sub.gmails.length : 1);
-              approvedCountFromSubs += c;
-              approvedEarningsFromSubs += (Number(sub.totalAmount) || Number(sub.amount) || (c * 10));
-          }
-      });
 
-      const manualApprovedCount = Number(f.manual_approved_count) || 0;
-      const totalApprovedCount = Math.max(approvedCountFromSubs, manualApprovedCount);
-      const totalGmails = totalApprovedCount;
-
-      const friendTotalEarnings = Math.max(approvedEarningsFromSubs, totalApprovedCount * 10);
-      const commission = (friendTotalEarnings * (commissionPercent || 10)) / 100;
-      const bonus = signupBonusUser || 5;
+      const commission = Number(((approvedEarnings * commRate) / 100).toFixed(2));
 
       return {
         uid: f.uid || `ref_friend_${i}`,
@@ -309,9 +263,9 @@ export const ReferralLeaderboard: React.FC = () => {
           : 'Recent',
         signupBonus: bonus,
         salesCommission: commission,
-        totalIncome: bonus + commission,
+        totalIncome: Number((bonus + commission).toFixed(2)),
         status: 'Active',
-        gmailsSold: totalGmails,
+        gmailsSold: approvedCount,
       };
     });
 

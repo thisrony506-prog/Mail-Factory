@@ -31,6 +31,70 @@ export function normalizeSubmissionStatus(status?: string | null): SubmissionSta
   return 'pending';
 }
 
+export function calculateFriendApprovedStats(
+  friendUid: string,
+  allSubmissions: Submission[],
+  manualApprovedCount: number = 0
+): { approvedCount: number; approvedEarnings: number } {
+  let approvedCount = 0;
+  let approvedEarnings = 0;
+
+  const friendSubs = (allSubmissions || []).filter((sub) => sub.userId === friendUid);
+
+  friendSubs.forEach((sub) => {
+    const parentStatus = normalizeSubmissionStatus(sub.status);
+    const parentCount = Number(sub.count) || Number((sub as any).quantity) || (sub.gmails ? sub.gmails.length : 1);
+    const parentTotal = Number(sub.totalAmount) || Number((sub as any).amount) || 0;
+    const rate = Number(sub.rate) || (parentCount > 0 && parentTotal > 0 ? parentTotal / parentCount : 10);
+
+    if (sub.gmails && Array.isArray(sub.gmails) && sub.gmails.length > 0) {
+      let subHasIndividualStatus = false;
+      let sApprovedCount = 0;
+      let sApprovedEarnings = 0;
+
+      sub.gmails.forEach((g) => {
+        if (g.status && g.status !== 'pending') {
+          subHasIndividualStatus = true;
+          const gStatus = normalizeSubmissionStatus(g.status);
+          if (gStatus === 'approved') {
+            sApprovedCount += 1;
+            const gRate = Number((g as any).rate) || rate;
+            sApprovedEarnings += gRate;
+          }
+        }
+      });
+
+      if (subHasIndividualStatus) {
+        approvedCount += sApprovedCount;
+        approvedEarnings += sApprovedEarnings;
+      } else {
+        if (parentStatus === 'approved') {
+          const effectiveCount = sub.gmails.length || parentCount;
+          approvedCount += effectiveCount;
+          approvedEarnings += (parentTotal > 0 ? parentTotal : effectiveCount * rate);
+        }
+      }
+    } else {
+      if (parentStatus === 'approved') {
+        approvedCount += parentCount;
+        approvedEarnings += (parentTotal > 0 ? parentTotal : parentCount * rate);
+      }
+    }
+  });
+
+  const finalManual = Number(manualApprovedCount) || 0;
+  if (finalManual > approvedCount) {
+    const extra = finalManual - approvedCount;
+    approvedCount = finalManual;
+    approvedEarnings += extra * 10;
+  }
+
+  return {
+    approvedCount,
+    approvedEarnings: Number(approvedEarnings.toFixed(2)),
+  };
+}
+
 export interface GmailItem {
   email: string;
   password: string;

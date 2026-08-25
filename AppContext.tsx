@@ -34,6 +34,7 @@ import {
   TopSellerItem,
   isExcludedSeller,
   normalizeSubmissionStatus,
+  calculateFriendApprovedStats,
 } from './types';
 
 export const DEFAULT_LOGO = "/app-logo.png";
@@ -1266,50 +1267,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const signupBonusTotal = myReferred.length * bonusPerUser;
 
     const friendsList = myReferred.map((friend) => {
-      const friendSubs = (allSubmissions || []).filter(
-        (sub) => sub.userId === friend.uid && (sub.status === 'approved' || sub.status?.toLowerCase() === 'approved')
+      const { approvedCount, approvedEarnings } = calculateFriendApprovedStats(
+        friend.uid,
+        allSubmissions || [],
+        Number(friend.manual_approved_count) || 0
       );
 
-      let approvedEarningsFromSubs = 0;
-      let approvedCountFromSubs = 0;
-
-      friendSubs.forEach((sub) => {
-        let hasIndividualStatus = false;
-        let sApprovedCount = 0;
-        const parentCount = Number(sub.count) || Number(sub.quantity) || (sub.gmails ? sub.gmails.length : 1);
-        const parentTotal = Number(sub.totalAmount) || Number(sub.amount) || (parentCount * 10);
-        const rate = Number(sub.rate) || (parentCount > 0 ? parentTotal / parentCount : 10);
-
-        if (sub.gmails && Array.isArray(sub.gmails)) {
-          sub.gmails.forEach((g: any) => {
-            const gs = (g.status || '').toLowerCase();
-            if (gs === 'approved' || gs === 'completed') sApprovedCount++;
-            if (gs) hasIndividualStatus = true;
-          });
-        }
-
-        if (hasIndividualStatus) {
-          approvedCountFromSubs += sApprovedCount;
-          approvedEarningsFromSubs += (sApprovedCount * rate);
-        } else {
-          const c = Number(sub.count) || Number(sub.quantity) || (sub.gmails ? sub.gmails.length : 1);
-          approvedCountFromSubs += c;
-          approvedEarningsFromSubs += (Number(sub.totalAmount) || Number(sub.amount) || (c * 10));
-        }
-      });
-
-      const manualApprovedCount = Number(friend.manual_approved_count) || 0;
-      const totalApprovedCount = Math.max(approvedCountFromSubs, manualApprovedCount);
-      const friendTotalEarnings = Math.max(approvedEarningsFromSubs, totalApprovedCount * 10);
-      const friendCommission = Number(((friendTotalEarnings * (commissionPercent || 10)) / 100).toFixed(2));
+      const commRate = Number(commissionPercent) || 10;
+      const friendCommission = Number(((approvedEarnings * commRate) / 100).toFixed(2));
       salesCommissionTotal += friendCommission;
 
       return {
         friend,
         signupBonus: bonusPerUser,
         salesCommission: friendCommission,
-        totalIncome: bonusPerUser + friendCommission,
-        gmailsSold: totalApprovedCount,
+        totalIncome: Number((bonusPerUser + friendCommission).toFixed(2)),
+        gmailsSold: approvedCount,
       };
     });
 
@@ -1329,13 +1302,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!user || !profile) return;
 
     const { totalRefEarnings } = computeUserReferralBreakdown(profile);
-    const existingRefEarnings = Number(profile.referralEarnings || 0);
-    const effectiveTotalRef = Number(Math.max(totalRefEarnings, existingRefEarnings).toFixed(2));
-    if (effectiveTotalRef <= 0) return;
+    if (totalRefEarnings <= 0) return;
 
     // Check how much has already been credited to the wallet
     const alreadyCredited = Number(profile.creditedReferralEarnings ?? profile.lastProcessedRefEarnings ?? 0);
-    const uncreditedDelta = Number((effectiveTotalRef - alreadyCredited).toFixed(2));
+    const uncreditedDelta = Number((totalRefEarnings - alreadyCredited).toFixed(2));
 
     if (uncreditedDelta > 0) {
       const currentBalance = Number(profile.balance || 0);
@@ -1346,9 +1317,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const updates: any = {};
       updates[`users/${user.uid}/balance`] = newBalance;
       updates[`users/${user.uid}/totalEarnings`] = newTotalEarnings;
-      updates[`users/${user.uid}/referralEarnings`] = effectiveTotalRef;
-      updates[`users/${user.uid}/creditedReferralEarnings`] = effectiveTotalRef;
-      updates[`users/${user.uid}/lastProcessedRefEarnings`] = effectiveTotalRef;
+      updates[`users/${user.uid}/referralEarnings`] = totalRefEarnings;
+      updates[`users/${user.uid}/creditedReferralEarnings`] = totalRefEarnings;
+      updates[`users/${user.uid}/lastProcessedRefEarnings`] = totalRefEarnings;
       updates[`users/${user.uid}/referralBalanceSynced`] = true;
 
       update(ref(db), updates).catch((e) => console.warn('Auto referral sync error:', e));
@@ -1359,9 +1330,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               ...prev,
               balance: newBalance,
               totalEarnings: newTotalEarnings,
-              referralEarnings: effectiveTotalRef,
-              creditedReferralEarnings: effectiveTotalRef,
-              lastProcessedRefEarnings: effectiveTotalRef,
+              referralEarnings: totalRefEarnings,
+              creditedReferralEarnings: totalRefEarnings,
+              lastProcessedRefEarnings: totalRefEarnings,
               referralBalanceSynced: true,
             }
           : null
