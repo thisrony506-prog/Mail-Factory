@@ -12,46 +12,50 @@ export const ReviewShifts: React.FC = () => {
 
   useEffect(() => {
     const updateCountdown = () => {
-      const now = new Date();
+      const now = Date.now();
       const newCountdowns: Record<string, { timeString: string; isClose: boolean }> = {};
 
       (Object.entries(reviewShifts) as [string, ShiftInfo][]).forEach(([key, shift]) => {
-        if (!shift.active) {
+        if (!shift || shift.active === false) {
           newCountdowns[key] = { timeString: '00 : 00 : 00', isClose: false };
           return;
         }
 
-        const timeMatch = (shift.time || '12:00 AM').match(/(\d+):(\d+)\s*(AM|PM)/i);
-        if (!timeMatch) {
+        // 1. Total duration converted to milliseconds from admin configured hours and minutes
+        const hours = Number(shift.hours ?? shift.duration_hours ?? 0);
+        const minutes = Number(shift.minutes ?? shift.duration_minutes ?? 0);
+        const totalDurationMs = (hours * 3600 + minutes * 60) * 1000;
+        
+        let startTime = Number(shift.startTime ?? shift.timer_started_at ?? shift.start_time ?? shift.startedAt ?? shift.started_at ?? 0);
+        if (startTime > 0 && startTime < 10000000000) {
+          startTime = startTime * 1000;
+        }
+
+        // If admin has started the timer and duration is set
+        if (startTime > 0 && totalDurationMs > 0) {
+          // 2. Calculate remaining time
+          const elapsedMs = now - startTime;
+          const remainingMs = totalDurationMs - elapsedMs;
+
+          // 3. If timer is stopped (active == false) or time is up
+          if (!shift.active || remainingMs <= 0) {
+            newCountdowns[key] = { timeString: '00 : 00 : 00', isClose: false };
+          } else {
+            // 4. Convert to hours, minutes and seconds
+            const totalSecs = Math.floor(remainingMs / 1000);
+            const h = Math.floor(totalSecs / 3600);
+            const m = Math.floor((totalSecs % 3600) / 60);
+            const s = totalSecs % 60;
+
+            const formatted = `${String(h).padStart(2, '0')} : ${String(m).padStart(2, '0')} : ${String(s).padStart(2, '0')}`;
+            newCountdowns[key] = {
+              timeString: formatted,
+              isClose: remainingMs < 3600000, // less than 1 hr
+            };
+          }
+        } else {
           newCountdowns[key] = { timeString: '00 : 00 : 00', isClose: false };
-          return;
         }
-
-        let hours = parseInt(timeMatch[1], 10);
-        const mins = parseInt(timeMatch[2], 10);
-        const ampm = timeMatch[3].toUpperCase();
-
-        if (ampm === 'PM' && hours !== 12) hours += 12;
-        if (ampm === 'AM' && hours === 12) hours = 0;
-
-        const target = new Date();
-        target.setHours(hours, mins, 0, 0);
-
-        if (target.getTime() <= now.getTime()) {
-          target.setDate(target.getDate() + 1);
-        }
-
-        const diff = target.getTime() - now.getTime();
-        const h = Math.floor(diff / 3600000);
-        const m = Math.floor((diff % 3600000) / 60000);
-        const s = Math.floor((diff % 60000) / 1000);
-
-        // Format like: "22 : 14 : 00" with spaces
-        const formatted = `${String(h).padStart(2, '0')} : ${String(m).padStart(2, '0')} : ${String(s).padStart(2, '0')}`;
-        newCountdowns[key] = {
-          timeString: formatted,
-          isClose: diff < 3600000, // less than 1 hr
-        };
       });
 
       setCountdowns(newCountdowns);
@@ -63,7 +67,7 @@ export const ReviewShifts: React.FC = () => {
   }, [reviewShifts]);
 
   const shiftsArray = (Object.entries(reviewShifts) as [string, ShiftInfo][])
-    .filter(([_, s]) => s.active !== false)
+    .filter(([_, s]) => s && s.active !== false)
     .sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
 
   if (shiftsArray.length === 0) return null;
@@ -76,9 +80,9 @@ export const ReviewShifts: React.FC = () => {
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:gap-4 my-4">
-      {shiftsArray.slice(0, 2).map(([key, shift], idx) => {
+      {shiftsArray.slice(0, 2).map(([key], idx) => {
         const isFirst = idx === 0;
-        const countdownInfo = countdowns[key] || { timeString: '-- : -- : --', isClose: false };
+        const countdownInfo = countdowns[key] || { timeString: '00 : 00 : 00', isClose: false };
 
         return (
           <div
@@ -112,18 +116,13 @@ export const ReviewShifts: React.FC = () => {
             </span>
 
             {/* Countdown Container */}
-            <div className="relative w-full border-2 border-slate-100 rounded-2xl pt-4 pb-6 px-1 flex flex-col items-center bg-slate-50/30">
+            <div className="w-full border-2 border-slate-100 rounded-2xl py-3.5 sm:py-4 px-1 flex flex-col items-center bg-slate-50/30">
               <div 
                 className={`text-[15px] sm:text-2xl font-mono font-bold tracking-widest sm:tracking-[0.2em] whitespace-nowrap ${
                   countdownInfo.isClose ? 'text-rose-500 animate-pulse' : 'text-[#1d9a62]'
                 }`}
               >
                 {countdownInfo.timeString}
-              </div>
-              
-              {/* Time Pill */}
-              <div className="absolute -bottom-3.5 bg-[#2ac883] text-white px-4 py-1 rounded-full text-[11px] sm:text-xs font-black shadow-sm tracking-wide">
-                {shift.time}
               </div>
             </div>
           </div>

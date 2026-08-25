@@ -52,8 +52,46 @@ export const DEFAULT_TOP_SELLERS: UserProfile[] = [];
 export const INITIAL_TOP_SELLERS: TopSellerItem[] = [];
 
 export const DEFAULT_SHIFTS: Record<string, ShiftInfo> = {
-  shift1: { title: 'শুভ রাত্রি প্রথম সময়', time: '12:00 AM', active: true, order: 1, icon: 'moon' },
-  shift2: { title: 'শুভ দিনের প্রথম সময়', time: '07:00 AM', active: true, order: 2, icon: 'sun' },
+  shift1: { title: 'শুভ রাত্রি প্রথম সময়', time: '', active: true, order: 1, icon: 'moon', hours: 24, minutes: 0, startTime: 0 },
+  shift2: { title: 'শুভ দিনের প্রথম সময়', time: '', active: true, order: 2, icon: 'sun', hours: 8, minutes: 0, startTime: 0 },
+};
+
+export const normalizeShiftData = (raw: any): Record<string, ShiftInfo> => {
+  if (!raw || typeof raw !== 'object') return {};
+  const result: Record<string, ShiftInfo> = {};
+
+  Object.keys(raw).forEach((key) => {
+    const item = raw[key];
+    if (item && typeof item === 'object') {
+      const normalizedKey = key.replace(/[^a-zA-Z0-9]/g, '').toLowerCase(); // converts shift_1, shift-1, Shift1 -> shift1
+      
+      const rawStart = item.startTime ?? item.timer_started_at ?? item.start_time ?? item.startedAt ?? item.started_at;
+      let startVal = rawStart !== undefined && rawStart !== null ? Number(rawStart) : 0;
+      if (startVal > 0 && startVal < 10000000000) {
+        // convert seconds to ms if 10-digit unix timestamp was passed
+        startVal = startVal * 1000;
+      }
+
+      const hoursVal = item.hours !== undefined ? Number(item.hours) : (item.duration_hours !== undefined ? Number(item.duration_hours) : (item.durationHour !== undefined ? Number(item.durationHour) : 0));
+      const minutesVal = item.minutes !== undefined ? Number(item.minutes) : (item.duration_minutes !== undefined ? Number(item.duration_minutes) : (item.durationMin !== undefined ? Number(item.durationMin) : 0));
+
+      result[normalizedKey] = {
+        title: item.title || (normalizedKey === 'shift1' ? 'শুভ রাত্রি প্রথম সময়' : 'শুভ দিনের প্রথম সময়'),
+        time: item.time !== undefined && item.time !== null ? String(item.time) : '',
+        active: item.active === true || item.active === 'true' || (item.active === undefined && startVal > 0),
+        order: item.order !== undefined ? Number(item.order) : (normalizedKey === 'shift1' ? 1 : 2),
+        icon: item.icon || (normalizedKey === 'shift1' ? 'moon' : 'sun'),
+        startTime: startVal,
+        start_time: startVal,
+        timer_started_at: startVal,
+        hours: hoursVal,
+        duration_hours: hoursVal,
+        minutes: minutesVal,
+        duration_minutes: minutesVal,
+      };
+    }
+  });
+  return result;
 };
 
 export const DEFAULT_PAYMENT_METHODS: Record<string, PaymentMethodConfig> = {
@@ -451,7 +489,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [reviewShifts, setReviewShifts] = useState<Record<string, ShiftInfo>>(() => {
     try {
       const cached = localStorage.getItem('mf_shifts_cache');
-      return cached ? JSON.parse(cached) : DEFAULT_SHIFTS;
+      if (cached) {
+        const parsed = normalizeShiftData(JSON.parse(cached));
+        if (Object.keys(parsed).length > 0) return { ...DEFAULT_SHIFTS, ...parsed };
+      }
+      return DEFAULT_SHIFTS;
     } catch {
       return DEFAULT_SHIFTS;
     }
@@ -714,9 +756,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         (snap) => {
           if (snap.exists()) {
             const val = snap.val();
-            if (val.review_shifts) {
-              setReviewShifts(val.review_shifts);
-              try { localStorage.setItem('mf_shifts_cache', JSON.stringify(val.review_shifts)); } catch {}
+            if (val.review_shifts || val.shifts) {
+              const parsed = normalizeShiftData(val.review_shifts || val.shifts);
+              if (Object.keys(parsed).length > 0) {
+                setReviewShifts((prev) => {
+                  const updated = { ...prev, ...parsed };
+                  try { localStorage.setItem('mf_shifts_cache', JSON.stringify(updated)); } catch {}
+                  return updated;
+                });
+              }
             }
             const pMethods = val.payment_methods;
             if (pMethods && typeof pMethods === 'object') {
@@ -766,6 +814,45 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {
       console.warn('Settings listener error:', e);
     }
+  }, []);
+
+  // Sync Shifts directly (from RTDB paths 'shifts', 'review_shifts', etc.)
+  useEffect(() => {
+    const unsubs: (() => void)[] = [];
+
+    const handleShiftsSnap = (snap: any) => {
+      if (snap.exists()) {
+        const val = snap.val();
+        if (val && typeof val === 'object') {
+          const parsed = normalizeShiftData(val);
+          if (Object.keys(parsed).length > 0) {
+            setReviewShifts((prev) => {
+              const updated = { ...prev, ...parsed };
+              try { localStorage.setItem('mf_shifts_cache', JSON.stringify(updated)); } catch {}
+              return updated;
+            });
+          }
+        }
+      }
+    };
+
+    try {
+      unsubs.push(onValue(ref(db, 'shifts'), handleShiftsSnap, (err) => console.warn('Shifts listener notice:', err)));
+    } catch (e) {
+      console.warn('Shifts listener error:', e);
+    }
+
+    try {
+      unsubs.push(onValue(ref(db, 'review_shifts'), handleShiftsSnap, (err) => console.warn('Review shifts listener notice:', err)));
+    } catch (e) {
+      console.warn('Review shifts listener error:', e);
+    }
+
+    return () => {
+      unsubs.forEach((u) => {
+        try { u(); } catch {}
+      });
+    };
   }, []);
 
   // Sync Top Sellers Leaderboard (Configured directly in Firebase RTDB)

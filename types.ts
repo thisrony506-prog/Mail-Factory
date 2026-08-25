@@ -226,11 +226,20 @@ export interface LevelConfig {
 }
 
 export interface ShiftInfo {
-  title: string;
-  time: string;
+  title?: string;
+  time?: string;
   active: boolean;
   order?: number;
   icon?: string;
+  startTime?: number;
+  start_time?: number;
+  timer_started_at?: number;
+  started_at?: number;
+  startedAt?: number;
+  hours?: number;
+  duration_hours?: number;
+  minutes?: number;
+  duration_minutes?: number;
 }
 
 export interface PaymentMethodConfig {
