@@ -466,12 +466,12 @@ export const MemberIdCardView: React.FC<MemberIdCardViewProps> = ({ onBack }) =>
   const hostDomain =
     typeof window !== 'undefined' && window.location.host && !window.location.host.includes('localhost')
       ? window.location.host
-      : 'mailfectory.top';
+      : 'mailfactory.top';
 
   const verificationUrl =
     typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost')
       ? `${window.location.origin}/id-card#verify/${profile?.uid || user?.uid || 'member'}`
-      : `https://mailfectory.top/id-card#verify/${profile?.uid || user?.uid || 'member'}`;
+      : `https://mailfactory.top/id-card#verify/${profile?.uid || user?.uid || 'member'}`;
 
   const handleCopyLink = () => {
     hapticFeedback.medium();

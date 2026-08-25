@@ -1,5 +1,5 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://mailfectory.top/sitemap.xml
+Sitemap: https://mailfactory.top/sitemap.xml
 

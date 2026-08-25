@@ -479,9 +479,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     return (
                       <button
                         key={item.id}
-                        disabled={item.disabled}
                         onClick={() => {
-                          if (item.disabled) return;
                           if (item.requiresAuth && !user) {
                             closeAndExecute(() => setAuthModalOpen(true));
                             return;
@@ -491,20 +489,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                           });
                         }}
-                        className={`w-full flex items-center justify-between p-2.5 rounded-xl transition-all ${
-                          item.disabled 
-                            ? 'cursor-not-allowed opacity-75 bg-slate-50 border border-slate-100 text-slate-500 font-medium'
-                            : isActive
-                              ? 'bg-indigo-600 text-white shadow-md font-bold cursor-pointer'
-                              : 'bg-white hover:bg-indigo-50/60 border border-slate-200/80 text-slate-700 font-medium cursor-pointer'
+                        className={`w-full flex items-center justify-between p-2.5 rounded-xl transition-all cursor-pointer ${
+                          isActive
+                            ? 'bg-indigo-600 text-white shadow-md font-bold'
+                            : 'bg-white hover:bg-indigo-50/60 border border-slate-200/80 text-slate-700 font-medium'
                         }`}
                       >
                         <div className="flex items-center gap-2.5">
                           <div
                             className={`p-1.5 rounded-lg ${
-                              item.disabled 
-                                ? 'bg-slate-200 text-slate-400'
-                                : isActive ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-600'
+                              isActive ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-600'
                             }`}
                           >
                             {item.icon}
@@ -513,22 +507,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                             <span className="text-xs font-bold block leading-tight">{item.label}</span>
                             <span
                               className={`text-[9px] block mt-0.5 ${
-                                item.disabled
-                                  ? 'text-amber-500 font-bold'
-                                  : isActive ? 'text-indigo-100' : 'text-slate-400'
+                                isActive ? 'text-indigo-100' : 'text-slate-400'
                               }`}
                             >
                               {item.sub}
                             </span>
                           </div>
                         </div>
-                        {item.disabled ? (
-                           <Lock className="w-3.5 h-3.5 text-slate-300" />
-                        ) : (
-                          <ChevronRight
-                            className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-300'}`}
-                          />
-                        )}
+                        <ChevronRight
+                          className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-300'}`}
+                        />
                       </button>
                     );
                   })}

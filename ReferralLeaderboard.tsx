@@ -117,7 +117,7 @@ export const ReferralLeaderboard: React.FC = () => {
   const refCode = profile?.referralCode || profile?.uid?.slice(0, 8).toUpperCase() || 'MF100';
   const siteDomain = typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost')
     ? window.location.origin
-    : 'https://mailfectory.top';
+    : 'https://mailfactory.top';
   const referralLink = `${siteDomain}/#/register?ref=${refCode}`;
   const userId = profile?.uid || 'MF-USER-001';
 
@@ -593,7 +593,7 @@ const drawRoundedRect = (
 
       ctx.fillStyle = '#cbd5e1';
       ctx.font = '22px sans-serif';
-      ctx.fillText(`অথবা ভিজিট করুন: mailfectory.top`, 600, 1370);
+      ctx.fillText(`অথবা ভিজিট করুন: mailfactory.top`, 600, 1370);
 
       // Guarantee Footer Banner
       drawRoundedRect(ctx, 80, 1425, 1040, 100, 28, '#0f172a', '#f59e0b', 3);

@@ -11,7 +11,7 @@ interface SEOProps {
 export const SEO: React.FC<SEOProps> = ({ 
   title = "Mail Factory - Trusted Gmail Exchange Platform", 
   description = "Bangladesh's #1 Trusted Gmail Exchange Platform. Fast payments, multi-tier reward levels, and high referral commissions.",
-  url = "https://mailfectory.top",
+  url = "https://mailfactory.top",
   type = "website",
   schemaData
 }) => {
