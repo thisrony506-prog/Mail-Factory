@@ -23,7 +23,6 @@ import {
   HelpCircle,
   PhoneCall,
   ShieldCheck,
-  Store,
   ShieldAlert,
   CheckCircle2,
   LogOut,
@@ -453,14 +452,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                       sub: language === 'bn' ? 'জিমেইল সাবমিট ও আয়ের পথ' : 'Submit Gmails & earn',
                       icon: <ArrowLeftRight className="w-4 h-4" />,
                       requiresAuth: false,
-                    },
-                    {
-                      id: 'marketplace' as ActiveTab,
-                      label: language === 'bn' ? 'মার্কেটপ্লেস' : 'Marketplace',
-                      sub: language === 'bn' ? 'শীঘ্রই আসছে...' : 'Coming soon...',
-                      icon: <Store className="w-4 h-4" />,
-                      requiresAuth: false,
-                      disabled: true,
                     },
                     {
                       id: 'history' as ActiveTab,

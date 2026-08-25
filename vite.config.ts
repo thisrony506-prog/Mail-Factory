@@ -10,6 +10,7 @@ export default defineConfig(() => {
       react(),
       tailwindcss(),
       VitePWA({
+        manifestFilename: 'manifest.json',
         registerType: 'autoUpdate',
         devOptions: {
           enabled: true,

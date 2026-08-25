@@ -137,7 +137,6 @@ interface AppContextType {
 export const TAB_TO_PATH: Record<ActiveTab, string> = {
   home: '/',
   exchange: '/exchange',
-  marketplace: '/marketplace',
   history: '/history',
   sellers: '/sellers',
   reviews: '/reviews',
@@ -160,7 +159,6 @@ export const PATH_TO_TAB: Record<string, ActiveTab> = {
   '/exchange': 'exchange',
   '/sell': 'exchange',
   '/submit': 'exchange',
-  '/marketplace': 'marketplace',
   '/history': 'history',
   '/submissions': 'history',
   '/transactions': 'history',
