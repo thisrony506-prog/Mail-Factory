@@ -951,6 +951,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               try {
                 await update(ref(db, `users/${refId}`), {
                   referralEarnings: increment(referrerBonus),
+                  creditedReferralEarnings: increment(referrerBonus),
+                  lastProcessedRefEarnings: increment(referrerBonus),
                   balance: increment(referrerBonus),
                 });
               } catch { }
@@ -1306,7 +1308,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (totalRefEarnings <= 0) return;
 
     // Check how much has already been credited to the wallet
-    const alreadyCredited = Number(profile.creditedReferralEarnings ?? profile.lastProcessedRefEarnings ?? 0);
+    const alreadyCredited = Math.max(
+      Number(profile.creditedReferralEarnings || 0),
+      Number(profile.lastProcessedRefEarnings || 0),
+      Number(profile.referralEarnings || 0)
+    );
     const uncreditedDelta = Number((totalRefEarnings - alreadyCredited).toFixed(2));
 
     if (uncreditedDelta > 0) {
@@ -1347,7 +1353,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const { totalRefEarnings } = computeUserReferralBreakdown(profile);
 
-    const alreadyCredited = Number(profile.creditedReferralEarnings ?? profile.lastProcessedRefEarnings ?? 0);
+    const alreadyCredited = Math.max(
+      Number(profile.creditedReferralEarnings || 0),
+      Number(profile.lastProcessedRefEarnings || 0),
+      Number(profile.referralEarnings || 0)
+    );
     const uncreditedDelta = Number((totalRefEarnings - alreadyCredited).toFixed(2));
 
     if (uncreditedDelta <= 0) {

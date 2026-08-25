@@ -150,6 +150,8 @@ export const AuthModal: React.FC = () => {
           try {
             await update(ref(db, `users/${refId}`), {
               referralEarnings: increment(signupBonusReferrer),
+              creditedReferralEarnings: increment(signupBonusReferrer),
+              lastProcessedRefEarnings: increment(signupBonusReferrer),
               balance: increment(signupBonusReferrer),
             });
           } catch {
@@ -283,6 +285,8 @@ export const AuthModal: React.FC = () => {
           try {
             await update(ref(db, `users/${refId}`), {
               referralEarnings: increment(signupBonusReferrer),
+              creditedReferralEarnings: increment(signupBonusReferrer),
+              lastProcessedRefEarnings: increment(signupBonusReferrer),
               balance: increment(signupBonusReferrer),
             });
           } catch {

@@ -333,10 +333,13 @@ export const onSubmissionStatusChange = functions.database
               if (commissionAmount > 0) {
                 await db.ref(`users/${referrerId}`).transaction((refUser: any) => {
                   if (!refUser) return refUser;
+                  const newRefEarnings = Math.max(0, (Number(refUser.referralEarnings) || 0) - commissionAmount);
                   return {
                     ...refUser,
                     balance: Math.max(0, (Number(refUser.balance) || 0) - commissionAmount),
-                    referralEarnings: Math.max(0, (Number(refUser.referralEarnings) || 0) - commissionAmount),
+                    referralEarnings: newRefEarnings,
+                    creditedReferralEarnings: newRefEarnings,
+                    lastProcessedRefEarnings: newRefEarnings,
                   };
                 });
               }
@@ -420,10 +423,13 @@ export const onSubmissionStatusChange = functions.database
                   if (commissionDelta !== 0) {
                     await db.ref(`users/${referrerId}`).transaction((refUser: any) => {
                       if (!refUser) return refUser;
+                      const newRefEarnings = Math.max(0, (Number(refUser.referralEarnings) || 0) + commissionDelta);
                       return {
                         ...refUser,
                         balance: Math.max(0, (Number(refUser.balance) || 0) + commissionDelta),
-                        referralEarnings: Math.max(0, (Number(refUser.referralEarnings) || 0) + commissionDelta),
+                        referralEarnings: newRefEarnings,
+                        creditedReferralEarnings: newRefEarnings,
+                        lastProcessedRefEarnings: newRefEarnings,
                       };
                     });
                     console.log(`Adjusted referrer ${referrerId} commission by ৳${commissionDelta}.`);
@@ -496,10 +502,13 @@ export const onSubmissionStatusChange = functions.database
                 if (!refUser) return refUser;
                 const currentRefEarnings = Number(refUser.referralEarnings) || 0;
                 const currentBalance = Number(refUser.balance) || 0;
+                const newRefEarnings = currentRefEarnings + commissionAmount;
                 return {
                   ...refUser,
                   balance: currentBalance + commissionAmount,
-                  referralEarnings: currentRefEarnings + commissionAmount,
+                  referralEarnings: newRefEarnings,
+                  creditedReferralEarnings: newRefEarnings,
+                  lastProcessedRefEarnings: newRefEarnings,
                 };
               });
               await db.ref(`users/${referrerId}/notifications`).push({
