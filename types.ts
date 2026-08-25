@@ -32,61 +32,91 @@ export function normalizeSubmissionStatus(status?: string | null): SubmissionSta
 }
 
 export function calculateFriendApprovedStats(
-  friendUid: string,
+  friendOrUid: string | { uid: string; email?: string; totalEarnings?: number; balance?: number; manual_approved_count?: number; total_submitted?: number },
   allSubmissions: Submission[],
-  manualApprovedCount: number = 0
+  manualApprovedCount: number = 0,
+  fallbackRate: number = 15
 ): { approvedCount: number; approvedEarnings: number } {
   let approvedCount = 0;
   let approvedEarnings = 0;
 
-  const friendSubs = (allSubmissions || []).filter((sub) => sub.userId === friendUid);
+  const friendUid = typeof friendOrUid === 'string' ? friendOrUid : friendOrUid?.uid;
+  const friendEmail = typeof friendOrUid === 'object' && friendOrUid?.email ? friendOrUid.email.toLowerCase().trim() : '';
+  const friendTotalEarnings = typeof friendOrUid === 'object' ? Number(friendOrUid?.totalEarnings) || 0 : 0;
+  const friendManualCount = typeof friendOrUid === 'object' && friendOrUid?.manual_approved_count !== undefined
+    ? Number(friendOrUid.manual_approved_count) || 0
+    : Number(manualApprovedCount) || 0;
 
-  friendSubs.forEach((sub) => {
-    const parentStatus = normalizeSubmissionStatus(sub.status);
-    const parentCount = Number(sub.count) || Number((sub as any).quantity) || (sub.gmails ? sub.gmails.length : 1);
-    const parentTotal = Number(sub.totalAmount) || Number((sub as any).amount) || 0;
-    const rate = Number(sub.rate) || (parentCount > 0 && parentTotal > 0 ? parentTotal / parentCount : 10);
-
-    if (sub.gmails && Array.isArray(sub.gmails) && sub.gmails.length > 0) {
-      let subHasIndividualStatus = false;
-      let sApprovedCount = 0;
-      let sApprovedEarnings = 0;
-
-      sub.gmails.forEach((g) => {
-        if (g.status && g.status !== 'pending') {
-          subHasIndividualStatus = true;
-          const gStatus = normalizeSubmissionStatus(g.status);
-          if (gStatus === 'approved') {
-            sApprovedCount += 1;
-            const gRate = Number((g as any).rate) || rate;
-            sApprovedEarnings += gRate;
-          }
-        }
-      });
-
-      if (subHasIndividualStatus) {
-        approvedCount += sApprovedCount;
-        approvedEarnings += sApprovedEarnings;
-      } else {
-        if (parentStatus === 'approved') {
-          const effectiveCount = sub.gmails.length || parentCount;
-          approvedCount += effectiveCount;
-          approvedEarnings += (parentTotal > 0 ? parentTotal : effectiveCount * rate);
-        }
-      }
-    } else {
-      if (parentStatus === 'approved') {
-        approvedCount += parentCount;
-        approvedEarnings += (parentTotal > 0 ? parentTotal : parentCount * rate);
-      }
+  const friendSubs = (allSubmissions || []).filter((sub) => {
+    if (!sub) return false;
+    if (friendUid && (sub.userId === friendUid || (sub as any).user_id === friendUid || (sub as any).uid === friendUid)) {
+      return true;
     }
+    if (friendEmail && sub.userEmail && sub.userEmail.toLowerCase().trim() === friendEmail) {
+      return true;
+    }
+    return false;
   });
 
-  const finalManual = Number(manualApprovedCount) || 0;
-  if (finalManual > approvedCount) {
-    const extra = finalManual - approvedCount;
-    approvedCount = finalManual;
-    approvedEarnings += extra * 10;
+  if (friendSubs.length > 0) {
+    let approvedCountFromSubs = 0;
+    let approvedEarningsFromSubs = 0;
+
+    friendSubs.forEach((sub) => {
+      const parentStatus = normalizeSubmissionStatus(sub.status);
+      const parentCount = Number(sub.count) || Number((sub as any).quantity) || (sub.gmails ? sub.gmails.length : 1);
+      const parentTotal = Number(sub.totalAmount) || Number((sub as any).amount) || 0;
+      const rate = Number(sub.rate) || (parentCount > 0 && parentTotal > 0 ? parentTotal / parentCount : fallbackRate);
+
+      if (sub.gmails && Array.isArray(sub.gmails) && sub.gmails.length > 0) {
+        let hasIndividualStatus = false;
+        let sApprovedCount = 0;
+        let sApprovedEarnings = 0;
+
+        sub.gmails.forEach((g) => {
+          if (g.status && g.status !== 'pending') {
+            hasIndividualStatus = true;
+            const gStatus = normalizeSubmissionStatus(g.status);
+            if (gStatus === 'approved') {
+              sApprovedCount += 1;
+              const gRate = Number((g as any).rate) || rate;
+              sApprovedEarnings += gRate;
+            }
+          }
+        });
+
+        if (hasIndividualStatus) {
+          approvedCountFromSubs += sApprovedCount;
+          approvedEarningsFromSubs += sApprovedEarnings;
+        } else {
+          if (parentStatus === 'approved') {
+            const effectiveCount = sub.gmails.length || parentCount;
+            approvedCountFromSubs += effectiveCount;
+            approvedEarningsFromSubs += (parentTotal > 0 ? parentTotal : effectiveCount * rate);
+          }
+        }
+      } else {
+        if (parentStatus === 'approved') {
+          approvedCountFromSubs += parentCount;
+          approvedEarningsFromSubs += (parentTotal > 0 ? parentTotal : parentCount * rate);
+        }
+      }
+    });
+
+    if (approvedCountFromSubs > 0) {
+      approvedCount = approvedCountFromSubs;
+      approvedEarnings = approvedEarningsFromSubs;
+    } else {
+      // All submissions found were rejected or pending - zero approved
+      approvedCount = 0;
+      approvedEarnings = 0;
+    }
+  } else {
+    // Only for legacy accounts without submission documents
+    if (friendManualCount > 0) {
+      approvedCount = friendManualCount;
+      approvedEarnings = friendManualCount * fallbackRate;
+    }
   }
 
   return {

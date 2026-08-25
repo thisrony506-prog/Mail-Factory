@@ -74,6 +74,7 @@ export const ReferralLeaderboard: React.FC = () => {
     withdrawRequests,
     submissions,
     allSubmissions,
+    levels,
   } = useApp();
 
   const isRefUserVerified = (item: ReferralLeaderboardItem): boolean => {
@@ -149,9 +150,10 @@ export const ReferralLeaderboard: React.FC = () => {
       const commRate = Number(commissionPercent) || 10;
       referredFriends.forEach((f) => {
         const { approvedEarnings } = calculateFriendApprovedStats(
-          f.uid,
+          f,
           allSubmissions || [],
-          Number(f.manual_approved_count) || 0
+          Number(f.manual_approved_count) || 0,
+          levels[0]?.rate || 15
         );
         friendTotalCommission += (approvedEarnings * commRate) / 100;
       });
@@ -159,7 +161,7 @@ export const ReferralLeaderboard: React.FC = () => {
       const signupBonusTotal = referredFriends.length * (signupBonusUser || 5);
       const computedRefEarnings = Number((signupBonusTotal + friendTotalCommission).toFixed(2));
 
-      const refEarnings = Math.max(computedRefEarnings, Number(u.referralEarnings || 0));
+      const refEarnings = referredFriends.length > 0 ? computedRefEarnings : Number(u.referralEarnings || 0);
       const refCount = referredFriends.length;
 
       return {
@@ -184,16 +186,17 @@ export const ReferralLeaderboard: React.FC = () => {
       const commRate = Number(commissionPercent) || 10;
       referredFriends.forEach((f) => {
         const { approvedEarnings } = calculateFriendApprovedStats(
-          f.uid,
+          f,
           allSubmissions || [],
-          Number(f.manual_approved_count) || 0
+          Number(f.manual_approved_count) || 0,
+          levels[0]?.rate || 15
         );
         friendTotalCommission += (approvedEarnings * commRate) / 100;
       });
 
       const signupBonusTotal = referredFriends.length * (signupBonusUser || 5);
       const computedRefEarnings = Number((signupBonusTotal + friendTotalCommission).toFixed(2));
-      const refEarnings = Math.max(computedRefEarnings, Number(profile.referralEarnings || 0));
+      const refEarnings = referredFriends.length > 0 ? computedRefEarnings : Number(profile.referralEarnings || 0);
 
       list.push({
         uid: profile.uid,
@@ -226,7 +229,7 @@ export const ReferralLeaderboard: React.FC = () => {
     });
 
     return list;
-  }, [allUsers, profile, signupBonusUser, commissionPercent, allSubmissions]);
+  }, [allUsers, profile, signupBonusUser, commissionPercent, allSubmissions, levels]);
 
   // Compute My Referred Friends List from Real Database Users ONLY
   const myReferredFriends: ReferredFriendItem[] = useMemo(() => {
@@ -240,9 +243,10 @@ export const ReferralLeaderboard: React.FC = () => {
 
     const friendsList: ReferredFriendItem[] = myRealReferred.map((f, i) => {
       const { approvedCount, approvedEarnings } = calculateFriendApprovedStats(
-        f.uid,
+        f,
         allSubmissions || [],
-        Number(f.manual_approved_count) || 0
+        Number(f.manual_approved_count) || 0,
+        levels[0]?.rate || 15
       );
 
       const commission = Number(((approvedEarnings * commRate) / 100).toFixed(2));

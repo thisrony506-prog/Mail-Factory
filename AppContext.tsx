@@ -1268,9 +1268,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const friendsList = myReferred.map((friend) => {
       const { approvedCount, approvedEarnings } = calculateFriendApprovedStats(
-        friend.uid,
+        friend,
         allSubmissions || [],
-        Number(friend.manual_approved_count) || 0
+        Number(friend.manual_approved_count) || 0,
+        levels[0]?.rate || 15
       );
 
       const commRate = Number(commissionPercent) || 10;
