@@ -51,7 +51,6 @@ export default defineConfig(() => {
         manifest: {
           name: 'Mail Factory',
           short_name: 'Mail Factory',
-          id: '/',
           description: 'Bangladesh #1 Trusted Gmail Exchange Platform',
           theme_color: '#4F46E5',
           background_color: '#020617',
@@ -61,31 +60,31 @@ export default defineConfig(() => {
           scope: '/',
           icons: [
             {
-              src: '/icon-192.png',
+              src: 'icon-192.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'any'
             },
             {
-              src: '/icon-512.png',
+              src: 'icon-512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any'
             },
             {
-              src: '/icon-192.png',
+              src: 'icon-192.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'maskable'
             },
             {
-              src: '/icon-512.png',
+              src: 'icon-512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable'
             },
             {
-              src: '/app-logo.png',
+              src: 'app-logo.png',
               sizes: '500x500',
               type: 'image/png',
               purpose: 'any'
