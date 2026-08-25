@@ -4,12 +4,12 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
-    <title>Mail Factory - #1 Trusted Gmail Exchange Platform</title>
+    <title>MailFactory Admin Panel</title>
     <link rel="canonical" href="https://mailfectory.top/" />
-    <meta name="description" content="Bangladesh's #1 Trusted Gmail Exchange Platform. Fast payments via bKash, Nagad, Rocket, multi-tier reward levels, and high referral commissions." />
-    <meta name="keywords" content="Mail Factory, Gmail Exchange Bangladesh, Gmail Sell BD, Earn Money Online BD, bKash Payment Exchange" />
-    <meta name="robots" content="index, follow" />
-    <meta name="theme-color" content="#4F46E5" />
+    <meta name="description" content="Secure Admin Dashboard for Mail Factory. Bangladesh's #1 Trusted Gmail Exchange Platform." />
+    <meta name="keywords" content="Mail Factory Admin, Gmail Exchange Admin, Secure Dashboard" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#0f172a" />
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
@@ -36,8 +36,8 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Mail Factory" />
-    <meta name="application-name" content="Mail Factory" />
+    <meta name="apple-mobile-web-app-title" content="AdminPanel" />
+    <meta name="application-name" content="AdminPanel" />
     <meta name="format-detection" content="telephone=no" />
 
     <!-- Critical Performance Preconnects & Resource Hints -->
@@ -108,6 +108,46 @@
       });
     </script>
     <script type="module" src="/main.tsx"></script>
+
+    <!-- Floating PWA Install Button -->
+    <button 
+      id="pwa-install-btn" 
+      class="fixed bottom-6 right-6 z-[9999] hidden items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-full shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 group border border-white/10"
+    >
+      <div class="bg-white/20 p-1.5 rounded-lg group-hover:rotate-12 transition-transform">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </div>
+      <span class="font-bold text-sm tracking-tight">Install App</span>
+    </button>
+
+    <script>
+      let deferredPrompt;
+      const installBtn = document.getElementById('pwa-install-btn');
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        installBtn.classList.remove('hidden');
+        installBtn.classList.add('flex');
+      });
+
+      installBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          console.log(`User response to the install prompt: ${outcome}`);
+          deferredPrompt = null;
+          installBtn.classList.remove('flex');
+          installBtn.classList.add('hidden');
+        }
+      });
+
+      window.addEventListener('appinstalled', (event) => {
+        installBtn.classList.remove('flex');
+        installBtn.classList.add('hidden');
+        deferredPrompt = null;
+      });
+    </script>
   </body>
 </html>
 

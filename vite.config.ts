@@ -16,12 +16,25 @@ export default defineConfig(() => {
           enabled: true,
           type: 'module',
         },
-        includeAssets: ['app-logo.png', 'icon-192.png', 'icon-512.png', 'favicon.png', 'apple-touch-icon.png', 'favicon.svg'],
+        includeAssets: ['app-logo.png', 'icon-192.png', 'icon-512.png', 'favicon.png', 'apple-touch-icon.png', 'favicon.svg', 'offline.html'],
         workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}', 'offline.html'],
           navigateFallback: '/index.html',
           runtimeCaching: [
+            // Handle offline page fallback
             {
+              urlPattern: ({ request }) => request.mode === 'navigate',
+              handler: 'NetworkOnly',
+              options: {
+                plugins: [
+                  {
+                    handlerDidError: async () => {
+                      return await caches.match('/offline.html');
+                    },
+                  },
+                ],
+              },
+            },            {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
               handler: 'CacheFirst',
               options: {
@@ -49,11 +62,11 @@ export default defineConfig(() => {
           ],
         },
         manifest: {
-          name: 'Mail Factory',
-          short_name: 'Mail Factory',
-          description: 'Bangladesh #1 Trusted Gmail Exchange Platform',
-          theme_color: '#4F46E5',
-          background_color: '#020617',
+          name: 'MailFactory Admin Panel',
+          short_name: 'AdminPanel',
+          description: 'Secure Admin Dashboard for Mail Factory',
+          theme_color: '#0f172a',
+          background_color: '#0f172a',
           display: 'standalone',
           orientation: 'portrait',
           start_url: '/',
