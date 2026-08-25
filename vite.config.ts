@@ -16,25 +16,12 @@ export default defineConfig(() => {
           enabled: true,
           type: 'module',
         },
-        includeAssets: ['app-logo.png', 'icon-192.png', 'icon-512.png', 'favicon.png', 'apple-touch-icon.png', 'favicon.svg', 'offline.html'],
+        includeAssets: ['app-logo.png', 'icon-192.png', 'icon-512.png', 'favicon.png', 'apple-touch-icon.png', 'favicon.svg'],
         workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}', 'offline.html'],
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
           navigateFallback: '/index.html',
           runtimeCaching: [
-            // Handle offline page fallback
             {
-              urlPattern: ({ request }) => request.mode === 'navigate',
-              handler: 'NetworkOnly',
-              options: {
-                plugins: [
-                  {
-                    handlerDidError: async () => {
-                      return await caches.match('/offline.html');
-                    },
-                  },
-                ],
-              },
-            },            {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
               handler: 'CacheFirst',
               options: {
