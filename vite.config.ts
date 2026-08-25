@@ -18,6 +18,7 @@ export default defineConfig(() => {
         includeAssets: ['app-logo.png', 'icon-192.png', 'icon-512.png', 'favicon.png', 'apple-touch-icon.png', 'favicon.svg'],
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
+          navigateFallback: '/index.html',
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

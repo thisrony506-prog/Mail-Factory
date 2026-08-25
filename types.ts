@@ -273,6 +273,7 @@ export interface FAQItem {
 export type ActiveTab =
   | 'home'
   | 'exchange'
+  | 'marketplace'
   | 'history'
   | 'sellers'
   | 'profile'
