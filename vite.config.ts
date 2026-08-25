@@ -49,6 +49,7 @@ export default defineConfig(() => {
         manifest: {
           name: 'Mail Factory',
           short_name: 'Mail Factory',
+          id: '/',
           description: 'Bangladesh #1 Trusted Gmail Exchange Platform',
           theme_color: '#4F46E5',
           background_color: '#020617',

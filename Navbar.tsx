@@ -161,11 +161,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                   hapticFeedback.medium();
                   promptInstall();
                 }}
-                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-400 hover:bg-amber-300 text-amber-900 text-xs font-black shadow-sm transition-all shrink-0"
+                className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-amber-400 hover:bg-amber-300 text-amber-950 text-[10px] sm:text-xs font-black shadow-sm transition-all shrink-0"
                 title="Install Mail Factory App"
               >
-                <Download className="w-3.5 h-3.5" />
-                <span>Install App</span>
+                <Download className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                <span className="hidden sm:inline">Install App</span>
+                <span className="sm:hidden">Install</span>
               </button>
             )}
 
