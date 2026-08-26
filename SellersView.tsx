@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { TopSellerItem, isExcludedSeller } from './types';
 
-const ADMIN_EMAILS = ['gmrony135@gmail.com', 'mailfactorybd@gmail.com'];
+const ADMIN_EMAILS = ['gmrony135@gmail.com', 'mailfactorybd@gmail.com', 'iamronyofficial1@gmail.com'];
 
 export const DEFAULT_BENCHMARK_SELLERS: TopSellerItem[] = [
   { uid: 'top_1', username: 'Rafiqul Islam', email: 'rafiqul@gmail.com', photoURL: '', totalEarnings: 18450, balance: 1250, manual_approved_count: 1420, total_submitted: 1450, badge: 'VIP Champion', rank: 1 },
@@ -35,6 +35,24 @@ export const SellersView: React.FC = () => {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
   const isAdmin = user && user.email && ADMIN_EMAILS.includes(user.email);
+
+  const todayStr = React.useMemo(() => new Date().toDateString(), []);
+  const todayClaimedUsers = React.useMemo(() => {
+    return (allUsers || []).filter((u) => {
+      if (!u) return false;
+      const isToday = u.lastBonusDate
+        ? new Date(u.lastBonusDate).toDateString() === todayStr
+        : u.last_login_date === todayStr;
+      return Boolean(u.dailyBonusClaimedToday && isToday) || (Boolean(u.dailyBonusToday) && isToday) || u.last_login_date === todayStr;
+    });
+  }, [allUsers, todayStr]);
+
+  const totalTodayBonusAmount = React.useMemo(() => {
+    return todayClaimedUsers.reduce((sum, u) => {
+      const amt = Number(u.dailyBonusToday) || 1.50;
+      return sum + amt;
+    }, 0);
+  }, [todayClaimedUsers]);
 
   // Compute display sellers merging benchmark defaults, admin configured topSellers, and real users
   const displaySellers: TopSellerItem[] = React.useMemo(() => {
@@ -168,6 +186,81 @@ export const SellersView: React.FC = () => {
             >
               এডিট →
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Admin Real-Time Daily Bonus Tracker */}
+      {isAdmin && (
+        <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-4 text-white shadow-xl border border-indigo-500/30 space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm">
+                🎁
+              </div>
+              <div className="text-left">
+                <h4 className="text-xs font-black text-slate-100 flex items-center gap-2">
+                  <span>ডেইলি বোনাস রিয়েল-টাইম ট্র্যাকার (Admin)</span>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-black border border-emerald-500/30 inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                    Live
+                  </span>
+                </h4>
+                <p className="text-[10px] text-slate-400">
+                  আজকে ইউজারদের ক্লেইম করা ডেইলি চেক-ইন বোনাস ও পরিমাণ
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Metrics */}
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="bg-slate-800/90 rounded-2xl p-2.5 border border-slate-700/60">
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block">আজকের মোট ক্লেইম সংখ্যা</span>
+              <span className="text-base font-black text-amber-400">{todayClaimedUsers.length} জন</span>
+            </div>
+            <div className="bg-slate-800/90 rounded-2xl p-2.5 border border-slate-700/60">
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block">আজকের মোট বোনাস (৳)</span>
+              <span className="text-base font-black text-emerald-400">৳{totalTodayBonusAmount.toFixed(2)}</span>
+            </div>
+          </div>
+
+          {/* Claimed Users Feed */}
+          <div className="space-y-1.5 pt-1">
+            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">
+              আজকের ক্লেইম করা ইউজারের তালিকা ({todayClaimedUsers.length})
+            </span>
+            {todayClaimedUsers.length > 0 ? (
+              <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1">
+                {todayClaimedUsers.map((u, i) => {
+                  const amt = Number(u.dailyBonusToday) || 1.50;
+                  const timeStr = u.lastBonusDate ? new Date(u.lastBonusDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'আজ';
+                  return (
+                    <div key={u.uid || i} className="bg-slate-800/70 hover:bg-slate-800 rounded-xl p-2 flex items-center justify-between border border-slate-700/50 text-xs">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-7 h-7 rounded-full bg-indigo-500/20 text-indigo-300 flex items-center justify-center font-bold text-[11px] shrink-0">
+                          {(u.username || u.email || 'U').charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0 text-left">
+                          <span className="font-bold text-slate-200 block truncate text-[11px]">{u.username || u.email?.split('@')[0]}</span>
+                          <span className="text-[9px] text-slate-400 block font-mono">{u.email || 'User'}</span>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 font-mono font-black text-[11px] border border-emerald-500/30 block">
+                          +৳{amt.toFixed(2)}
+                        </span>
+                        <span className="text-[9px] text-slate-400 block mt-0.5 font-mono">{timeStr}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="bg-slate-800/40 rounded-xl p-3 text-center text-[11px] text-slate-400 font-medium">
+                আজকে এখনো কোনো ইউজার ডেইলি বোনাস ক্লেইম করেননি।
+              </div>
+            )}
           </div>
         </div>
       )}

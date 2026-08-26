@@ -95,7 +95,13 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const [chartRange, setChartRange] = useState<7 | 14 | 30>(30);
 
   const todayStr = new Date().toDateString();
-  const alreadyClaimed = profile?.last_login_date === todayStr;
+  const isBonusDateToday = profile?.lastBonusDate
+    ? new Date(profile.lastBonusDate).toDateString() === todayStr
+    : profile?.last_login_date === todayStr;
+
+  const alreadyClaimed = Boolean(
+    (profile?.dailyBonusClaimedToday && isBonusDateToday) || profile?.last_login_date === todayStr
+  );
 
   const handleClaimStreak = async () => {
     if (alreadyClaimed || claimingStreak) return;

@@ -1268,48 +1268,61 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!user || !profile) return { success: false, streakCount: 0 };
     const today = new Date().toDateString();
     const lastLogin = profile.last_login_date || '';
-    if (lastLogin === today) {
+
+    // Check if already claimed today
+    const isBonusDateToday = profile.lastBonusDate
+      ? new Date(profile.lastBonusDate).toDateString() === today
+      : lastLogin === today;
+
+    if ((profile.dailyBonusClaimedToday && isBonusDateToday) || lastLogin === today) {
       return { success: false, streakCount: profile.login_streak || 1 };
     }
+
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const newStreak = lastLogin === yesterday.toDateString() ? (profile.login_streak || 0) + 1 : 1;
 
-    // Weighted random bonus between 0.50৳ and 4.00৳
-    // Mostly 1.00, 2.00, 1.50, 2.50, 0.50
-    const rand = Math.random() * 100;
-    let bonusAmount = 1.0;
-    if (rand < 25) {
-      bonusAmount = 1.0; // 25% chance -> ৳1.00
-    } else if (rand < 45) {
-      bonusAmount = 0.5; // 20% chance -> ৳0.50
-    } else if (rand < 65) {
-      bonusAmount = 1.5; // 20% chance -> ৳1.50
-    } else if (rand < 80) {
-      bonusAmount = 2.0; // 15% chance -> ৳2.00
-    } else if (rand < 92) {
-      bonusAmount = 2.5; // 12% chance -> ৳2.50
-    } else if (rand < 97) {
-      bonusAmount = 3.0; // 5% chance -> ৳3.00
-    } else if (rand < 99) {
-      bonusAmount = 3.5; // 2% chance -> ৳3.50
-    } else {
-      bonusAmount = 4.0; // 1% chance -> ৳4.00
-    }
+    // Standard bonus amount 1.50৳ as configured for daily check-in
+    const bonusAmount = 1.50;
+    const now = Date.now();
 
     try {
+      // 1. Update User Node in Firebase Database with exact required keys
       await update(ref(db, `users/${user.uid}`), {
+        dailyBonusClaimedToday: true,
+        dailyBonusToday: bonusAmount,
+        lastBonusDate: now,
         login_streak: newStreak,
         last_login_date: today,
         balance: increment(bonusAmount),
         totalEarnings: increment(bonusAmount),
       });
 
-      // Optimistic state update
+      // 2. Add transaction record to transactions node
+      try {
+        await push(ref(db, 'transactions'), {
+          userId: user.uid,
+          username: profile.username || (user.email ? user.email.split('@')[0] : 'User'),
+          userEmail: user.email || '',
+          type: 'daily_bonus',
+          category: 'Daily Bonus',
+          title: 'Daily Check-in Bonus',
+          amount: bonusAmount,
+          timestamp: now,
+          date: new Date().toISOString()
+        });
+      } catch (txErr) {
+        console.warn('Failed to push daily_bonus transaction record:', txErr);
+      }
+
+      // 3. Optimistic local state update
       setProfile((prev) =>
         prev
           ? {
               ...prev,
+              dailyBonusClaimedToday: true,
+              dailyBonusToday: bonusAmount,
+              lastBonusDate: now,
               login_streak: newStreak,
               last_login_date: today,
               balance: (Number(prev.balance) || 0) + bonusAmount,

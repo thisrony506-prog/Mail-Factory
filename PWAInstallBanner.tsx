@@ -3,7 +3,7 @@ import { useApp } from './AppContext';
 import { usePWAInstall, useIsStandalone } from './usePWAInstall';
 import { AppLogo3D } from './AppLogo3D';
 import { hapticFeedback } from './haptics';
-import { Download, X, Sparkles, CheckCircle2, Smartphone, ShieldCheck } from 'lucide-react';
+import { Download, X, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
 interface PWAInstallBannerProps {
   variant?: 'card' | 'floating' | 'inline';
@@ -17,126 +17,133 @@ export const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({
   const { language } = useApp();
   const isStandalone = useIsStandalone();
   const { isInstalled, promptInstall } = usePWAInstall();
+  
+  // Check if banner dismissed by user
   const [isDismissed, setIsDismissed] = useState<boolean>(() => {
-    return localStorage.getItem('mf_pwa_dismissed') === '1';
+    try {
+      return (
+        localStorage.getItem('pwaBannerDismissed') === 'true' ||
+        localStorage.getItem('mf_pwa_dismissed') === '1'
+      );
+    } catch {
+      return false;
+    }
   });
 
-  // If already running as standalone PWA or installed, don't show
+  // If already running as standalone PWA or installed or dismissed, don't show
   if (isStandalone || isInstalled || isDismissed) {
     return null;
   }
 
-  const handleInstall = () => {
+  const handleInstallClick = (e: React.MouseEvent) => {
     hapticFeedback.heavy();
     promptInstall();
   };
 
-  const handleDismiss = () => {
+  const dismissInstallBanner = (e: React.MouseEvent) => {
+    e.stopPropagation();
     hapticFeedback.light();
     setIsDismissed(true);
-    localStorage.setItem('mf_pwa_dismissed', '1');
+    try {
+      localStorage.setItem('pwaBannerDismissed', 'true');
+      localStorage.setItem('mf_pwa_dismissed', '1');
+    } catch {}
   };
 
   if (variant === 'floating') {
     return (
-      <div className={`fixed bottom-20 left-4 right-4 z-40 max-w-md mx-auto animate-in slide-in-from-bottom-5 duration-300 ${className}`}>
-        <div className="rounded-2xl bg-slate-900/95 border border-indigo-500/40 p-3.5 shadow-2xl backdrop-blur-md flex items-center justify-between gap-3 text-white">
-          <div className="flex items-center gap-3 min-w-0">
-            <AppLogo3D size={44} glow animated className="shrink-0" />
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-black text-white truncate">Mail Factory</span>
-                <span className="px-1.5 py-0.2 bg-emerald-500/20 text-emerald-400 text-[9px] font-extrabold rounded">
-                  Official
-                </span>
-              </div>
-              <p className="text-[10px] text-slate-300 font-medium truncate">
-                {language === 'bn' ? 'হোমস্ক্রিনে অ্যাপ যোগ করুন' : 'Add to Home Screen'}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5 shrink-0">
-            <button
-              onClick={handleInstall}
-              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-extrabold shadow-md flex items-center gap-1.5 active:scale-95 transition-all cursor-pointer"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>{language === 'bn' ? 'ইনস্টল' : 'Install'}</span>
-            </button>
-            <button
-              onClick={handleDismiss}
-              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-              title="Close"
-              aria-label="Close install banner"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
+      <div 
+        id="pwa-install-banner"
+        onClick={handleInstallClick}
+        className={`fixed bottom-20 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-32px)] max-w-[420px] bg-gradient-to-r from-[#0EA5E9] via-[#4F46E5] to-[#7C3AED] p-3.5 sm:p-4 rounded-[18px] shadow-2xl shadow-indigo-600/40 border border-white/20 text-white flex items-center gap-3 cursor-pointer select-none active:scale-[0.98] transition-transform duration-200 animate-in slide-in-from-bottom-5 ${className}`}
+      >
+        {/* App Logo / Icon (44x44px, drop-shadow) */}
+        <div className="relative shrink-0 w-[44px] h-[44px]">
+          <AppLogo3D size={44} glow animated className="drop-shadow-md" />
         </div>
+
+        {/* Text Block */}
+        <div className="flex-1 min-w-0 pr-7">
+          <h4 className="text-[13px] font-bold text-white truncate leading-tight">
+            📱 Install Mail Factory App
+          </h4>
+          <p className="text-[11px] font-normal text-white/80 truncate leading-tight mt-0.5">
+            {language === 'bn' ? 'ফাস্ট অ্যাক্সেস পেতে অ্যাপ ইনস্টল করুন' : 'Fast access with official app'}
+          </p>
+        </div>
+
+        {/* Absolute-positioned Circular Close Button (X) */}
+        <button
+          type="button"
+          onClick={dismissInstallBanner}
+          className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-black/25 hover:bg-black/45 border border-white/25 text-white flex items-center justify-center transition-colors cursor-pointer outline-none active:scale-90"
+          aria-label="Close Install Banner"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
     );
   }
 
   return (
     <div
-      className={`rounded-3xl bg-gradient-to-br from-indigo-950 via-slate-900 to-purple-950 border border-indigo-500/30 p-4 sm:p-5 shadow-xl text-white relative overflow-hidden ${className}`}
+      onClick={handleInstallClick}
+      className={`rounded-[18px] bg-gradient-to-r from-[#0EA5E9] via-[#4F46E5] to-[#7C3AED] p-4 sm:p-5 shadow-2xl shadow-indigo-600/30 border border-white/20 text-white relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform ${className}`}
     >
       {/* Background Glow */}
-      <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      {/* Top Absolute Circular Close Button */}
+      <button
+        type="button"
+        onClick={dismissInstallBanner}
+        className="absolute top-3 right-3 w-7 h-7 rounded-full bg-black/25 hover:bg-black/45 border border-white/25 text-white flex items-center justify-center transition-colors cursor-pointer z-20 outline-none active:scale-90"
+        aria-label="Close Install Banner"
+      >
+        <X className="w-4.5 h-4.5" />
+      </button>
+
+      <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pr-6">
         {/* Left: App Logo & Details */}
         <div className="flex items-center gap-3.5">
-          <div className="relative shrink-0">
-            <AppLogo3D size={56} glow animated />
+          <div className="relative shrink-0 w-12 h-12 sm:w-14 sm:h-14">
+            <AppLogo3D size={52} glow animated className="drop-shadow-lg" />
             <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-slate-900 flex items-center justify-center shadow-xs z-20">
               <CheckCircle2 className="w-3 h-3 text-slate-950" />
             </div>
           </div>
 
           <div className="space-y-0.5">
-            <div className="flex items-center gap-2">
-              <h3 className="text-base font-black text-white tracking-tight">Mail Factory App</h3>
-            </div>
-            <p className="text-xs text-slate-300 font-medium">
-              {language === 'bn'
-                ? 'অফিশিয়াল অ্যাপটি ইনস্টল করে দ্রুত জিমেইল সেল ও ক্যাশআউট করুন'
-                : 'Install the official app for instant Gmail exchange & fast payouts'}
+            <h3 className="text-sm sm:text-base font-bold text-white tracking-tight flex items-center gap-2">
+              <span>📱 Install Mail Factory App</span>
+            </h3>
+            <p className="text-xs text-white/80 font-normal">
+              {language === 'bn' ? 'ফাস্ট অ্যাক্সেস পেতে অ্যাপ ইনস্টল করুন' : 'Install app for fast access & instant updates'}
             </p>
-            <div className="flex items-center gap-2 text-[10px] text-slate-400 pt-0.5">
-              <span className="flex items-center gap-1 text-emerald-400 font-bold">
+            <div className="flex items-center gap-2 text-[10px] text-white/70 pt-0.5">
+              <span className="flex items-center gap-1 text-emerald-300 font-bold">
                 <ShieldCheck className="w-3 h-3" />
-                <span>100% Secure</span>
+                <span>Verified PWA</span>
               </span>
               <span>•</span>
-              <span>50k+ user's</span>
-              <span>•</span>
-              <span>Fast & Verified</span>
+              <span>Fast & Secure</span>
             </div>
           </div>
         </div>
 
-        {/* Right: Actions */}
+        {/* Right: Install CTA Action */}
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
-            onClick={handleInstall}
-            className="flex-1 sm:flex-initial px-5 py-3 rounded-2xl bg-gradient-to-r from-indigo-500 via-indigo-600 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-xs font-black shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
+            type="button"
+            onClick={handleInstallClick}
+            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white text-indigo-700 hover:bg-slate-100 font-extrabold text-xs shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0"
           >
-            <Download className="w-4 h-4 text-amber-300 animate-bounce" />
-            <span>{language === 'bn' ? 'অ্যাপ ইনস্টল করুন' : 'Install Official App'}</span>
-          </button>
-
-          <button
-            onClick={handleDismiss}
-            className="p-3 rounded-2xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 text-slate-400 hover:text-white transition-colors cursor-pointer"
-            title="Dismiss"
-            aria-label="Dismiss install banner"
-          >
-            <X className="w-4 h-4" />
+            <Download className="w-4 h-4 text-indigo-600" />
+            <span>{language === 'bn' ? 'ইনস্টল করুন' : 'Install Now'}</span>
           </button>
         </div>
       </div>
     </div>
   );
 };
+

@@ -214,6 +214,9 @@ export interface UserProfile {
   is_blocked?: boolean;
   isTopSeller?: boolean;
   admin_message?: string;
+  dailyBonusClaimedToday?: boolean;
+  dailyBonusToday?: number;
+  lastBonusDate?: number;
 }
 
 export interface LevelConfig {
