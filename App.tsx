@@ -3,14 +3,12 @@ import './logoPreload';
 import { AppProvider, useApp } from './AppContext';
 import { Navbar } from './Navbar';
 import { ViewSkeleton } from './ViewSkeleton';
-import { usePWAInstall } from './usePWAInstall';
+import { PWAInstallPrompt } from './PWAInstallPrompt';
 
 import { HomeView } from './HomeView';
 import { GuestLandingView } from './GuestLandingView';
 
 import { MessageSquare, Bell } from 'lucide-react';
-
-import { PWAInstallPromptOverlay } from './PWAInstallPromptOverlay';
 
 // Resilient dynamic import helper with auto-retry on network drop or new deployment
 function lazyWithRetry<T extends React.ComponentType<any>>(
@@ -45,7 +43,6 @@ const ReferralLeaderboard = lazyWithRetry(() => import('./ReferralLeaderboard').
 const LiveChatDrawer = lazyWithRetry(() => import('./LiveChatDrawer').then(m => ({ default: m.LiveChatDrawer })));
 const NotificationDrawer = lazyWithRetry(() => import('./NotificationDrawer').then(m => ({ default: m.NotificationDrawer })));
 const AuthModal = lazyWithRetry(() => import('./AuthModal').then(m => ({ default: m.AuthModal })));
-const IOSInstallGuideModal = lazyWithRetry(() => import('./IOSInstallGuideModal').then(m => ({ default: m.IOSInstallGuideModal })));
 
 const FAQModal = lazyWithRetry(() => import('./Modals').then(m => ({ default: m.FAQModal })));
 const ContactModal = lazyWithRetry(() => import('./Modals').then(m => ({ default: m.ContactModal })));
@@ -68,7 +65,6 @@ const MainLayout: React.FC = () => {
     setRateModalOpen,
     setAuthModalOpen,
   } = useApp();
-  const { showIOSGuide, closeIOSGuide } = usePWAInstall();
 
   const [isFAQOpen, setIsFAQOpen] = useState<boolean>(false);
   const [isContactOpen, setIsContactOpen] = useState<boolean>(false);
@@ -157,7 +153,6 @@ const MainLayout: React.FC = () => {
         <Suspense fallback={null}>
           <AuthModal />
           <LiveChatDrawer />
-          <IOSInstallGuideModal isOpen={showIOSGuide} onClose={closeIOSGuide} />
           <FAQModal
             isOpen={isFAQOpen || activeTab === 'faq'}
             onClose={() => {
@@ -173,8 +168,7 @@ const MainLayout: React.FC = () => {
             }}
           />
         </Suspense>
-        {/* PWA Install Prompt Overlay for Guest view */}
-        <PWAInstallPromptOverlay />
+        <PWAInstallPrompt />
       </div>
     );
   }
@@ -244,15 +238,11 @@ const MainLayout: React.FC = () => {
         </button>
       </div>
 
-      {/* PWA Install Prompt Overlay for App Shell */}
-      <PWAInstallPromptOverlay />
-
       {/* Global Modals and Drawers - lazy loaded to prevent rendering overhead */}
       <Suspense fallback={null}>
         <AuthModal />
         <LiveChatDrawer />
         <NotificationDrawer />
-        <IOSInstallGuideModal isOpen={showIOSGuide} onClose={closeIOSGuide} />
 
         <FAQModal
           isOpen={isFAQOpen || activeTab === 'faq'}
@@ -272,6 +262,7 @@ const MainLayout: React.FC = () => {
         <GlobalSMSPopup />
         { /* <FCMSetup /> */ }
       </Suspense>
+      <PWAInstallPrompt />
     </div>
   );
 };

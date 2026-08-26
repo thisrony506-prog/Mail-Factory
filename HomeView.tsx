@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useApp } from './AppContext';
 import { translations } from './i18n';
 import { ReviewShifts } from './ReviewShifts';
-import { PWAInstallBanner } from './PWAInstallBanner';
 import { SEO } from './SEO';
 import { HomeReviewsPreview } from './HomeReviewsPreview';
 
@@ -72,8 +71,6 @@ export const HomeView: React.FC = () => {
           }
         }}
       />
-      {/* PWA Install Banner */}
-      <PWAInstallBanner />
 
       {/* 100% Safe Trust Banner */}
       <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs font-bold shadow-sm">

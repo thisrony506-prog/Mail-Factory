@@ -6,7 +6,6 @@ import { AuthPageView } from './AuthPageView';
 import { db } from './firebase';
 import { ref, onValue } from 'firebase/database';
 import { Review, TopSellerItem, isExcludedSeller } from './types';
-import { PWAInstallBanner } from './PWAInstallBanner';
 import { AppLogo3D } from './AppLogo3D';
 import { DEFAULT_BENCHMARK_SELLERS } from './SellersView';
 import {
@@ -443,9 +442,6 @@ export const GuestLandingView: React.FC = () => {
             </div>
           </div>
         </section>
-
-        {/* PWA INSTALL BANNER */}
-        <PWAInstallBanner />
 
         {/* APP SITUATION & LIVE STATS */}
         <section className="space-y-4">
