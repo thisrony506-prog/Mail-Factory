@@ -91,18 +91,15 @@ export function usePWAInstall() {
   }, []);
 
   const promptInstall = async () => {
-    // If iOS Safari, trigger the instruction modal
+    // If iOS Safari or running without native prompt event, trigger the instruction modal
     if (isIOS && !isStandalone) {
       setGlobalIOSGuide(true);
       return;
     }
 
     if (!deferredPrompt) {
-      alert(
-        "To install the app manually / ম্যানুয়ালি ইনস্টল করতে:\n\n" +
-        "1. Tap the browser menu (⋮) / ব্রাউজারের মেনুতে ক্লিক করুন\n" +
-        "2. Select 'Install app' or 'Add to Home screen' / 'Install app' বা 'Add to Home screen' নির্বাচন করুন"
-      );
+      // Open the visual in-app guide modal for Android/Chrome/Samsung Internet
+      setGlobalIOSGuide(true);
       return;
     }
 
@@ -116,6 +113,7 @@ export function usePWAInstall() {
       setDeferredPrompt(null);
     } catch (err) {
       console.warn('[PWA] Error during install prompt:', err);
+      setGlobalIOSGuide(true);
     }
   };
 

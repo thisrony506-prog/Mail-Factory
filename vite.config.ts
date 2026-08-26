@@ -15,7 +15,7 @@ export default defineConfig(() => {
           enabled: true,
           type: 'module',
         },
-        includeAssets: ['app-logo.png', 'icon-192.png', 'icon-512.png', 'favicon.png', 'apple-touch-icon.png', 'favicon.svg'],
+        includeAssets: ['app-logo.png', 'app-logo-clean.png', 'icon-192.png', 'icon-512.png', 'favicon.png', 'apple-touch-icon.png', 'favicon.svg'],
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
           runtimeCaching: [
@@ -59,32 +59,44 @@ export default defineConfig(() => {
           scope: '/',
           icons: [
             {
-              src: '/icon-192.png',
-              sizes: '192x192',
-              type: 'image/png',
-              purpose: 'any'
-            },
-            {
-              src: '/icon-512.png',
+              src: '/app-logo.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any'
-            },
-            {
-              src: '/icon-192.png',
-              sizes: '192x192',
-              type: 'image/png',
-              purpose: 'maskable'
-            },
-            {
-              src: '/icon-512.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'maskable'
             },
             {
               src: '/app-logo.png',
-              sizes: '500x500',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'maskable'
+            },
+            {
+              src: '/icon-192.png',
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'any'
+            },
+            {
+              src: '/icon-512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'any'
+            },
+            {
+              src: '/icon-192.png',
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'maskable'
+            },
+            {
+              src: '/icon-512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'maskable'
+            },
+            {
+              src: '/apple-touch-icon.png',
+              sizes: '180x180',
               type: 'image/png',
               purpose: 'any'
             }

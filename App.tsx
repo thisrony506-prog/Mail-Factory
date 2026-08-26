@@ -10,6 +10,8 @@ import { GuestLandingView } from './GuestLandingView';
 
 import { MessageSquare, Bell } from 'lucide-react';
 
+import { PWAInstallPromptOverlay } from './PWAInstallPromptOverlay';
+
 // Resilient dynamic import helper with auto-retry on network drop or new deployment
 function lazyWithRetry<T extends React.ComponentType<any>>(
   factory: () => Promise<{ default: T }>
@@ -155,6 +157,7 @@ const MainLayout: React.FC = () => {
         <Suspense fallback={null}>
           <AuthModal />
           <LiveChatDrawer />
+          <IOSInstallGuideModal isOpen={showIOSGuide} onClose={closeIOSGuide} />
           <FAQModal
             isOpen={isFAQOpen || activeTab === 'faq'}
             onClose={() => {
@@ -170,6 +173,8 @@ const MainLayout: React.FC = () => {
             }}
           />
         </Suspense>
+        {/* PWA Install Prompt Overlay for Guest view */}
+        <PWAInstallPromptOverlay />
       </div>
     );
   }
@@ -238,6 +243,9 @@ const MainLayout: React.FC = () => {
           )}
         </button>
       </div>
+
+      {/* PWA Install Prompt Overlay for App Shell */}
+      <PWAInstallPromptOverlay />
 
       {/* Global Modals and Drawers - lazy loaded to prevent rendering overhead */}
       <Suspense fallback={null}>
