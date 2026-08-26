@@ -40,8 +40,6 @@ export function usePWAInstall() {
     return false;
   });
 
-  const [isIOS, setIsIOS] = useState<boolean>(false);
-
   useEffect(() => {
     if (isStandalone) {
       setIsInstalled(true);
@@ -58,16 +56,34 @@ export function usePWAInstall() {
       setDeferredPrompt((window as any).__mf_deferred_prompt);
     }
 
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    const isAppleDevice = /iphone|ipad|ipod/.test(userAgent);
-    const isSafariBrowser =
-      /safari/.test(userAgent) && !/crios|fxios|edgios|chrome|android/.test(userAgent);
-    setIsIOS(isAppleDevice && isSafariBrowser);
+    // Provide a global function for raw HTML buttons to trigger install directly
+    (window as any).triggerPwaInstall = async () => {
+       const promptEvent = (window as any).__mf_deferred_prompt;
+       if (promptEvent) {
+         try {
+           await promptEvent.prompt();
+           const choice = await promptEvent.userChoice;
+           if (choice && choice.outcome === 'accepted') {
+             setIsInstalled(true);
+             localStorage.setItem('mailfactory_pwa_installed', 'true');
+           }
+         } catch (e) {
+           console.warn('Install prompt error:', e);
+         }
+       }
+    };
 
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       (window as any).__mf_deferred_prompt = e;
       setDeferredPrompt(e as BeforeInstallPromptEvent);
+    };
+
+    const handleCustomPWAReady = (e: any) => {
+      const promptEvent = e.detail || (window as any).__mf_deferred_prompt;
+      if (promptEvent) {
+        setDeferredPrompt(promptEvent);
+      }
     };
 
     const handleAppInstalled = () => {
@@ -83,10 +99,12 @@ export function usePWAInstall() {
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('mf_pwa_ready', handleCustomPWAReady);
     window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('mf_pwa_ready', handleCustomPWAReady);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
@@ -94,30 +112,23 @@ export function usePWAInstall() {
   const promptInstall = async () => {
     const promptEvent = deferredPrompt || (typeof window !== 'undefined' && (window as any).__mf_deferred_prompt);
 
-    if (!promptEvent) {
-      if (isIOS) {
-        alert('iOS-এ অ্যাপ ইনস্টল করতে Safari ব্রাউজারের Share (শেয়ার) আইকনে চাপ দিন এবং "Add to Home Screen" নির্বাচন করুন।');
-      } else {
-        alert('আপনার ব্রাউজারের ৩-ডট (⋮) মেনু থেকে "Install app" বা "Add to Home screen" চাপুন।');
+    if (promptEvent) {
+      try {
+        await promptEvent.prompt();
+        const choiceResult = await promptEvent.userChoice;
+        if (choiceResult && choiceResult.outcome === 'accepted') {
+          setIsInstalled(true);
+          try {
+            localStorage.setItem('mailfactory_pwa_installed', 'true');
+          } catch {}
+        }
+        setDeferredPrompt(null);
+        if (typeof window !== 'undefined') {
+          (window as any).__mf_deferred_prompt = null;
+        }
+      } catch (err) {
+        console.warn('[PWA] Error during install prompt execution:', err);
       }
-      return;
-    }
-
-    try {
-      await promptEvent.prompt();
-      const choiceResult = await promptEvent.userChoice;
-      if (choiceResult && choiceResult.outcome === 'accepted') {
-        setIsInstalled(true);
-        try {
-          localStorage.setItem('mailfactory_pwa_installed', 'true');
-        } catch {}
-      }
-      setDeferredPrompt(null);
-      if (typeof window !== 'undefined') {
-        (window as any).__mf_deferred_prompt = null;
-      }
-    } catch (err) {
-      console.warn('[PWA] Error during install prompt:', err);
     }
   };
 
@@ -128,9 +139,6 @@ export function usePWAInstall() {
     hasNativePrompt: !!deferredPrompt,
     isInstalled,
     isStandalone,
-    isIOS,
     promptInstall,
   };
 }
-
-

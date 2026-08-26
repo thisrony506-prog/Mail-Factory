@@ -100,7 +100,6 @@ const MainLayout: React.FC = () => {
     }
   }, []);
 
-
   // If user is not logged in, support public routes or render the Guest Landing / Welcome Page
   if (!user) {
     const isPublicTab =

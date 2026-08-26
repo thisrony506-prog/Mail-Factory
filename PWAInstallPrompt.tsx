@@ -13,7 +13,6 @@ declare global {
 /**
  * Tracks PWA events via Google Analytics (gtag), dataLayer, console, and local metrics storage.
  */
-
 export const trackPWAEvent = (eventName: string, params: Record<string, any> = {}) => {
   if (typeof window === 'undefined') return;
 
@@ -49,17 +48,6 @@ export const trackPWAEvent = (eventName: string, params: Record<string, any> = {
   console.log(`[PWA Analytics] 📊 Tracked Event: ${eventName}`, eventPayload);
 };
 
-// Helper function attached to window for easy stats retrieval in console
-if (typeof window !== 'undefined') {
-  window.getPWATrackingStats = () => {
-    try {
-      return JSON.parse(localStorage.getItem('mf_pwa_analytics_stats') || '{}');
-    } catch {
-      return {};
-    }
-  };
-}
-
 export const PWAInstallPrompt: React.FC = () => {
   const [isVisible, setIsVisible] = useState<boolean>(false);
   const [isInstalling, setIsInstalling] = useState<boolean>(false);
@@ -88,20 +76,19 @@ export const PWAInstallPrompt: React.FC = () => {
       return;
     }
 
+    // Always show install prompt banner if not dismissed and not in standalone
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+      trackPWAEvent('pwa_prompt_shown', { label: 'Install Banner Displayed' });
+    }, 1500);
+
     // Handler when 'mf_pwa_ready' custom event is triggered
     const handlePWAReady = () => {
-      if (!isDismissed() && !isStandalone && window.__mf_deferred_prompt) {
+      if (!isDismissed() && !isStandalone) {
         setIsVisible(true);
-        trackPWAEvent('pwa_prompt_shown', { label: 'PWA Install Banner Displayed' });
       }
     };
 
-    // Check if event was already fired before component mounted
-    if (window.__mf_deferred_prompt) {
-      handlePWAReady();
-    }
-
-    // Listen strictly for 'mf_pwa_ready' event
     window.addEventListener('mf_pwa_ready', handlePWAReady);
 
     // Listen for appinstalled event to auto-hide UI & track success
@@ -113,6 +100,7 @@ export const PWAInstallPrompt: React.FC = () => {
     window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
+      clearTimeout(timer);
       window.removeEventListener('mf_pwa_ready', handlePWAReady);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
@@ -120,39 +108,38 @@ export const PWAInstallPrompt: React.FC = () => {
 
   const handleInstall = async () => {
     const promptEvent = window.__mf_deferred_prompt;
-    if (!promptEvent) return;
-
+    
     // Track user click on the Install button
     trackPWAEvent('pwa_install_click', { action: 'user_clicked_install' });
 
-    try {
-      setIsInstalling(true);
-      // Trigger native install prompt stored in window.__mf_deferred_prompt
-      await promptEvent.prompt();
-      const choiceResult = await promptEvent.userChoice;
-      if (choiceResult && choiceResult.outcome === 'accepted') {
-        trackPWAEvent('pwa_install_accepted', { outcome: 'accepted' });
-        console.log('[PWA] User accepted the install prompt');
-      } else {
-        trackPWAEvent('pwa_install_dismissed_native', { outcome: 'dismissed' });
-        console.log('[PWA] User dismissed the native install prompt');
+    if (promptEvent) {
+      try {
+        setIsInstalling(true);
+        await promptEvent.prompt();
+        const choiceResult = await promptEvent.userChoice;
+        if (choiceResult && choiceResult.outcome === 'accepted') {
+          trackPWAEvent('pwa_install_accepted', { outcome: 'accepted' });
+          setIsVisible(false);
+        } else {
+          trackPWAEvent('pwa_install_dismissed_native', { outcome: 'dismissed' });
+        }
+      } catch (err) {
+        console.error('[PWA] Error executing install prompt:', err);
+      } finally {
+        setIsInstalling(false);
+        window.__mf_deferred_prompt = null;
       }
-    } catch (err) {
-      console.error('[PWA] Error executing install prompt:', err);
-      trackPWAEvent('pwa_install_error', { error: String(err) });
-    } finally {
-      setIsInstalling(false);
-      setIsVisible(false);
-      window.__mf_deferred_prompt = null;
+    } else {
+      // If native deferred prompt is not yet ready, try triggerPwaInstall
+      if (typeof (window as any).triggerPwaInstall === 'function') {
+        (window as any).triggerPwaInstall();
+      }
     }
   };
 
   const handleClose = () => {
-    // Track user click on the Close/Dismiss button
     trackPWAEvent('pwa_dismiss_click', { action: 'user_clicked_close' });
-
     setIsVisible(false);
-    // Persist dismissal in localStorage
     try {
       localStorage.setItem('mf_pwa_prompt_dismissed', '1');
       localStorage.setItem('pwaBannerDismissed', 'true');
@@ -182,7 +169,7 @@ export const PWAInstallPrompt: React.FC = () => {
             </p>
           </div>
         </div>
-
+        
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={handleInstall}
