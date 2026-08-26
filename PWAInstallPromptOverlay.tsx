@@ -11,7 +11,10 @@ export const PWAInstallPromptOverlay: React.FC = () => {
   
   const [isDismissed, setIsDismissed] = useState<boolean>(() => {
     try {
-      return sessionStorage.getItem('mf_pwa_prompt_dismissed') === '1';
+      return (
+        localStorage.getItem('mailfactory_pwa_installed') === 'true' ||
+        sessionStorage.getItem('mf_pwa_prompt_dismissed') === '1'
+      );
     } catch {
       return false;
     }
@@ -24,7 +27,7 @@ export const PWAInstallPromptOverlay: React.FC = () => {
     if (isInstallable && !isInstalled && !isStandalone && !isDismissed) {
       const timer = setTimeout(() => {
         setIsVisible(true);
-      }, 1200);
+      }, 1000);
       return () => clearTimeout(timer);
     } else {
       setIsVisible(false);
@@ -76,9 +79,9 @@ export const PWAInstallPromptOverlay: React.FC = () => {
             {/* App Title & Badge */}
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <h4 className="text-sm font-black text-white tracking-tight">Mail Factory</h4>
+                <h4 className="text-sm font-black text-white tracking-tight">Mail Factory App</h4>
                 <span className="px-1.5 py-0.5 rounded-md bg-indigo-500/30 text-indigo-300 text-[9px] font-extrabold border border-indigo-400/30">
-                  PWA App
+                  Official App
                 </span>
               </div>
               <p className="text-[11px] text-slate-300 font-medium leading-tight mt-0.5">

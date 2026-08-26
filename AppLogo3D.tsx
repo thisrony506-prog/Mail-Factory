@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { LOGO_BASE64 } from './logoBase64';
-import { Mail, Sparkles } from 'lucide-react';
+import { LOGO_BASE64, OFFICIAL_LOGO_URL } from './logoBase64';
+import { Mail } from 'lucide-react';
 
 interface AppLogo3DProps {
   className?: string;
@@ -33,7 +33,15 @@ export const AppLogo3D: React.FC<AppLogo3DProps> = ({
   const [hasError, setHasError] = useState(false);
   const [srcIndex, setSrcIndex] = useState(0);
   
-  const sources = [src, LOGO_BASE64, '/app-logo.png'].filter(Boolean) as string[];
+  const sources = [
+    src,
+    'https://files.catbox.moe/xdvz6g.png',
+    '/app-logo.png',
+    LOGO_BASE64,
+    OFFICIAL_LOGO_URL,
+    '/icon-192.png'
+  ].filter(Boolean) as string[];
+
   const currentSrc = sources[srcIndex] || LOGO_BASE64;
 
   const handleError = () => {
@@ -62,6 +70,7 @@ export const AppLogo3D: React.FC<AppLogo3DProps> = ({
           height={dimension}
           loading="eager"
           decoding="async"
+          crossOrigin="anonymous"
           className="w-full h-full object-contain select-none bg-transparent"
           onError={handleError}
         />

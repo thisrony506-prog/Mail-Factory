@@ -96,7 +96,7 @@ export const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({
 
           <div className="space-y-0.5">
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-black text-white tracking-tight">Mail Factory</h3>
+              <h3 className="text-base font-black text-white tracking-tight">Mail Factory App</h3>
             </div>
             <p className="text-xs text-slate-300 font-medium">
               {language === 'bn'

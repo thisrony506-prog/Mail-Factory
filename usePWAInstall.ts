@@ -20,10 +20,37 @@ interface BeforeInstallPromptEvent extends Event {
 
 export function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstallable, setIsInstallable] = useState<boolean>(false);
-  const [isInstalled, setIsInstalled] = useState<boolean>(false);
-  const [isStandalone, setIsStandalone] = useState<boolean>(false);
+  
+  // Read persistent install status from localStorage and standalone mode
+  const [isInstalled, setIsInstalled] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      if (localStorage.getItem('mailfactory_pwa_installed') === 'true') {
+        return true;
+      }
+      if (
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as any).standalone === true ||
+        document.referrer.includes('android-app://')
+      ) {
+        localStorage.setItem('mailfactory_pwa_installed', 'true');
+        return true;
+      }
+    } catch {}
+    return false;
+  });
+
+  const [isStandalone, setIsStandalone] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true ||
+      document.referrer.includes('android-app://')
+    );
+  });
+
   const [isIOS, setIsIOS] = useState<boolean>(false);
+  const [hasPromptEvent, setHasPromptEvent] = useState<boolean>(false);
   const [showIOSGuide, setShowIOSGuide] = useState<boolean>(globalShowIOSGuide);
 
   useEffect(() => {
@@ -47,6 +74,9 @@ export function usePWAInstall() {
       setIsStandalone(isStandaloneMode);
       if (isStandaloneMode) {
         setIsInstalled(true);
+        try {
+          localStorage.setItem('mailfactory_pwa_installed', 'true');
+        } catch {}
       }
     };
 
@@ -63,22 +93,21 @@ export function usePWAInstall() {
     // 3. Listen for Chrome / Android / Edge install prompt
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e);
-      const isStandaloneMode =
-        window.matchMedia('(display-mode: standalone)').matches ||
-        (window.navigator as any).standalone === true;
-
-      if (!isStandaloneMode) {
-        setIsInstallable(true);
-      }
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+      setHasPromptEvent(true);
     };
 
     // 4. Listen for app installed event
     const handleAppInstalled = () => {
-      setIsInstallable(false);
       setIsInstalled(true);
       setDeferredPrompt(null);
-      console.log('[PWA] Mail Factory was successfully installed.');
+      setHasPromptEvent(false);
+      try {
+        localStorage.setItem('mailfactory_pwa_installed', 'true');
+        localStorage.setItem('mf_pwa_dismissed', '1');
+        sessionStorage.setItem('mf_pwa_prompt_dismissed', '1');
+      } catch {}
+      console.log('[PWA] Mail Factory App was successfully installed.');
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -107,8 +136,12 @@ export function usePWAInstall() {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === 'accepted') {
-        setIsInstallable(false);
         setIsInstalled(true);
+        try {
+          localStorage.setItem('mailfactory_pwa_installed', 'true');
+          localStorage.setItem('mf_pwa_dismissed', '1');
+          sessionStorage.setItem('mf_pwa_prompt_dismissed', '1');
+        } catch {}
       }
       setDeferredPrompt(null);
     } catch (err) {
@@ -121,9 +154,12 @@ export function usePWAInstall() {
     setGlobalIOSGuide(false);
   };
 
+  // If installed or running in standalone mode, installable is strictly false (hidden forever)
+  const isInstallable = !isInstalled && !isStandalone;
+
   return {
-    isInstallable: isInstallable || (isIOS && !isStandalone && !isInstalled),
-    hasNativePrompt: !!deferredPrompt,
+    isInstallable,
+    hasNativePrompt: hasPromptEvent || !!deferredPrompt,
     isInstalled,
     isStandalone,
     isIOS,
@@ -133,3 +169,4 @@ export function usePWAInstall() {
     promptInstall,
   };
 }
+

@@ -47,7 +47,7 @@ export default defineConfig(() => {
           ],
         },
         manifest: {
-          name: 'Mail Factory',
+          name: 'Mail Factory App',
           short_name: 'Mail Factory',
           id: '/',
           description: 'Bangladesh #1 Trusted Gmail Exchange Platform',
