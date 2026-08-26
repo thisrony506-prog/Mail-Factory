@@ -1,4 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useIsStandalone } from './useIsStandalone';
+
+export { useIsStandalone };
 
 // Global listener for iOS guide modal
 let globalShowIOSGuide = false;
@@ -19,7 +22,14 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function usePWAInstall() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const isStandalone = useIsStandalone();
+
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(() => {
+    if (typeof window !== 'undefined' && (window as any).__mf_deferred_prompt) {
+      return (window as any).__mf_deferred_prompt;
+    }
+    return null;
+  });
   
   // Read persistent install status from localStorage and standalone mode
   const [isInstalled, setIsInstalled] = useState<boolean>(() => {
@@ -40,18 +50,23 @@ export function usePWAInstall() {
     return false;
   });
 
-  const [isStandalone, setIsStandalone] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    return (
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true ||
-      document.referrer.includes('android-app://')
-    );
-  });
-
   const [isIOS, setIsIOS] = useState<boolean>(false);
-  const [hasPromptEvent, setHasPromptEvent] = useState<boolean>(false);
+  const [hasPromptEvent, setHasPromptEvent] = useState<boolean>(() => {
+    if (typeof window !== 'undefined' && (window as any).__mf_deferred_prompt) {
+      return true;
+    }
+    return false;
+  });
   const [showIOSGuide, setShowIOSGuide] = useState<boolean>(globalShowIOSGuide);
+
+  useEffect(() => {
+    if (isStandalone) {
+      setIsInstalled(true);
+      try {
+        localStorage.setItem('mailfactory_pwa_installed', 'true');
+      } catch {}
+    }
+  }, [isStandalone]);
 
   useEffect(() => {
     const handleGuideChange = (val: boolean) => setShowIOSGuide(val);
@@ -64,25 +79,13 @@ export function usePWAInstall() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // 1. Detect Standalone mode (already installed & running as PWA)
-    const checkStandalone = () => {
-      const isStandaloneMode =
-        window.matchMedia('(display-mode: standalone)').matches ||
-        (window.navigator as any).standalone === true ||
-        document.referrer.includes('android-app://');
+    // 1. Check if early prompt already exists on window
+    if ((window as any).__mf_deferred_prompt) {
+      setDeferredPrompt((window as any).__mf_deferred_prompt);
+      setHasPromptEvent(true);
+    }
 
-      setIsStandalone(isStandaloneMode);
-      if (isStandaloneMode) {
-        setIsInstalled(true);
-        try {
-          localStorage.setItem('mailfactory_pwa_installed', 'true');
-        } catch {}
-      }
-    };
-
-    checkStandalone();
-
-    // 2. Detect iOS Safari
+    // 3. Detect iOS Safari
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isAppleDevice = /iphone|ipad|ipod/.test(userAgent);
     const isSafariBrowser =
@@ -90,17 +93,26 @@ export function usePWAInstall() {
     const isIOSDevice = isAppleDevice && isSafariBrowser;
     setIsIOS(isIOSDevice);
 
-    // 3. Listen for Chrome / Android / Edge install prompt
+    // 4. Listen for Chrome / Android / Edge install prompt
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
+      (window as any).__mf_deferred_prompt = e;
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setHasPromptEvent(true);
     };
 
-    // 4. Listen for app installed event
+    const handleCustomPWAReady = (e: any) => {
+      if (e.detail) {
+        setDeferredPrompt(e.detail);
+        setHasPromptEvent(true);
+      }
+    };
+
+    // 5. Listen for app installed event
     const handleAppInstalled = () => {
       setIsInstalled(true);
       setDeferredPrompt(null);
+      (window as any).__mf_deferred_prompt = null;
       setHasPromptEvent(false);
       try {
         localStorage.setItem('mailfactory_pwa_installed', 'true');
@@ -111,31 +123,37 @@ export function usePWAInstall() {
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('mf_pwa_ready', handleCustomPWAReady);
     window.addEventListener('appinstalled', handleAppInstalled);
+    window.addEventListener('mf_pwa_installed', handleAppInstalled);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('mf_pwa_ready', handleCustomPWAReady);
       window.removeEventListener('appinstalled', handleAppInstalled);
+      window.removeEventListener('mf_pwa_installed', handleAppInstalled);
     };
   }, []);
 
   const promptInstall = async () => {
-    // If iOS Safari or running without native prompt event, trigger the instruction modal
+    // Check current state or window variable
+    const promptEvent = deferredPrompt || (typeof window !== 'undefined' && (window as any).__mf_deferred_prompt);
+
     if (isIOS && !isStandalone) {
       setGlobalIOSGuide(true);
       return;
     }
 
-    if (!deferredPrompt) {
+    if (!promptEvent) {
       // Open the visual in-app guide modal for Android/Chrome/Samsung Internet
       setGlobalIOSGuide(true);
       return;
     }
 
     try {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
+      await promptEvent.prompt();
+      const choiceResult = await promptEvent.userChoice;
+      if (choiceResult && choiceResult.outcome === 'accepted') {
         setIsInstalled(true);
         try {
           localStorage.setItem('mailfactory_pwa_installed', 'true');
@@ -144,6 +162,9 @@ export function usePWAInstall() {
         } catch {}
       }
       setDeferredPrompt(null);
+      if (typeof window !== 'undefined') {
+        (window as any).__mf_deferred_prompt = null;
+      }
     } catch (err) {
       console.warn('[PWA] Error during install prompt:', err);
       setGlobalIOSGuide(true);

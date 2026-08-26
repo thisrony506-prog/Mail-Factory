@@ -47,6 +47,36 @@
     <meta name="application-name" content="Mail Factory App" />
     <meta name="format-detection" content="telephone=no" />
 
+    <!-- Early PWA Install Prompt Capture & SW Registration -->
+    <script>
+      (function() {
+        window.__mf_deferred_prompt = null;
+        window.addEventListener('beforeinstallprompt', function(e) {
+          e.preventDefault();
+          window.__mf_deferred_prompt = e;
+          window.dispatchEvent(new CustomEvent('mf_pwa_ready', { detail: e }));
+          console.log('[PWA] Native install prompt captured');
+        });
+        window.addEventListener('appinstalled', function() {
+          window.__mf_deferred_prompt = null;
+          try {
+            localStorage.setItem('mailfactory_pwa_installed', 'true');
+          } catch(err) {}
+          window.dispatchEvent(new CustomEvent('mf_pwa_installed'));
+          console.log('[PWA] App installed successfully');
+        });
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js').then(function(reg) {
+              console.log('[PWA] SW active with scope:', reg.scope);
+            }).catch(function(err) {
+              console.warn('[PWA] SW registration notice:', err);
+            });
+          });
+        }
+      })();
+    </script>
+
     <!-- Critical Performance Preconnects & Resource Hints -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

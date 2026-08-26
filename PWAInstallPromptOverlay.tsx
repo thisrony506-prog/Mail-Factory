@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from './AppContext';
-import { usePWAInstall } from './usePWAInstall';
+import { usePWAInstall, useIsStandalone } from './usePWAInstall';
 import { AppLogo3D } from './AppLogo3D';
 import { hapticFeedback } from './haptics';
 import { Download, X, Sparkles, ShieldCheck, Zap, BellRing } from 'lucide-react';
 
 export const PWAInstallPromptOverlay: React.FC = () => {
   const { language } = useApp();
-  const { isInstallable, isInstalled, isStandalone, promptInstall } = usePWAInstall();
+  const isStandalone = useIsStandalone();
+  const { isInstallable, isInstalled, promptInstall } = usePWAInstall();
   
   const [isDismissed, setIsDismissed] = useState<boolean>(() => {
     try {
