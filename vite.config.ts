@@ -15,7 +15,7 @@ export default defineConfig(() => {
           enabled: true,
           type: 'module',
         },
-        includeAssets: ['app-logo.png', 'app-logo-clean.png', 'icon-192.png', 'icon-512.png', 'favicon.png', 'apple-touch-icon.png', 'favicon.svg'],
+        includeAssets: ['app-logo.png', 'app-logo-clean.png', 'icon-192.png', 'icon-512.png', 'favicon.png', 'favicon.ico', 'apple-touch-icon.png', 'apple-touch-icon-precomposed.png', 'favicon.svg'],
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
           runtimeCaching: [
@@ -52,25 +52,13 @@ export default defineConfig(() => {
           id: '/',
           description: 'Bangladesh #1 Trusted Gmail Exchange Platform',
           theme_color: '#4F46E5',
-          background_color: '#020617',
+          background_color: '#0f172a',
           display: 'standalone',
           orientation: 'portrait',
           start_url: '/',
           scope: '/',
           icons: [
             {
-              src: '/app-logo.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'any'
-            },
-            {
-              src: '/app-logo.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'maskable'
-            },
-            {
               src: '/icon-192.png',
               sizes: '192x192',
               type: 'image/png',
@@ -83,16 +71,22 @@ export default defineConfig(() => {
               purpose: 'any'
             },
             {
-              src: '/icon-192.png',
+              src: '/icons/icon-maskable-192.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'maskable'
             },
             {
-              src: '/icon-512.png',
+              src: '/icons/icon-maskable-512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable'
+            },
+            {
+              src: '/app-logo.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'any'
             },
             {
               src: '/apple-touch-icon.png',

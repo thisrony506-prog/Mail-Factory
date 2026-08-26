@@ -1,29 +1,17 @@
 {
   "name": "Mail Factory",
-  "short_name": "MailFactory",
+  "short_name": "Mail Factory",
   "description": "Bangladesh #1 Trusted Gmail Exchange Platform - Fast & Secure Monitored Payouts",
   "start_url": "/",
   "scope": "/",
   "id": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#ffffff",
+  "background_color": "#0f172a",
   "theme_color": "#4F46E5",
   "categories": ["finance", "productivity", "utilities"],
   "icons": [
     {
-      "src": "/app-logo.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/app-logo.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
       "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
@@ -36,16 +24,22 @@
       "purpose": "any"
     },
     {
-      "src": "/icon-192.png",
+      "src": "/icons/icon-maskable-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/icons/icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    },
+    {
+      "src": "/app-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/apple-touch-icon.png",
