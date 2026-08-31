@@ -1726,8 +1726,22 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), "dist");
-    // Serve static assets EXCEPT index.html to allow custom path interception
-    app.use(express.static(distPath, { index: false }));
+    // Serve static assets EXCEPT index.html with high-performance Cache-Control headers
+    app.use(express.static(distPath, {
+      index: false,
+      maxAge: '1d',
+      setHeaders: (res, path) => {
+        if (path.includes('/assets/') || path.includes('/static/')) {
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        } else if (path.endsWith('.js') || path.endsWith('.css')) {
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        } else if (path.match(/\.(png|jpg|jpeg|gif|svg|ico|webp|avif|woff|woff2)$/)) {
+          res.setHeader('Cache-Control', 'public, max-age=2592000, must-revalidate'); // 30 days for images/fonts
+        } else if (path.endsWith('.json') || path.endsWith('.webmanifest')) {
+          res.setHeader('Cache-Control', 'public, max-age=86400, must-revalidate'); // 1 day for manifests
+        }
+      }
+    }));
     
     app.get("*", (req: Request, res: Response) => {
       const urlPath = req.path;

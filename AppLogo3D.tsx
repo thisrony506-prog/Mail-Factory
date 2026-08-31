@@ -35,6 +35,7 @@ export function AppLogo3D({
   
   const sources = useMemo(() => [
     src,
+    '/app-logo.webp',
     'https://files.catbox.moe/xdvz6g.png',
     '/app-logo.png',
     APP_LOGO_BASE64,
