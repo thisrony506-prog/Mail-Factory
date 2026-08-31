@@ -107,8 +107,10 @@ export const BuyGmailSEOView: React.FC = () => {
 
           <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
             <button
-              onClick={handleAction}
-              className="px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 text-sm font-black text-white shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all flex items-center justify-center gap-2 cursor-pointer group"
+              onClick={() => {
+                setActiveTab('buyer_market');
+              }}
+              className="px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 text-sm font-black text-white shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all flex items-center justify-center gap-2 cursor-pointer group active:scale-95"
             >
               <ShoppingBag className="w-4 h-4 transition-transform group-hover:scale-110" />
               <span>{isBn ? 'সরাসরি জিমেইল কিনুন' : 'Order PVA Gmails Instantly'}</span>
@@ -116,10 +118,13 @@ export const BuyGmailSEOView: React.FC = () => {
             </button>
             <button
               onClick={() => {
-                if (!user) setAuthModalOpen(true, 'register');
-                else setActiveTab('buyer_market');
+                if (!user) {
+                  setActiveTab('register');
+                } else {
+                  setActiveTab('buyer_market');
+                }
               }}
-              className="px-8 py-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-sm font-extrabold text-white transition-all border border-slate-700 cursor-pointer"
+              className="px-8 py-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-sm font-extrabold text-white transition-all border border-slate-700 cursor-pointer active:scale-95"
             >
               {isBn ? 'লগইন / রেজিস্টার করুন' : 'Sign In / Register'}
             </button>

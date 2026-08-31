@@ -53,7 +53,7 @@ export const SellGmailSEOView: React.FC = () => {
   };
 
   const handleContactWhatsApp = () => {
-    window.open('https://wa.me/8801700000000?text=Hello%20Mail%20Factory,%20I%20want%20to%20sell%20my%20Gmail%20accounts.', '_blank');
+    window.open('https://wa.me/8801964182265?text=Hello%20Mail%20Factory,%20I%20want%20to%20sell%20my%20Gmail%20accounts.', '_blank');
   };
 
   const t = {

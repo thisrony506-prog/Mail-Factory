@@ -172,7 +172,7 @@ export const BuyerMarketplaceView: React.FC<BuyerMarketplaceViewProps> = ({
   const handleOpenBuyModal = (product: BuyerProduct) => {
     hapticFeedback.medium();
     if (!user) {
-      setAuthModalOpen(true);
+      setActiveTab('register');
       return;
     }
     setCheckoutProduct(product);

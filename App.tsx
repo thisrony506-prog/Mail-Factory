@@ -248,13 +248,13 @@ const MainLayout: React.FC = () => {
               </button>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setAuthModalOpen(true, 'login')}
+                  onClick={() => setActiveTab('login')}
                   className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white transition-colors cursor-pointer"
                 >
                   {language === 'bn' ? 'লগইন' : 'Login'}
                 </button>
                 <button
-                  onClick={() => setAuthModalOpen(true, 'register')}
+                  onClick={() => setActiveTab('register')}
                   className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-xs font-black text-white shadow-md transition-colors cursor-pointer"
                 >
                   {language === 'bn' ? 'সাইন আপ' : 'Register'}
