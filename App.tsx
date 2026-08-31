@@ -185,13 +185,73 @@ const MainLayout: React.FC = () => {
             : "Get in touch with Mail Factory customer support agents on WhatsApp or via live chat.",
           url: "https://www.mailfectory.top/contact"
         };
+      case 'buy-gmail-accounts':
+        return {
+          title: language === 'bn' 
+            ? "Buy Gmail PVA Accounts BD - পাইকারি দামে জিমেইল কিনুন | Mail Factory" 
+            : "Buy Gmail PVA Accounts - USA, UK, BD Old | Mail Factory",
+          description: language === 'bn'
+            ? "১০০% ফোন ভেরিফাইড (PVA), পুরাতন ও তাজা জিমেইল পাইকারি দামে কিনুন। ইনস্ট্যান্ট ডেলিভারি ও রিয়েল সাপোর্টের সাথে।"
+            : "Buy Gmail PVA accounts 100% verified. USA, UK, BD, Old Gmail 2010-2024. Instant delivery, bKash/Nagad/PayPal. Trusted by 3200+ customers.",
+          url: "https://www.mailfectory.top/buy-gmail-accounts"
+        };
+      case 'sell-old-gmail-accounts':
+        return {
+          title: language === 'bn' 
+            ? "Sell Old Gmail Accounts for Money - জিমেইল বিক্রি করুন BD | Mail Factory" 
+            : "Sell Old Gmail Accounts for Money - Best Price BD | Mail Factory",
+          description: language === 'bn'
+            ? "আপনার পুরাতন বা নতুন জিমেইল অ্যাকাউন্ট বিক্রি করুন সবচেয়ে সেরা দামে। মাত্র ২ ঘণ্টার মধ্যে বিকাশ/নগদে ১০০% নিরাপদ পেমেন্ট।"
+            : "Sell old Gmail accounts for money in BD. Best price for 2010-2024 Gmail. Instant bKash, Nagad, PayPal payment in 2 hours. 100% safe & trusted.",
+          url: "https://www.mailfectory.top/sell-old-gmail-accounts"
+        };
       case 'buyer_market':
         return {
-          title: language === 'bn' ? "বায়ার মার্কেটপ্লেস - মেইল ফ্যাক্টরি" : "Buyer Marketplace - Buy Verified Gmails",
+          title: language === 'bn' ? "বায়ার মার্কেটপ্লেস - পাইকারি জিমেইল কিনুন | Mail Factory" : "Buyer Marketplace - Buy Verified Gmails | Mail Factory",
           description: language === 'bn'
             ? "মেইল ফ্যাক্টরি থেকে শতভাগ নিরাপদ এবং ভেরিফাইড জিমেইল পাইকারি দামে কিনুন।"
             : "Buy high quality bulk Gmails, PVA accounts, and aged verified channels at wholesale prices.",
           url: "https://www.mailfectory.top/buyer/market"
+        };
+      case 'buyer_wallet':
+        return {
+          title: language === 'bn' ? "বায়ার ওয়ালেট - ব্যালেন্স ও পেমেন্ট | Mail Factory" : "Buyer Wallet - Deposit Balance & Payouts | Mail Factory",
+          description: language === 'bn'
+            ? "আপনার বায়ার ওয়ালেট ব্যালেন্স চেক করুন এবং সহজেই ফান্ড যুক্ত করুন।"
+            : "Check your buyer wallet balance, add deposit funds via bKash/Nagad/Rocket securely.",
+          url: "https://www.mailfectory.top/buyer/wallet"
+        };
+      case 'buyer_deposit':
+        return {
+          title: language === 'bn' ? "ডিপোজিট ফান্ডস - বায়ার অ্যাকাউন্ট | Mail Factory" : "Add Deposit Funds - Buyer Account | Mail Factory",
+          description: language === 'bn'
+            ? "বিকাশ, নগদ বা রকেটের মাধ্যমে বায়ার ওয়ালেটে ইনস্ট্যান্ট ডিপোজিট করুন।"
+            : "Deposit funds into your buyer wallet instantly using bKash, Nagad, Rocket, or crypto.",
+          url: "https://www.mailfectory.top/buyer/deposit"
+        };
+      case 'buyer_orders':
+        return {
+          title: language === 'bn' ? "আমার অর্ডারসমূহ - ক্রয়কৃত জিমেইল লিস্ট | Mail Factory" : "My Orders - Purchased Gmail Accounts | Mail Factory",
+          description: language === 'bn'
+            ? "আপনার ক্রয়কৃত জিমেইল অ্যাকাউন্টগুলোর বিস্তারিত ও ক্রেডেনশিয়াল দেখুন।"
+            : "View and download your purchased Gmail account credentials and order details.",
+          url: "https://www.mailfectory.top/buyer/orders"
+        };
+      case 'buyer_transactions':
+        return {
+          title: language === 'bn' ? "লেনদেনের ইতিহাস - বায়ার অ্যাকাউন্ট | Mail Factory" : "Transaction History - Buyer Wallet | Mail Factory",
+          description: language === 'bn'
+            ? "আপনার বায়ার অ্যাকাউন্টের সকল ডিপোজিট ও কেনাকাটার লেনদেন হিস্ট্রি দেখুন।"
+            : "View all past deposits and purchase statement logs in your buyer account.",
+          url: "https://www.mailfectory.top/buyer/transactions"
+        };
+      case 'buyer_policies':
+        return {
+          title: language === 'bn' ? "ক্রেতা নীতিমালা ও রিপ্লেসমেন্ট পলিসি | Mail Factory" : "Buyer Guarantee & Replacement Policy | Mail Factory",
+          description: language === 'bn'
+            ? "মেইল ফ্যাক্টরি ক্রেতা সুরক্ষা এবং জিমেইল রিপ্লেসমেন্ট নীতিমালা পড়ুন।"
+            : "Read our 24-hour buyer guarantee and Gmail account replacement policies.",
+          url: "https://www.mailfectory.top/buyer/policies"
         };
       default:
         return null;

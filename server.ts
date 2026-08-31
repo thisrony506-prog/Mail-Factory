@@ -1747,9 +1747,9 @@ async function startServer() {
     app.get("*", (req: Request, res: Response) => {
       const urlPath = req.path;
       const baseUrl = (process.env.APP_URL || "https://www.mailfectory.top").replace(/\/$/, "");
-      let title = "Sell Gmail Accounts - PVA USA, UK, BD Old | Mail Factory";
-      let description = "Sell Gmail PVA Accounts in BD. USA, UK, BD, Old Gmail 2010-2024. Instant payout, bKash, Nagad, Rocket. Trusted since 2022 - 3200+ sellers.";
-      let keywords = "sell gmail accounts, gmail bikri korbo, gmail sell bd, earn money online bd";
+      let title = "Buy & Sell Gmail Accounts - PVA USA, UK, BD Old | Mail Factory";
+      let description = "Buy & Sell Gmail PVA Accounts in BD. USA, UK, BD, Old Gmail 2010-2024. Instant delivery & payouts via bKash, Nagad, Rocket, PayPal. Trusted since 2022.";
+      let keywords = "buy gmail accounts, sell gmail accounts, buy PVA gmail, sell old gmail, gmail kinbo, gmail bikri korbo, gmail buy sell bd, bulk gmail buy";
       let canonical = baseUrl + (urlPath.endsWith("/") ? urlPath : urlPath + "/");
       let schemaData: any = {
         "@context": "https://schema.org",
@@ -1759,13 +1759,33 @@ async function startServer() {
       };
 
       if (
+        urlPath === "/buy-gmail-accounts" || 
+        urlPath === "/buy-gmail-accounts/" ||
+        urlPath === "/buyer/market" ||
+        urlPath === "/buyer/market/"
+      ) {
+        title = "Buy Gmail PVA Accounts - USA, UK, BD Old | Mail Factory";
+        description = "Buy Gmail PVA accounts 100% verified. USA, UK, BD, Old Gmail 2010-2024. Instant delivery, bKash, Nagad, PayPal, Crypto. Trusted by 3200+ customers.";
+        keywords = "buy gmail accounts, buy pva gmail, buy verified gmail bd, bulk gmail accounts buy, cheap gmail buy";
+        schemaData = {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            {"@type": "Question","name": "Are these Gmail PVA?","acceptedAnswer": {"@type": "Answer","text": "Yes 100% PVA verified with real phone numbers."}},
+            {"@type": "Question","name": "How fast is delivery?","acceptedAnswer": {"@type": "Answer","text": "Instant 5-10 mins after payment confirmation."}}
+          ]
+        };
+      } else if (
         urlPath === "/sell-old-gmail-accounts" || 
         urlPath === "/sell-old-gmail-accounts/" ||
         urlPath === "/sell-gmail-accounts" || 
-        urlPath === "/sell-gmail-accounts/"
+        urlPath === "/sell-gmail-accounts/" ||
+        urlPath === "/exchange" ||
+        urlPath === "/exchange/"
       ) {
         title = "Sell Old Gmail Accounts for Money - Best Price BD | Mail Factory";
-        description = "Sell old Gmail accounts for money in BD. Best price for 2010-2024 Gmail. Instant bKash, Nagad, PayPal payment in 2 hours. 100% safe & trusted.";
+        description = "Sell old Gmail accounts for money in BD. Best price for 2010-2024 Gmail. Instant bKash, Nagad, Rocket payment in 2 hours. 100% safe & trusted.";
+        keywords = "sell gmail accounts, sell old gmail, gmail bikri korbo, sell gmail bd, earn money selling gmail";
         schemaData = {
           "@context": "https://schema.org",
           "@type": "FAQPage",
