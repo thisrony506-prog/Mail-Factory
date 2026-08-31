@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { LOGO_BASE64, OFFICIAL_LOGO_URL } from './logoBase64';
+import React, { useState, useMemo } from 'react';
+import { APP_LOGO_BASE64 } from './logoBase64';
 import { Mail } from 'lucide-react';
 
 interface AppLogo3DProps {
@@ -10,13 +10,13 @@ interface AppLogo3DProps {
   src?: string;
 }
 
-export const AppLogo3D: React.FC<AppLogo3DProps> = ({
+export function AppLogo3D({
   className = '',
   size = 'md',
   glow = false,
   animated = false,
   src,
-}) => {
+}: AppLogo3DProps) {
   let dimension = 40;
   if (typeof size === 'number') {
     dimension = size;
@@ -33,16 +33,15 @@ export const AppLogo3D: React.FC<AppLogo3DProps> = ({
   const [hasError, setHasError] = useState(false);
   const [srcIndex, setSrcIndex] = useState(0);
   
-  const sources = [
+  const sources = useMemo(() => [
     src,
     'https://files.catbox.moe/xdvz6g.png',
     '/app-logo.png',
-    LOGO_BASE64,
-    OFFICIAL_LOGO_URL,
+    APP_LOGO_BASE64,
     '/icon-192.png'
-  ].filter(Boolean) as string[];
+  ].filter(Boolean) as string[], [src]);
 
-  const currentSrc = sources[srcIndex] || LOGO_BASE64;
+  const currentSrc = sources[srcIndex] || APP_LOGO_BASE64;
 
   const handleError = () => {
     if (srcIndex < sources.length - 1) {
@@ -84,4 +83,4 @@ export const AppLogo3D: React.FC<AppLogo3DProps> = ({
       )}
     </div>
   );
-};
+}

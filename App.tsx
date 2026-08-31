@@ -1,4 +1,4 @@
-import React, { useState, Suspense, lazy } from 'react';
+import React, { useState } from 'react';
 import './logoPreload';
 import { AppProvider, useApp } from './AppContext';
 import { Navbar } from './Navbar';
@@ -10,46 +10,35 @@ import { GuestLandingView } from './GuestLandingView';
 
 import { MessageSquare, Bell } from 'lucide-react';
 
-// Resilient dynamic import helper with auto-retry on network drop or new deployment
-function lazyWithRetry<T extends React.ComponentType<any>>(
-  factory: () => Promise<{ default: T }>
-) {
-  return lazy(() =>
-    factory().catch((error) => {
-      console.warn('[Chunk Load Warning] Retrying dynamic import...', error);
-      return new Promise<{ default: T }>((resolve, reject) => {
-        setTimeout(() => {
-          factory().then(resolve).catch(reject);
-        }, 1000);
-      });
-    })
-  );
-}
-
-// Code-split / Lazy load non-critical views and heavy modules for instant page load
-const ExchangeView = lazyWithRetry(() => import('./ExchangeView').then(m => ({ default: m.ExchangeView })));
-const HistoryView = lazyWithRetry(() => import('./HistoryView').then(m => ({ default: m.HistoryView })));
-const SellersView = lazyWithRetry(() => import('./SellersView').then(m => ({ default: m.SellersView })));
-const ProfileView = lazyWithRetry(() => import('./ProfileView').then(m => ({ default: m.ProfileView })));
-const WithdrawView = lazyWithRetry(() => import('./WithdrawView').then(m => ({ default: m.WithdrawView })));
-const PrivacyView = lazyWithRetry(() => import('./PrivacyView').then(m => ({ default: m.PrivacyView })));
-const AboutView = lazyWithRetry(() => import('./AboutView').then(m => ({ default: m.AboutView })));
-const ReviewsView = lazyWithRetry(() => import('./ReviewsView').then(m => ({ default: m.ReviewsView })));
-const SettingsView = lazyWithRetry(() => import('./SettingsView').then(m => ({ default: m.SettingsView })));
-const ChangePasswordView = lazyWithRetry(() => import('./ChangePasswordView').then(m => ({ default: m.ChangePasswordView })));
-const EditProfileView = lazyWithRetry(() => import('./EditProfileView').then(m => ({ default: m.EditProfileView })));
-const MemberIdCardView = lazyWithRetry(() => import('./MemberIdCardView').then(m => ({ default: m.MemberIdCardView })));
-const ReferralLeaderboard = lazyWithRetry(() => import('./ReferralLeaderboard').then(m => ({ default: m.ReferralLeaderboard })));
-const LiveChatDrawer = lazyWithRetry(() => import('./LiveChatDrawer').then(m => ({ default: m.LiveChatDrawer })));
-const NotificationDrawer = lazyWithRetry(() => import('./NotificationDrawer').then(m => ({ default: m.NotificationDrawer })));
-const AuthModal = lazyWithRetry(() => import('./AuthModal').then(m => ({ default: m.AuthModal })));
-
-const FAQModal = lazyWithRetry(() => import('./Modals').then(m => ({ default: m.FAQModal })));
-const ContactModal = lazyWithRetry(() => import('./Modals').then(m => ({ default: m.ContactModal })));
-const RateAppModal = lazyWithRetry(() => import('./Modals').then(m => ({ default: m.RateAppModal })));
-
-const GlobalSMSPopup = lazyWithRetry(() => import('./GlobalSMSPopup').then(m => ({ default: m.GlobalSMSPopup })));
-const FCMSetup = lazyWithRetry(() => import('./FCMSetup').then(m => ({ default: m.FCMSetup })));
+import { ExchangeView } from './ExchangeView';
+import { HistoryView } from './HistoryView';
+import { SellersView } from './SellersView';
+import { ProfileView } from './ProfileView';
+import { WithdrawView } from './WithdrawView';
+import { PrivacyView } from './PrivacyView';
+import { AboutView } from './AboutView';
+import { ReviewsView } from './ReviewsView';
+import { FAQView } from './FAQView';
+import { ContactView } from './ContactView';
+import { SettingsView } from './SettingsView';
+import { ChangePasswordView } from './ChangePasswordView';
+import { EditProfileView } from './EditProfileView';
+import { MemberIdCardView } from './MemberIdCardView';
+import { ReferralLeaderboard } from './ReferralLeaderboard';
+import { BuyerMarketplaceView } from './BuyerMarketplaceView';
+import { BuyerOrdersView } from './BuyerOrdersView';
+import { BuyerWalletView } from './BuyerWalletView';
+import { BuyerDepositView } from './BuyerDepositView';
+import { BuyerTransactionsView } from './BuyerTransactionsView';
+import { BuyerPoliciesView } from './BuyerPoliciesView';
+import { LiveChatDrawer } from './LiveChatDrawer';
+import { NotificationDrawer } from './NotificationDrawer';
+import { AuthModal } from './AuthModal';
+import { FAQModal, ContactModal, RateAppModal } from './Modals';
+import { GlobalSMSPopup } from './GlobalSMSPopup';
+import { FCMSetup } from './FCMSetup';
+import { BuyGmailSEOView } from './BuyGmailSEOView';
+import { SellGmailSEOView } from './SellGmailSEOView';
 
 const MainLayout: React.FC = () => {
   const {
@@ -64,40 +53,67 @@ const MainLayout: React.FC = () => {
     isRateModalOpen,
     setRateModalOpen,
     setAuthModalOpen,
+    profile,
+    addNotification,
   } = useApp();
 
   const [isFAQOpen, setIsFAQOpen] = useState<boolean>(false);
   const [isContactOpen, setIsContactOpen] = useState<boolean>(false);
 
   React.useEffect(() => {
-    const handleHashCheck = () => {
-      if (window.location.hash.startsWith('#verify')) {
+    const handleUrlAndHashCheck = () => {
+      const path = window.location.pathname;
+      if (path === '/buy-gmail-accounts' || path === '/buy-gmail-accounts/') {
+        setActiveTab('buy-gmail-accounts');
+      } else if (
+        path === '/sell-old-gmail-accounts' || 
+        path === '/sell-old-gmail-accounts/' ||
+        path === '/sell-gmail-accounts' || 
+        path === '/sell-gmail-accounts/'
+      ) {
+        setActiveTab('sell-old-gmail-accounts');
+      } else if (window.location.hash.startsWith('#verify')) {
         setActiveTab('id_card');
       }
     };
-    handleHashCheck();
-    window.addEventListener('hashchange', handleHashCheck);
-    return () => window.removeEventListener('hashchange', handleHashCheck);
+    handleUrlAndHashCheck();
+    window.addEventListener('hashchange', handleUrlAndHashCheck);
+    window.addEventListener('popstate', handleUrlAndHashCheck);
+    return () => {
+      window.removeEventListener('hashchange', handleUrlAndHashCheck);
+      window.removeEventListener('popstate', handleUrlAndHashCheck);
+    };
   }, [setActiveTab]);
 
-  // Preload key routes in idle background time for instantaneous tab switching without lag
   React.useEffect(() => {
-    const preloadViews = () => {
-      import('./ExchangeView');
-      import('./HistoryView');
-      import('./SellersView');
-      import('./ProfileView');
-      import('./WithdrawView');
-      import('./ReferralLeaderboard');
-    };
-
-    if ('requestIdleCallback' in window) {
-      (window as Window & { requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => number })
-        .requestIdleCallback(preloadViews, { timeout: 3000 });
+    const path = window.location.pathname;
+    if (activeTab === 'buy-gmail-accounts') {
+      if (path !== '/buy-gmail-accounts' && path !== '/buy-gmail-accounts/') {
+        window.history.pushState(null, '', '/buy-gmail-accounts/');
+      }
+    } else if (activeTab === 'sell-old-gmail-accounts') {
+      if (path !== '/sell-gmail-accounts' && path !== '/sell-gmail-accounts/') {
+        window.history.pushState(null, '', '/sell-gmail-accounts/');
+      }
     } else {
-      const timer = setTimeout(preloadViews, 1500);
-      return () => clearTimeout(timer);
+      if (
+        path === '/buy-gmail-accounts' || 
+        path === '/buy-gmail-accounts/' ||
+        path === '/sell-old-gmail-accounts' ||
+        path === '/sell-old-gmail-accounts/' ||
+        path === '/sell-gmail-accounts' ||
+        path === '/sell-gmail-accounts/'
+      ) {
+        window.history.pushState(null, '', '/');
+      }
     }
+  }, [activeTab]);
+
+  // Clear any legacy pending_checkout key from storage
+  React.useEffect(() => {
+    try {
+      localStorage.removeItem('pending_checkout');
+    } catch {}
   }, []);
 
   // If user is not logged in, support public routes or render the Guest Landing / Welcome Page
@@ -107,7 +123,17 @@ const MainLayout: React.FC = () => {
       activeTab === 'privacy' ||
       activeTab === 'reviews' ||
       activeTab === 'sellers' ||
-      activeTab === 'id_card';
+      activeTab === 'id_card' ||
+      activeTab === 'buyer_market' ||
+      activeTab === 'buyer_policies' ||
+      activeTab === 'buyer_orders' ||
+      activeTab === 'buyer_wallet' ||
+      activeTab === 'buyer_deposit' ||
+      activeTab === 'buyer_transactions' ||
+      activeTab === 'faq' ||
+      activeTab === 'contact' ||
+      activeTab === 'buy-gmail-accounts' ||
+      activeTab === 'sell-old-gmail-accounts';
 
     return (
       <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
@@ -136,37 +162,43 @@ const MainLayout: React.FC = () => {
               </div>
             </header>
 
-            <main className="flex-1 max-w-4xl w-full mx-auto p-4">
-              <Suspense fallback={<ViewSkeleton />}>
-                {activeTab === 'reviews' && <ReviewsView />}
-                {activeTab === 'sellers' && <SellersView />}
-                {activeTab === 'about' && <AboutView />}
-                {activeTab === 'privacy' && <PrivacyView />}
-                {activeTab === 'id_card' && <MemberIdCardView onBack={() => setActiveTab('home')} />}
-              </Suspense>
+            <main className="flex-1 max-w-4xl w-full mx-auto p-4 animate-fade-in">
+              {activeTab === 'buy-gmail-accounts' && <BuyGmailSEOView />}
+              {activeTab === 'sell-old-gmail-accounts' && <SellGmailSEOView />}
+              {activeTab === 'reviews' && <ReviewsView />}
+              {activeTab === 'sellers' && <SellersView />}
+              {activeTab === 'about' && <AboutView />}
+              {activeTab === 'privacy' && <PrivacyView />}
+              {activeTab === 'faq' && <FAQView />}
+              {activeTab === 'contact' && <ContactView />}
+              {activeTab === 'buyer_market' && (
+                <BuyerMarketplaceView
+                  onOpenDeposit={() => setAuthModalOpen(true, 'login')}
+                  onOpenOrders={() => setAuthModalOpen(true, 'login')}
+                  onOpenWallet={() => setAuthModalOpen(true, 'login')}
+                />
+              )}
+              {activeTab === 'buyer_orders' && <BuyerOrdersView />}
+              {activeTab === 'buyer_wallet' && <BuyerWalletView />}
+              {activeTab === 'buyer_deposit' && <BuyerDepositView />}
+              {activeTab === 'buyer_transactions' && <BuyerTransactionsView />}
+              {activeTab === 'buyer_policies' && <BuyerPoliciesView />}
+              {activeTab === 'id_card' && <MemberIdCardView onBack={() => setActiveTab('home')} />}
             </main>
           </div>
         ) : (
-          <Suspense fallback={<ViewSkeleton />}><GuestLandingView /></Suspense>
+          <GuestLandingView />
         )}
-        <Suspense fallback={null}>
-          <AuthModal />
-          <LiveChatDrawer />
-          <FAQModal
-            isOpen={isFAQOpen || activeTab === 'faq'}
-            onClose={() => {
-              setIsFAQOpen(false);
-              if (activeTab === 'faq') setActiveTab('home');
-            }}
-          />
-          <ContactModal
-            isOpen={isContactOpen || activeTab === 'contact'}
-            onClose={() => {
-              setIsContactOpen(false);
-              if (activeTab === 'contact') setActiveTab('home');
-            }}
-          />
-        </Suspense>
+        <AuthModal />
+        <LiveChatDrawer />
+        <FAQModal
+          isOpen={isFAQOpen}
+          onClose={() => setIsFAQOpen(false)}
+        />
+        <ContactModal
+          isOpen={isContactOpen}
+          onClose={() => setIsContactOpen(false)}
+        />
         <PWAInstallPrompt />
       </div>
     );
@@ -184,36 +216,50 @@ const MainLayout: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 w-full pb-6">
-        <Suspense fallback={<ViewSkeleton />}>
-          {activeTab === 'home' && <HomeView />}
-          {activeTab === 'exchange' && <ExchangeView />}
-          {activeTab === 'history' && <HistoryView />}
-          {activeTab === 'sellers' && <SellersView />}
-          {activeTab === 'privacy' && <PrivacyView />}
-          {activeTab === 'about' && <AboutView />}
-          {activeTab === 'profile' && (
-            <ProfileView
-              onOpenEditProfile={() => setActiveTab('edit_profile')}
-              onOpenChangePass={() => setActiveTab('change_password')}
-              onOpenFAQ={() => setActiveTab('faq')}
-              onOpenContact={() => setActiveTab('contact')}
-            />
-          )}
-          {activeTab === 'withdraw' && <WithdrawView />}
-          {activeTab === 'reviews' && <ReviewsView />}
-          {activeTab === 'referral_leaderboard' && <ReferralLeaderboard />}
-          {activeTab === 'change_password' && <ChangePasswordView />}
-          {activeTab === 'edit_profile' && <EditProfileView />}
-          {activeTab === 'id_card' && <MemberIdCardView onBack={() => setActiveTab('profile')} />}
-          {activeTab === 'settings' && (
-            <SettingsView
-              onOpenEditProfile={() => setActiveTab('edit_profile')}
-              onOpenChangePass={() => setActiveTab('change_password')}
-              onOpenFAQ={() => setActiveTab('faq')}
-              onOpenContact={() => setActiveTab('contact')}
-            />
-          )}
-        </Suspense>
+        {activeTab === 'buy-gmail-accounts' && <BuyGmailSEOView />}
+        {activeTab === 'sell-old-gmail-accounts' && <SellGmailSEOView />}
+        {activeTab === 'home' && <HomeView />}
+        {activeTab === 'exchange' && <ExchangeView />}
+        {activeTab === 'history' && <HistoryView />}
+        {activeTab === 'sellers' && <SellersView />}
+        {activeTab === 'privacy' && <PrivacyView />}
+        {activeTab === 'about' && <AboutView />}
+        {activeTab === 'faq' && <FAQView />}
+        {activeTab === 'contact' && <ContactView />}
+        {activeTab === 'buyer_market' && (
+          <BuyerMarketplaceView
+            onOpenDeposit={() => setActiveTab('buyer_deposit')}
+            onOpenOrders={() => setActiveTab('buyer_orders')}
+            onOpenWallet={() => setActiveTab('buyer_wallet')}
+          />
+        )}
+        {activeTab === 'buyer_orders' && <BuyerOrdersView />}
+        {activeTab === 'buyer_wallet' && <BuyerWalletView />}
+        {activeTab === 'buyer_deposit' && <BuyerDepositView />}
+        {activeTab === 'buyer_transactions' && <BuyerTransactionsView />}
+        {activeTab === 'buyer_policies' && <BuyerPoliciesView />}
+        {activeTab === 'profile' && (
+          <ProfileView
+            onOpenEditProfile={() => setActiveTab('edit_profile')}
+            onOpenChangePass={() => setActiveTab('change_password')}
+            onOpenFAQ={() => setActiveTab('faq')}
+            onOpenContact={() => setActiveTab('contact')}
+          />
+        )}
+        {activeTab === 'withdraw' && <WithdrawView />}
+        {activeTab === 'reviews' && <ReviewsView />}
+        {activeTab === 'referral_leaderboard' && <ReferralLeaderboard />}
+        {activeTab === 'change_password' && <ChangePasswordView />}
+        {activeTab === 'edit_profile' && <EditProfileView />}
+        {activeTab === 'id_card' && <MemberIdCardView onBack={() => setActiveTab('profile')} />}
+        {activeTab === 'settings' && (
+          <SettingsView
+            onOpenEditProfile={() => setActiveTab('edit_profile')}
+            onOpenChangePass={() => setActiveTab('change_password')}
+            onOpenFAQ={() => setActiveTab('faq')}
+            onOpenContact={() => setActiveTab('contact')}
+          />
+        )}
       </main>
 
       {/* Floating Action Buttons */}
@@ -237,30 +283,21 @@ const MainLayout: React.FC = () => {
         </button>
       </div>
 
-      {/* Global Modals and Drawers - lazy loaded to prevent rendering overhead */}
-      <Suspense fallback={null}>
-        <AuthModal />
-        <LiveChatDrawer />
-        <NotificationDrawer />
+      {/* Global Modals and Drawers */}
+      <AuthModal />
+      <LiveChatDrawer />
+      <NotificationDrawer />
 
-        <FAQModal
-          isOpen={isFAQOpen || activeTab === 'faq'}
-          onClose={() => {
-            setIsFAQOpen(false);
-            if (activeTab === 'faq') setActiveTab('home');
-          }}
-        />
-        <ContactModal
-          isOpen={isContactOpen || activeTab === 'contact'}
-          onClose={() => {
-            setIsContactOpen(false);
-            if (activeTab === 'contact') setActiveTab('home');
-          }}
-        />
-        <RateAppModal isOpen={isRateModalOpen} onClose={() => setRateModalOpen(false)} />
-        <GlobalSMSPopup />
-        { /* <FCMSetup /> */ }
-      </Suspense>
+      <FAQModal
+        isOpen={isFAQOpen}
+        onClose={() => setIsFAQOpen(false)}
+      />
+      <ContactModal
+        isOpen={isContactOpen}
+        onClose={() => setIsContactOpen(false)}
+      />
+      <RateAppModal isOpen={isRateModalOpen} onClose={() => setRateModalOpen(false)} />
+      <GlobalSMSPopup />
       <PWAInstallPrompt />
     </div>
   );

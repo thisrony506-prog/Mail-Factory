@@ -138,7 +138,8 @@ export interface Submission {
   key?: string;
   userId: string;
   userEmail?: string;
-  username: string;
+  username?: string;
+  userName?: string;
   submittedAt: number;
   status: SubmissionStatus;
   gmailsType?: GmailType;
@@ -164,15 +165,18 @@ export interface WithdrawRequest {
   id?: string;
   key?: string;
   userId: string;
-  username: string;
+  username?: string;
+  userName?: string;
   amount: number;
   feeAmount?: number;
   netAmount?: number;
-  method: string;
-  paymentMethod: string;
-  paymentNumber: string;
+  method?: string;
+  paymentMethod?: string;
+  paymentNumber?: string;
+  senderNumber?: string;
   status: 'pending' | 'approved' | 'rejected';
-  requestedAt: number;
+  requestedAt?: number;
+  createdAt?: number;
   processedAt?: number;
   transactionNote?: string;
   trxId?: string;
@@ -186,11 +190,14 @@ export interface WithdrawRequest {
 
 export interface UserProfile {
   uid: string;
-  username: string;
+  username?: string;
+  userName?: string;
   email: string;
   phone?: string;
   photoURL?: string;
   balance: number;
+  deposit_balance?: number;
+  reserved_balance?: number;
   hold: number;
   paymentNumber?: string;
   paymentMethod?: string;
@@ -209,6 +216,7 @@ export interface UserProfile {
   total_submitted: number;
   total_withdrawn: number;
   totalEarnings?: number;
+  total_spent?: number;
   auth_provider?: string;
   manual_approved_count?: number;
   is_blocked?: boolean;
@@ -264,6 +272,18 @@ export interface AppNotification {
   timestamp: number;
 }
 
+export interface PriceAlertSubscription {
+  id: string;
+  userId: string;
+  userEmail?: string;
+  accountType: 'fresh' | 'aged' | 'all';
+  targetPrice?: number; // Alert when price reaches or drops below this
+  direction?: 'any_change' | 'price_drop' | 'target_or_below';
+  createdAt: number;
+  lastNotifiedPrice?: number;
+  active: boolean;
+}
+
 export interface ChatMessage {
   id?: string;
   uid?: string;
@@ -298,12 +318,43 @@ export type ActiveTab =
   | 'edit_profile'
   | 'id_card'
   | 'faq'
-  | 'contact';
+  | 'contact'
+  | 'buyer_market'
+  | 'buyer_orders'
+  | 'buyer_wallet'
+  | 'buyer_deposit'
+  | 'buyer_transactions'
+  | 'buyer_policies';
 export type Language = 'bn' | 'en';
+
+export interface BuyerProduct {
+  id: string;
+  code?: string;
+  sku?: string;
+  title: string;
+  titleBn?: string;
+  category: 'fresh' | 'aged';
+  price: number; // in BDT per unit
+  oldPrice?: number;
+  stock: number;
+  rating: number;
+  reviewsCount?: number;
+  deliveryTime: string;
+  deliveryTimeBn?: string;
+  description: string;
+  descriptionBn?: string;
+  features: string[];
+  featuresBn?: string[];
+  badge?: string;
+  badgeBn?: string;
+  minQty: number;
+  maxQty?: number;
+}
 
 export interface TopSellerItem {
   uid: string;
-  username: string;
+  username?: string;
+  userName?: string;
   email?: string;
   photoURL?: string;
   totalEarnings: number;
@@ -313,6 +364,60 @@ export interface TopSellerItem {
   total_withdrawn?: number;
   badge?: string;
   rank?: number;
+}
+
+export interface BuyerCredential {
+  email: string;
+  password: string;
+  recoveryEmail?: string;
+  gmail?: string; // alias for gmail field
+}
+
+export interface BuyerOrder {
+  id?: string;
+  key?: string;
+  userId: string;
+  userEmail?: string;
+  username?: string;
+  userName?: string;
+  productId: string;
+  productTitle: string;
+  packageTitle?: string;
+  quantity: number;
+  unitPrice?: number;
+  totalPrice?: number;
+  amount: number;
+  credentials?: BuyerCredential[];
+  delivered_gmails?: Array<{ gmail: string; password: string; recoveryEmail?: string }>;
+  deliveredAccounts?: Array<any>;
+  downloadText?: string;
+  status: 'pending' | 'processing' | 'delivered' | 'cancelled' | 'failed' | 'refunded';
+  deliveryData?: BuyerCredential[];
+  createdAt: number;
+  deliveredAt?: number;
+  updatedAt?: number;
+  adminNote?: string;
+}
+
+export interface DepositRequest {
+  id?: string;
+  key?: string;
+  userId: string;
+  userEmail?: string;
+  username?: string;
+  userName?: string;
+  amount: number;
+  method?: string;
+  paymentMethod?: string;
+  paymentNumber?: string;
+  senderNumber?: string;
+  trxId: string;
+  status: 'pending' | 'approved' | 'rejected';
+  requestedAt?: number;
+  createdAt?: number;
+  processedAt?: number;
+  adminNote?: string;
+  note?: string;
 }
 
 export interface Review {

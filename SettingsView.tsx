@@ -5,6 +5,7 @@ import { auth, signOut } from './firebase';
 import { SEO } from './SEO';
 import { hapticFeedback } from './haptics';
 import { usePWAInstall } from './usePWAInstall';
+import { useUserBalance } from './useUserBalance';
 import { AppLogo3D } from './AppLogo3D';
 import {
   Settings,
@@ -55,6 +56,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     setNotifDrawerOpen,
     currentLevel,
     addNotification,
+    appMode,
+    buyerOrders,
   } = useApp();
   
   const t = translations[language];
@@ -71,8 +74,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     }
   };
 
-  const mainBalance = (profile?.balance || 0).toFixed(2);
+  const { balance: realTimeBalance, depositBalance: realTimeDepositBalance, reservedBalance: realTimeReservedBalance, loading: balanceLoading } = useUserBalance(user);
+  const mainBalance = balanceLoading ? "..." : (Number(realTimeBalance !== undefined ? realTimeBalance : (profile?.balance || 0))).toFixed(2);
+  const depositBalance = balanceLoading ? "..." : (Number(realTimeDepositBalance !== undefined ? realTimeDepositBalance : (profile?.deposit_balance || 0))).toFixed(2);
   const holdBalance = (profile?.hold || 0).toFixed(2);
+  const pendingOrdersSum = (buyerOrders || [])
+    .filter((o) => o && o.userId === user?.uid && (o.status === 'pending' || o.status === 'processing'))
+    .reduce((sum, o) => sum + (Number(o.amount || (Number(o.unitPrice || 0) * Number(o.quantity || 1))) || 0), 0);
+  const reservedBalance = balanceLoading ? "..." : (pendingOrdersSum > 0 ? pendingOrdersSum : (Number(realTimeReservedBalance !== undefined ? realTimeReservedBalance : (profile?.reserved_balance || 0)))).toFixed(2);
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-4 pb-28 space-y-4">
@@ -161,14 +170,45 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
           {/* Quick Wallet balance summary */}
           <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80">
-            <div className="bg-slate-800/80 rounded-2xl p-2.5 flex items-center justify-between border border-slate-700/60">
-              <span className="text-xs text-slate-400 font-medium">Main Balance:</span>
-              <span className="text-sm font-black text-emerald-400 font-mono">৳{mainBalance}</span>
-            </div>
-            <div className="bg-slate-800/80 rounded-2xl p-2.5 flex items-center justify-between border border-slate-700/60">
-              <span className="text-xs text-slate-400 font-medium">Hold Balance:</span>
-              <span className="text-sm font-black text-amber-400 font-mono">৳{holdBalance}</span>
-            </div>
+            {appMode === 'buying' ? (
+              <>
+                <div className="bg-slate-800/80 rounded-2xl p-2.5 flex flex-col justify-center border border-slate-700/60 overflow-hidden min-w-0">
+                  <span className="text-[10px] sm:text-xs text-indigo-300 font-bold whitespace-nowrap truncate block w-full tracking-tight">
+                    {language === 'bn' ? 'ফান্ড যোগ করুন' : 'Add Funds'}
+                  </span>
+                  <span className="text-xs sm:text-sm font-black text-amber-300 font-mono tracking-tight whitespace-nowrap mt-0.5 block">
+                    ৳{depositBalance}
+                  </span>
+                </div>
+                <div className="bg-slate-800/80 rounded-2xl p-2.5 flex flex-col justify-center border border-slate-700/60 overflow-hidden min-w-0">
+                  <span className="text-[10px] sm:text-xs text-slate-400 font-bold whitespace-nowrap truncate block w-full tracking-tight">
+                    {language === 'bn' ? 'লকড ব্যালেন্স' : 'Locked Balance'}
+                  </span>
+                  <span className="text-xs sm:text-sm font-black text-white font-mono tracking-tight whitespace-nowrap mt-0.5 block">
+                    ৳{reservedBalance}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="bg-slate-800/80 rounded-2xl p-2.5 flex flex-col justify-center border border-slate-700/60 overflow-hidden min-w-0">
+                  <span className="text-[10px] sm:text-xs text-slate-400 font-bold whitespace-nowrap truncate block w-full tracking-tight">
+                    {language === 'bn' ? 'মেইন ব্যালেন্স' : 'Main Balance'}
+                  </span>
+                  <span className="text-xs sm:text-sm font-black text-emerald-400 font-mono tracking-tight whitespace-nowrap mt-0.5 block">
+                    ৳{mainBalance}
+                  </span>
+                </div>
+                <div className="bg-slate-800/80 rounded-2xl p-2.5 flex flex-col justify-center border border-slate-700/60 overflow-hidden min-w-0">
+                  <span className="text-[10px] sm:text-xs text-slate-400 font-bold whitespace-nowrap truncate block w-full tracking-tight">
+                    {language === 'bn' ? 'হোল্ড ব্যালেন্স' : 'Hold Balance'}
+                  </span>
+                  <span className="text-xs sm:text-sm font-black text-amber-400 font-mono tracking-tight whitespace-nowrap mt-0.5 block">
+                    ৳{holdBalance}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -316,7 +356,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <button
             onClick={() => {
               hapticFeedback.light();
-              setActiveTab('history');
+              setActiveTab(appMode === 'buying' ? 'buyer_transactions' : 'history');
             }}
             className="w-full flex items-center justify-between py-3 px-2 text-left hover:bg-slate-50 rounded-2xl transition-all cursor-pointer"
           >
@@ -326,10 +366,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </div>
               <div>
                 <h3 className="text-xs font-extrabold text-slate-800">
-                  {language === 'bn' ? 'পে-আউট ও ট্রানজেকশন হিস্ট্রি' : 'Payout & Transaction Reports'}
+                  {appMode === 'buying' 
+                    ? (language === 'bn' ? 'ডিপোজিট ও অর্ডার হিস্ট্রি' : 'Buyer Transaction History')
+                    : (language === 'bn' ? 'পে-আউট ও ট্রানজেকশন হিস্ট্রি' : 'Payout & Transaction Reports')}
                 </h3>
                 <p className="text-[10px] text-slate-400 font-medium">
-                  {language === 'bn' ? 'পূর্বের সকল উত্তোলন ও কাজের রেকর্ড দেখুন' : 'View past withdrawals & work audit history'}
+                  {appMode === 'buying'
+                    ? (language === 'bn' ? 'আপনার সমস্ত ডিপোজিট ও ক্রয়ের বিবরণী' : 'View deposit & purchase history')
+                    : (language === 'bn' ? 'পূর্বের সকল উত্তোলন ও কাজের রেকর্ড দেখুন' : 'View past withdrawals & work audit history')}
                 </p>
               </div>
             </div>

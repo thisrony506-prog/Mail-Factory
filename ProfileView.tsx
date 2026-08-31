@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   Zap,
   History,
+  Receipt,
   CheckCircle2,
   Activity,
   TrendingUp,
@@ -28,6 +29,7 @@ import {
   CheckCircle,
   Clock,
   XCircle,
+  ShoppingBag,
   BarChart3,
   ChevronRight,
   ArrowUpRight,
@@ -61,17 +63,34 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     profile,
     user,
     language,
+    appMode,
     currentLevel,
     nextLevel,
     setWithdrawModalOpen,
     setActiveTab,
     claimDailyStreak,
     submissions,
+    buyerOrders,
     withdrawRequests,
     allUsers,
   } = useApp();
 
-  const { balance: realTimeBalance, loading: balanceLoading } = useUserBalance(user);
+  const { balance: realTimeBalance, depositBalance: realTimeDepositBalance, reservedBalance: realTimeReservedBalance, loading: balanceLoading } = useUserBalance(user);
+  const pendingOrdersSum = (buyerOrders || [])
+    .filter((o) => o && o.userId === user?.uid && (o.status === 'pending' || o.status === 'processing'))
+    .reduce((sum, o) => sum + (Number(o.amount || (Number(o.unitPrice || 0) * Number(o.quantity || 1))) || 0), 0);
+  const displayReservedBalance = balanceLoading ? "..." : (pendingOrdersSum > 0 ? pendingOrdersSum : (Number(realTimeReservedBalance !== undefined ? realTimeReservedBalance : (profile?.reserved_balance || 0)))).toFixed(2);
+
+  // Buyer orders stats if in buying mode
+  const userBuyerOrders = useMemo(() => {
+    if (!user) return [];
+    return (buyerOrders || []).filter((o) => o.userId === user.uid);
+  }, [buyerOrders, user?.uid]);
+
+  const totalBoughtQty = userBuyerOrders.reduce((acc, o) => acc + (o.qty || o.quantity || 1), 0);
+  const approvedBoughtQty = userBuyerOrders.filter((o) => o.status === 'delivered').reduce((acc, o) => acc + (o.qty || o.quantity || 1), 0);
+  const pendingBoughtQty = userBuyerOrders.filter((o) => o.status === 'pending' || o.status === 'processing').reduce((acc, o) => acc + (o.qty || o.quantity || 1), 0);
+  const rejectedBoughtQty = userBuyerOrders.filter((o) => o.status === 'cancelled' || o.status === 'failed' || o.status === 'rejected' || o.status === 'refunded').reduce((acc, o) => acc + (o.qty || o.quantity || 1), 0);
 
   const referrerName = useMemo(() => {
     if (!profile?.referredBy) return null;
@@ -204,6 +223,16 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               {profile?.email || user?.email}
             </p>
 
+          {appMode === 'buying' ? (
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1.5">
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold px-3 py-1 rounded-full bg-white/15 border border-white/20 text-indigo-200">
+                <span>🛒 Gmail Buyer Account</span>
+              </span>
+              <span className="text-[11px] text-indigo-200 font-medium px-2.5 py-1 rounded-full bg-black/20">
+                Joined {memberSince}
+              </span>
+            </div>
+          ) : (
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1.5">
               <span className="inline-flex items-center gap-1 text-[11px] font-bold px-3 py-1 rounded-full bg-white/15 border border-white/20 text-amber-300">
                 <Award className="w-3.5 h-3.5" />
@@ -225,117 +254,292 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 Joined {memberSince}
               </span>
             </div>
+          )}
           </div>
         </div>
 
-        {/* Member ID Card Quick Access Card */}
-        <div className="mt-5 pt-4 border-t border-white/15 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-3 text-left w-full sm:w-auto">
-            <div className="w-10 h-10 rounded-xl bg-amber-400/20 border border-amber-300/40 text-amber-300 flex items-center justify-center shrink-0">
-              <QrCode className="w-5 h-5" />
+        {/* Member ID Card Quick Access Card - Only in Selling Mode */}
+        {appMode !== 'buying' && (
+          <div className="mt-5 pt-4 border-t border-white/15 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-3 text-left w-full sm:w-auto">
+              <div className="w-10 h-10 rounded-xl bg-amber-400/20 border border-amber-300/40 text-amber-300 flex items-center justify-center shrink-0">
+                <QrCode className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-black text-white">{t.memberIdCard}</span>
+                  {hasWithdrawn ? (
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-extrabold">
+                      {t.verifiedMember}
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-[10px] font-extrabold">
+                      {t.generalMember}
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-indigo-200">
+                  {t.memberIdCardSubtitle}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                hapticFeedback.medium();
+                setActiveTab('id_card');
+              }}
+              className="w-full sm:w-auto px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-amber-950 text-xs font-black shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer shrink-0"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>কার্ড দেখুন ও ডাউনলোড (ID Card)</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* 2. WALLET SECTION (CHANGES ACCORDING TO APP MODE) */}
+      <div className="rounded-3xl bg-white border border-slate-200/80 p-5 shadow-sm space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {appMode === 'buying' ? (
+            <>
+              {/* Deposit Balance */}
+              <div className="bg-gradient-to-r from-indigo-600 to-blue-700 text-white p-4 rounded-2xl shadow-lg relative overflow-hidden group">
+                <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-white/10 rounded-full blur-xl group-hover:scale-125 transition-transform" />
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-80 flex items-center gap-1.5">
+                    <Wallet className="w-3.5 h-3.5" />
+                    {language === 'bn' ? 'ডিপোজিট ব্যালেন্স' : 'Deposit Balance'}
+                  </p>
+                  <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[9px] font-black border border-white/30 uppercase">
+                    Non-withdrawable
+                  </span>
+                </div>
+                <h2 className="text-3xl font-black mt-1 font-mono tracking-tighter">
+                  {balanceLoading ? "..." : `৳${realTimeDepositBalance.toFixed(2)}`}
+                </h2>
+                <p className="text-[10px] text-indigo-100/70 font-medium mt-1">
+                  {language === 'bn' ? 'জিমেইল ক্রয়ের জন্য ডিপোজিটকৃত ব্যালেন্স' : 'Balance for buying Gmails'}
+                </p>
+              </div>
+
+              {/* Locked Balance */}
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-200/80">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-extrabold text-amber-800 flex items-center gap-1.5">
+                    <Clock className="w-4 h-4 text-amber-600" />
+                    {language === 'bn' ? 'লকড ব্যালেন্স' : 'Locked Balance'}
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-800 border border-amber-300 text-[10px] font-bold">
+                    Reserved
+                  </span>
+                </div>
+                <div className="text-2xl sm:text-3xl font-black text-amber-800 font-mono">
+                  ৳{displayReservedBalance}
+                </div>
+                <span className="text-[10px] text-slate-500 font-medium mt-0.5 block">
+                  {language === 'bn' ? 'অর্ডারের জন্য লক করা টাকা' : 'Funds locked for active orders'}
+                </span>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Main Balance (Real-time via useUserBalance hook) */}
+              <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white p-5 rounded-2xl shadow-xl relative overflow-hidden group">
+                <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/15 rounded-full blur-2xl group-hover:scale-125 transition-transform" />
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-90 flex items-center gap-1.5">
+                    <Activity className="w-4 h-4 text-emerald-200" />
+                    {t.mainBalance}
+                  </p>
+                  <span className="px-2.5 py-0.5 rounded-full bg-white/25 text-white text-[10px] font-black border border-white/30 uppercase tracking-wide backdrop-blur-xs">
+                    {t.withdrawable || 'Withdrawable'}
+                  </span>
+                </div>
+                <h2 className="text-3xl sm:text-4xl font-black mt-2 font-mono tracking-tight">
+                  {balanceLoading ? "..." : `৳${realTimeBalance.toFixed(2)}`}
+                </h2>
+                <p className="text-[11px] text-emerald-100 font-medium mt-1.5 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
+                  {language === 'bn' ? 'সেলাইং জিমেইল থেকে প্রাপ্ত ক্যাশ ইনকাম' : 'Earnings from selling Gmails'}
+                </p>
+              </div>
+
+              {/* Hold/Locked Balance */}
+              <div className="p-5 rounded-2xl bg-gradient-to-br from-amber-50 via-amber-100/50 to-amber-50 border border-amber-200/90 shadow-sm">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-black text-amber-900 flex items-center gap-1.5">
+                    <Clock className="w-4 h-4 text-amber-600 animate-spin-slow" />
+                    {t.holdBalance}
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-900 border border-amber-300 text-[10px] font-extrabold uppercase">
+                    Reviewing
+                  </span>
+                </div>
+                <div className="text-2xl sm:text-3xl font-black text-amber-950 font-mono mt-1">
+                  ৳{holdBalance}
+                </div>
+                <span className="text-[11px] text-amber-700/80 font-medium mt-1.5 block">
+                  {t.holdBalanceNotice}
+                </span>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        {appMode === 'buying' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2">
+            <button
+              onClick={() => {
+                hapticFeedback.medium();
+                setActiveTab('buyer_wallet');
+              }}
+              className="group relative overflow-hidden p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-800 hover:from-indigo-500 hover:to-violet-700 text-white shadow-lg shadow-indigo-500/25 transition-all duration-300 active:scale-95 flex flex-row sm:flex-col items-center sm:justify-center gap-3.5 sm:gap-2 border border-indigo-400/30 cursor-pointer text-left sm:text-center w-full"
+            >
+              <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-md flex items-center justify-center text-white shadow-inner group-hover:scale-110 transition-transform shrink-0">
+                <Wallet className="w-5 h-5" />
+              </div>
+              <div className="flex-1 sm:flex-none">
+                <span className="block text-xs sm:text-sm font-black tracking-tight whitespace-nowrap">{t.deposit}</span>
+                <span className="block text-[10px] text-indigo-200 font-medium mt-0.5">{language === 'bn' ? 'ব্যালেন্স রিচার্জ' : 'Add Balance'}</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-white/50 block sm:hidden shrink-0" />
+            </button>
+
+            <button
+              onClick={() => {
+                hapticFeedback.medium();
+                setActiveTab('buyer_orders');
+              }}
+              className="group relative overflow-hidden p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 hover:from-emerald-500 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/25 transition-all duration-300 active:scale-95 flex flex-row sm:flex-col items-center sm:justify-center gap-3.5 sm:gap-2 border border-emerald-400/30 cursor-pointer text-left sm:text-center w-full"
+            >
+              <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-md flex items-center justify-center text-white shadow-inner group-hover:scale-110 transition-transform shrink-0">
+                <ShoppingBag className="w-5 h-5" />
+              </div>
+              <div className="flex-1 sm:flex-none">
+                <span className="block text-xs sm:text-sm font-black tracking-tight whitespace-nowrap">{language === 'bn' ? 'আমার অর্ডার' : 'My Orders'}</span>
+                <span className="block text-[10px] text-emerald-200 font-medium mt-0.5">{language === 'bn' ? 'কেনাকাটার তালিকা' : 'Track Orders'}</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-white/50 block sm:hidden shrink-0" />
+            </button>
+
+            <button
+              onClick={() => {
+                hapticFeedback.light();
+                setActiveTab('buyer_transactions');
+              }}
+              className="group relative overflow-hidden p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-violet-600 via-indigo-700 to-purple-800 hover:from-violet-500 hover:to-indigo-600 text-white shadow-lg shadow-indigo-500/25 transition-all duration-300 active:scale-95 flex flex-row sm:flex-col items-center sm:justify-center gap-3.5 sm:gap-2 border border-violet-400/30 cursor-pointer text-left sm:text-center w-full"
+            >
+              <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-md flex items-center justify-center text-white shadow-inner group-hover:scale-110 transition-transform shrink-0">
+                <Receipt className="w-5 h-5 text-violet-200" />
+              </div>
+              <div className="flex-1 sm:flex-none">
+                <span className="block text-xs sm:text-sm font-black tracking-tight whitespace-nowrap">{language === 'bn' ? 'ট্রানজেকশন হিস্ট্রি' : 'Transactions'}</span>
+                <span className="block text-[10px] text-violet-200 font-medium mt-0.5">{language === 'bn' ? 'ডিপোজিট ও অর্ডার' : 'Logs & History'}</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-white/50 block sm:hidden shrink-0" />
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2">
+            <button
+              onClick={() => {
+                hapticFeedback.medium();
+                setWithdrawModalOpen(true);
+              }}
+              className="group relative overflow-hidden p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 hover:from-emerald-500 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/25 transition-all duration-300 active:scale-95 flex flex-row sm:flex-col items-center sm:justify-center gap-3.5 sm:gap-2 border border-emerald-400/30 cursor-pointer text-left sm:text-center w-full"
+            >
+              <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-md flex items-center justify-center text-white shadow-inner group-hover:scale-110 transition-transform shrink-0">
+                <ArrowUpRight className="w-5 h-5" />
+              </div>
+              <div className="flex-1 sm:flex-none">
+                <span className="block text-xs sm:text-sm font-black tracking-tight whitespace-nowrap">{t.withdraw}</span>
+                <span className="block text-[10px] text-emerald-200 font-medium mt-0.5">{language === 'bn' ? 'টাকা তুলুন' : 'Cash Out'}</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-white/50 block sm:hidden shrink-0" />
+            </button>
+
+            <button
+              onClick={() => {
+                hapticFeedback.light();
+                setActiveTab('history');
+              }}
+              className="group relative overflow-hidden p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-slate-800 via-slate-900 to-zinc-900 hover:from-slate-700 hover:to-zinc-800 text-white shadow-lg shadow-slate-900/25 transition-all duration-300 active:scale-95 flex flex-row sm:flex-col items-center sm:justify-center gap-3.5 sm:gap-2 border border-slate-700/60 cursor-pointer text-left sm:text-center w-full"
+            >
+              <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center text-slate-200 shadow-inner group-hover:scale-110 transition-transform shrink-0">
+                <History className="w-5 h-5 text-indigo-300" />
+              </div>
+              <div className="flex-1 sm:flex-none">
+                <span className="block text-xs sm:text-sm font-black tracking-tight whitespace-nowrap">{t.history}</span>
+                <span className="block text-[10px] text-slate-400 font-medium mt-0.5">{language === 'bn' ? 'লেনদেন ইতিহাস' : 'Logs'}</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-white/40 block sm:hidden shrink-0" />
+            </button>
+
+            <button
+              onClick={() => {
+                hapticFeedback.light();
+                setActiveTab('sellers');
+              }}
+              className="group relative overflow-hidden p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-amber-600 via-amber-700 to-orange-800 hover:from-amber-500 hover:to-orange-700 text-white shadow-lg shadow-amber-500/25 transition-all duration-300 active:scale-95 flex flex-row sm:flex-col items-center sm:justify-center gap-3.5 sm:gap-2 border border-amber-400/30 cursor-pointer text-left sm:text-center w-full"
+            >
+              <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-md flex items-center justify-center text-white shadow-inner group-hover:scale-110 transition-transform shrink-0">
+                <Trophy className="w-5 h-5 text-amber-200" />
+              </div>
+              <div className="flex-1 sm:flex-none">
+                <span className="block text-xs sm:text-sm font-black tracking-tight whitespace-nowrap">{language === 'bn' ? 'সেলার্স' : 'Sellers'}</span>
+                <span className="block text-[10px] text-amber-200 font-medium mt-0.5">{language === 'bn' ? 'সেরা সেলার' : 'Leaderboard'}</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-white/50 block sm:hidden shrink-0" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {appMode === 'buying' ? (
+        /* Buying Gmail Statistics */
+        <div className="rounded-3xl bg-white border border-slate-200/80 p-5 sm:p-6 shadow-sm space-y-4">
+          <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
+            <div className="p-2.5 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+              <ShoppingBag className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-black text-white">{t.memberIdCard}</span>
-                {hasWithdrawn ? (
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-extrabold">
-                    {t.verifiedMember}
-                  </span>
-                ) : (
-                  <span className="px-2 py-0.5 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-[10px] font-extrabold">
-                    {t.generalMember}
-                  </span>
-                )}
-              </div>
-              <p className="text-[11px] text-indigo-200">
-                {t.memberIdCardSubtitle}
+              <h3 className="text-sm sm:text-base font-black text-slate-900">
+                {language === 'bn' ? 'জিমেইল ক্রয় পরিসংখ্যান' : 'Gmail Buying Statistics'}
+              </h3>
+              <p className="text-xs text-slate-500 font-medium">
+                {language === 'bn' ? 'আপনার ক্রয়কৃত জিমেইল অর্ডারসমূহের স্ট্যাটাস' : 'Status of your purchased Gmail orders'}
               </p>
             </div>
           </div>
 
-          <button
-            onClick={() => {
-              hapticFeedback.medium();
-              setActiveTab('id_card');
-            }}
-            className="w-full sm:w-auto px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-amber-950 text-xs font-black shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer shrink-0"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>কার্ড দেখুন ও ডাউনলোড (ID Card)</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* 2. MAIN BALANCE & WALLET ACTIONS */}
-      <div className="rounded-3xl bg-white border border-slate-200/80 p-5 shadow-sm space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {/* Main Balance (Real-time via useUserBalance hook) */}
-          <div className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white p-4 rounded-2xl shadow-lg">
-            <p className="text-xs uppercase tracking-wider opacity-80">Available Balance</p>
-            <h2 className="text-3xl font-black mt-1 font-mono">
-              {balanceLoading ? "..." : `৳${realTimeBalance.toFixed(2)}`}
-            </h2>
-          </div>
-
-          {/* Hold Balance */}
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-200/80">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-extrabold text-amber-800 flex items-center gap-1.5">
-                <Hourglass className="w-4 h-4 text-amber-600" />
-                {t.holdBalance}
-              </span>
-              <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-800 border border-amber-300 text-[10px] font-bold">
-                Reviewing
-              </span>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+            <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-100 flex flex-col justify-between">
+              <span className="text-[11px] font-bold text-indigo-900 uppercase">Total Orders</span>
+              <span className="text-2xl font-black text-indigo-950 font-mono mt-2">{totalBoughtQty} টি</span>
             </div>
-            <div className="text-2xl sm:text-3xl font-black text-amber-800 font-mono">
-              ৳{holdBalance}
+
+            <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-100 flex flex-col justify-between">
+              <span className="text-[11px] font-bold text-emerald-900 uppercase">Approved</span>
+              <span className="text-2xl font-black text-emerald-950 font-mono mt-2">{approvedBoughtQty} টি</span>
             </div>
-            <span className="text-[10px] text-slate-500 font-medium mt-0.5 block">
-              {t.holdBalanceNotice}
-            </span>
+
+            <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-100 flex flex-col justify-between">
+              <span className="text-[11px] font-bold text-amber-900 uppercase">Pending</span>
+              <span className="text-2xl font-black text-amber-950 font-mono mt-2">{pendingBoughtQty} টি</span>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-rose-50/70 border border-rose-100 flex flex-col justify-between">
+              <span className="text-[11px] font-bold text-rose-900 uppercase">Rejected</span>
+              <span className="text-2xl font-black text-rose-950 font-mono mt-2">{rejectedBoughtQty} টি</span>
+            </div>
           </div>
         </div>
-
-        {/* Action Buttons */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          <button
-            onClick={() => {
-              hapticFeedback.medium();
-              setWithdrawModalOpen(true);
-            }}
-            className="py-3 px-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs font-black shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-2"
-          >
-            <Wallet className="w-4 h-4" />
-            <span>{t.withdraw}</span>
-          </button>
-
-          <button
-            onClick={() => {
-              hapticFeedback.light();
-              setActiveTab('history');
-            }}
-            className="py-3 px-3 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 text-xs font-bold border border-slate-200 transition-all flex items-center justify-center gap-2"
-          >
-            <History className="w-4 h-4 text-slate-600" />
-            <span>{t.history}</span>
-          </button>
-
-          <button
-            onClick={() => {
-              hapticFeedback.light();
-              setActiveTab('sellers');
-            }}
-            className="col-span-2 sm:col-span-1 py-3 px-3 rounded-2xl bg-amber-50 hover:bg-amber-100 active:scale-95 text-amber-900 text-xs font-extrabold border border-amber-200 transition-all flex items-center justify-center gap-2"
-          >
-            <Trophy className="w-4 h-4 text-amber-600" />
-            <span>{t.sellers}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* 3. DAILY REWARD & LOGIN STREAK */}
+      ) : (
+        <>
+          {/* 3. DAILY REWARD & LOGIN STREAK */}
       <div className="rounded-3xl bg-white border border-slate-200/80 p-5 shadow-sm space-y-4">
         <div className="flex items-center justify-between">
           <div>
@@ -691,6 +895,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </div>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 };

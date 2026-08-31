@@ -80,7 +80,7 @@ export const ReviewShifts: React.FC = () => {
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:gap-4 my-4">
-      {shiftsArray.slice(0, 2).map(([key], idx) => {
+      {(shiftsArray || []).slice(0, 2).map(([key], idx) => {
         const isFirst = idx === 0;
         const countdownInfo = countdowns[key] || { timeString: '00 : 00 : 00', isClose: false };
 

@@ -4,6 +4,7 @@ import { useApp } from './AppContext';
 import { translations, LANGUAGES } from './i18n';
 import { auth, signOut } from './firebase';
 import { usePWAInstall } from './usePWAInstall';
+import { useUserBalance } from './useUserBalance';
 import { hapticFeedback } from './haptics';
 import {
   X,
@@ -60,9 +61,18 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
     setActiveTab,
     setChatDrawerOpen,
     setNotifDrawerOpen,
-    mainBalance,
-    holdBalance,
+    appMode,
+    buyerOrders,
   } = useApp();
+
+  const { balance: realTimeBalance, depositBalance: realTimeDepositBalance, reservedBalance: realTimeReservedBalance, loading: balanceLoading } = useUserBalance(user);
+  const displayMainBalance = balanceLoading ? "..." : (Number(realTimeBalance !== undefined ? realTimeBalance : (profile?.balance || 0))).toFixed(2);
+  const displayDepositBalance = balanceLoading ? "..." : (Number(realTimeDepositBalance !== undefined ? realTimeDepositBalance : (profile?.deposit_balance || 0))).toFixed(2);
+  const displayHoldBalance = (profile?.hold || 0).toFixed(2);
+  const pendingOrdersSum = (buyerOrders || [])
+    .filter((o) => o && o.userId === user?.uid && (o.status === 'pending' || o.status === 'processing'))
+    .reduce((sum, o) => sum + (Number(o.amount || (Number(o.unitPrice || 0) * Number(o.quantity || 1))) || 0), 0);
+  const displayReservedBalance = balanceLoading ? "..." : (pendingOrdersSum > 0 ? pendingOrdersSum : (Number(realTimeReservedBalance !== undefined ? realTimeReservedBalance : (profile?.reserved_balance || 0)))).toFixed(2);
 
   const t = translations[language];
   const { isInstallable, promptInstall } = usePWAInstall();
@@ -174,18 +184,52 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                 </div>
 
                 {/* Wallet quick balance bar */}
-                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800/80">
-                  <button
-                    onClick={() => closeAndExecute(() => setActiveTab('withdraw'))}
-                    className="bg-slate-800/80 hover:bg-slate-800 rounded-xl p-2 flex items-center justify-between border border-slate-700/60 transition-colors cursor-pointer"
-                  >
-                    <span className="text-[10px] text-slate-400 font-medium">Main:</span>
-                    <span className="text-xs font-black text-emerald-400 font-mono">৳{mainBalance}</span>
-                  </button>
-                  <div className="bg-slate-800/80 rounded-xl p-2 flex items-center justify-between border border-slate-700/60">
-                    <span className="text-[10px] text-slate-400 font-medium">Hold:</span>
-                    <span className="text-xs font-black text-amber-400 font-mono">৳{holdBalance}</span>
-                  </div>
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80">
+                  {appMode === 'buying' ? (
+                    <>
+                      <button
+                        onClick={() => closeAndExecute(() => setActiveTab('buyer_wallet'))}
+                        className="bg-slate-800/80 hover:bg-slate-800/95 rounded-xl p-2.5 flex flex-col justify-center border border-slate-700/60 transition-colors cursor-pointer text-left overflow-hidden min-w-0"
+                      >
+                        <span className="text-[10px] sm:text-xs text-indigo-300 font-bold whitespace-nowrap truncate block w-full tracking-tight">
+                          {language === 'bn' ? 'ফান্ড যোগ করুন' : 'Add Funds'}
+                        </span>
+                        <span className="text-xs sm:text-sm font-black text-amber-300 font-mono tracking-tight whitespace-nowrap mt-0.5 block">
+                          ৳{displayDepositBalance}
+                        </span>
+                      </button>
+                      <div className="bg-slate-800/80 rounded-xl p-2.5 flex flex-col justify-center border border-slate-700/60 text-left overflow-hidden min-w-0">
+                        <span className="text-[10px] sm:text-xs text-slate-400 font-bold whitespace-nowrap truncate block w-full tracking-tight">
+                          {language === 'bn' ? 'লকড ব্যালেন্স' : 'Locked Balance'}
+                        </span>
+                        <span className="text-xs sm:text-sm font-black text-white font-mono tracking-tight whitespace-nowrap mt-0.5 block">
+                          ৳{displayReservedBalance}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => closeAndExecute(() => setActiveTab('withdraw'))}
+                        className="bg-slate-800/80 hover:bg-slate-800/95 rounded-xl p-2.5 flex flex-col justify-center border border-slate-700/60 transition-colors cursor-pointer text-left overflow-hidden min-w-0"
+                      >
+                        <span className="text-[10px] sm:text-xs text-slate-400 font-bold whitespace-nowrap truncate block w-full tracking-tight">
+                          {language === 'bn' ? 'মেইন ব্যালেন্স' : 'Main Balance'}
+                        </span>
+                        <span className="text-xs sm:text-sm font-black text-emerald-400 font-mono tracking-tight whitespace-nowrap mt-0.5 block">
+                          ৳{displayMainBalance}
+                        </span>
+                      </button>
+                      <div className="bg-slate-800/80 rounded-xl p-2.5 flex flex-col justify-center border border-slate-700/60 text-left overflow-hidden min-w-0">
+                        <span className="text-[10px] sm:text-xs text-slate-400 font-bold whitespace-nowrap truncate block w-full tracking-tight">
+                          {language === 'bn' ? 'হোল্ড ব্যালেন্স' : 'Hold Balance'}
+                        </span>
+                        <span className="text-xs sm:text-sm font-black text-amber-400 font-mono tracking-tight whitespace-nowrap mt-0.5 block">
+                          ৳{displayHoldBalance}
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -329,7 +373,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
             </button>
 
             <button
-              onClick={() => closeAndExecute(() => setActiveTab('history'))}
+              onClick={() => closeAndExecute(() => setActiveTab(appMode === 'buying' ? 'buyer_transactions' : 'history'))}
               className="w-full flex items-center justify-between p-3 bg-white hover:bg-slate-100/80 border border-slate-200/80 rounded-2xl transition-all cursor-pointer"
             >
               <div className="flex items-center gap-3">
@@ -338,9 +382,15 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                 </div>
                 <div className="text-left">
                   <h5 className="text-xs font-extrabold text-slate-800">
-                    {language === 'bn' ? 'পে-আউট ও ট্রানজেকশন হিস্ট্রি' : 'Payout History'}
+                    {appMode === 'buying' 
+                      ? (language === 'bn' ? 'ডিপোজিট ও অর্ডার হিস্ট্রি' : 'Buyer Transaction History')
+                      : (language === 'bn' ? 'পে-আউট ও ট্রানজেকশন হিস্ট্রি' : 'Payout History')}
                   </h5>
-                  <span className="text-[10px] text-slate-400 font-medium">View past withdrawals & work audit</span>
+                  <span className="text-[10px] text-slate-400 font-medium">
+                    {appMode === 'buying'
+                      ? (language === 'bn' ? 'আপনার ডিপোজিট এবং অর্ডার ট্রানজেকশনসমূহ' : 'View deposit & purchase transactions')
+                      : 'View past withdrawals & work audit'}
+                  </span>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-slate-400" />
@@ -475,6 +525,24 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                 <div className="text-left">
                   <h5 className="text-xs font-extrabold text-slate-800">{t.privacyPolicy}</h5>
                   <span className="text-[10px] text-slate-400 font-medium">Data protection terms</span>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+            </button>
+
+            <button
+              onClick={() => closeAndExecute(() => setActiveTab('buyer_policies'))}
+              className="w-full flex items-center justify-between p-3 bg-white hover:bg-slate-100/80 border border-slate-200/80 rounded-2xl transition-all cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center">
+                  <FileText className="w-4 h-4" />
+                </div>
+                <div className="text-left">
+                  <h5 className="text-xs font-extrabold text-slate-800">
+                    {language === 'bn' ? 'শর্তাবলী ও নীতিমালা' : 'Terms & Policies'}
+                  </h5>
+                  <span className="text-[10px] text-slate-400 font-medium">Terms and warranty rules</span>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-slate-400" />

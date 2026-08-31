@@ -8,6 +8,7 @@ import { ref, onValue } from 'firebase/database';
 import { Review, TopSellerItem, isExcludedSeller } from './types';
 import { AppLogo3D } from './AppLogo3D';
 import { DEFAULT_BENCHMARK_SELLERS } from './SellersView';
+import { SEO } from './SEO';
 import {
   ShieldCheck,
   Zap,
@@ -35,6 +36,7 @@ import {
   Trophy,
   Crown,
   User as UserIcon,
+  Pin,
 } from 'lucide-react';
 
 export const GuestLandingView: React.FC = () => {
@@ -51,6 +53,7 @@ export const GuestLandingView: React.FC = () => {
     appLogo,
     commissionPercent,
     signupBonusUser,
+    setActiveTab,
   } = useApp();
 
   const t = translations[language] || translations['bn'];
@@ -73,7 +76,10 @@ export const GuestLandingView: React.FC = () => {
             id: k,
           }));
 
-          const published = allList.filter((r) => r.status !== 'rejected');
+          const published = allList.filter((r) => {
+            const rStatus = (r.status || '').toLowerCase();
+            return rStatus === 'approved' || !r.status;
+          });
           let sum = 0;
           published.forEach((r) => {
             sum += Number(r.rating) || 5;
@@ -82,7 +88,14 @@ export const GuestLandingView: React.FC = () => {
           setTotalReviewsCount(published.length);
           setAvgRating(published.length > 0 ? sum / published.length : 5.0);
 
-          const sorted = [...published].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+          const sorted = [...published].sort((a, b) => {
+            const pinA = (a as any).pinned ? 1 : 0;
+            const pinB = (b as any).pinned ? 1 : 0;
+            if (pinA !== pinB) {
+              return pinB - pinA;
+            }
+            return (b.createdAt || 0) - (a.createdAt || 0);
+          });
           setLiveReviews(sorted);
         } else {
           setLiveReviews([]);
@@ -201,7 +214,7 @@ export const GuestLandingView: React.FC = () => {
     const combinedList = Array.from(listMap.values());
     combinedList.sort((a, b) => (Number(b.totalEarnings) || 0) - (Number(a.totalEarnings) || 0));
 
-    return combinedList.slice(0, 8).map((seller, idx) => ({
+    return (combinedList || []).slice(0, 8).map((seller, idx) => ({
       ...seller,
       rank: idx + 1,
       badge: idx === 0 ? 'VIP Champion' : idx < 3 ? 'Diamond VIP' : 'Gold Partner',
@@ -268,6 +281,17 @@ export const GuestLandingView: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans selection:bg-indigo-500 selection:text-white pb-12">
+      <SEO 
+        title="Buy & Sell Gmail Accounts - PVA USA, UK, BD Old | Mail Factory"
+        description="Buy & Sell Gmail PVA Accounts in BD. USA, UK, BD, Old Gmail 2010-2024. Instant delivery, bKash, Nagad, PayPal. Trusted since 2022 - 3200+ customers."
+        url="https://mailfactory.top/"
+        schemaData={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Mail Factory",
+          "url": "https://mailfactory.top"
+        }}
+      />
       {/* Landing Navbar */}
       <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
         <div className="max-w-5xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2">
@@ -371,23 +395,23 @@ export const GuestLandingView: React.FC = () => {
               </span>
             </div>
 
-            <h2 className="text-2xl sm:text-4xl font-black text-white leading-tight tracking-tight">
+            <h1 className="text-2xl sm:text-4xl font-black text-white leading-tight tracking-tight">
               {language === 'bn' ? (
                 <>
-                  আপনার জিমেইল বিক্রি করে <br />
+                  #১ বিশ্বস্ত জিমেইল কেনা-বেচার মার্কেটপ্লেস <br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400">
-                    প্রতিদিন নিশ্চিত পেমেন্ট ইনকাম করুন
+                    নিশ্চিত পেমেন্ট ও ইনকাম
                   </span>
                 </>
               ) : (
                 <>
-                  Sell Your Gmail Accounts & <br />
+                  #1 Trusted Gmail Buy & Sell Market <br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400">
-                    Get Instant Cash Daily
+                    in Bangladesh
                   </span>
                 </>
               )}
-            </h2>
+            </h1>
 
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
               {language === 'bn'
@@ -798,7 +822,14 @@ export const GuestLandingView: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {displayedReviews.slice(0, 3).map((rev) => {
+            {(displayedReviews || []).slice(0, 3).map((rev) => {
+              const uName = rev.userName || (rev as any).name || 'User';
+              const uPhoto = rev.userPhoto || (rev as any).avatarUrl || (rev as any).avatar || (rev as any).photoUrl || (rev as any).photo || (rev as any).photoURL || '';
+              const isPinned = (rev as any).pinned || false;
+              const isVerified = rev.isVerified || (rev as any).isVerified || false;
+              const textToShow = rev.text || (rev as any).comment || '';
+              const isBn = language === 'bn';
+
               const dateStr = rev.createdAt 
                 ? new Date(rev.createdAt).toLocaleDateString(language === 'bn' ? 'bn-BD' : 'en-US', {
                     day: 'numeric',
@@ -810,19 +841,50 @@ export const GuestLandingView: React.FC = () => {
                 <div key={rev.id} className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/80 space-y-2.5 hover:border-slate-600 transition-all flex flex-col justify-between">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-black flex items-center justify-center text-xs overflow-hidden border border-slate-700 shadow-sm shrink-0">
-                          {rev.userPhoto ? (
-                            <img src={rev.userPhoto} alt={rev.userName} width={32} height={32} loading="lazy" decoding="async" className="w-full h-full object-cover" />
-                          ) : (
-                            rev.userName?.charAt(0).toUpperCase() || 'U'
-                          )}
-                        </div>
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        {/* Dynamic Avatar Resolver */}
+                        {uPhoto ? (
+                          <img
+                            src={uPhoto}
+                            alt={uName}
+                            referrerPolicy="no-referrer"
+                            className="w-8 h-8 rounded-full object-cover shrink-0 border border-slate-700"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const sibling = e.currentTarget.nextElementSibling as HTMLElement;
+                              if (sibling) sibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+
+                        {/* Fallback Letter Placeholder */}
+                        {uPhoto ? (
+                          <div 
+                            style={{ display: 'none' }}
+                            className="w-8 h-8 rounded-full bg-indigo-500/10 text-indigo-400 font-extrabold text-xs flex items-center justify-center shrink-0 border border-indigo-500/20"
+                          >
+                            {uName.charAt(0).toUpperCase()}
+                          </div>
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-indigo-500/10 text-indigo-400 font-extrabold text-xs flex items-center justify-center shrink-0 border border-indigo-500/20">
+                            {uName.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+
                         <div className="min-w-0">
-                          <div className="flex items-center gap-1">
-                            <span className="text-xs font-extrabold text-white truncate">{rev.userName}</span>
-                            {rev.isVerified && (
-                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" title="Verified Seller" />
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-xs font-extrabold text-white truncate">{uName}</span>
+                            {isVerified && (
+                              <span className="inline-flex items-center gap-0.5 px-1 py-0.2 rounded-full bg-emerald-500/10 text-emerald-400 text-[7px] font-black tracking-wide border border-emerald-500/20 shrink-0">
+                                <ShieldCheck className="w-2.5 h-2.5" />
+                                {isBn ? 'ভেরিফাইড' : 'Verified'}
+                              </span>
+                            )}
+                            {isPinned && (
+                              <span className="inline-flex items-center gap-0.5 px-1 py-0.2 rounded-full bg-amber-500/10 text-amber-400 text-[7px] font-black tracking-wide border border-amber-500/20 shrink-0">
+                                <Pin className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
+                                {isBn ? 'পিনড' : 'Pinned'}
+                              </span>
                             )}
                           </div>
                           <span className="text-[10px] text-slate-400 font-medium block">
@@ -840,7 +902,7 @@ export const GuestLandingView: React.FC = () => {
                       </div>
                     </div>
                     <p className="text-[11px] text-slate-300 font-medium leading-relaxed italic line-clamp-3">
-                      "{rev.text}"
+                      "{textToShow}"
                     </p>
                   </div>
 
@@ -890,6 +952,61 @@ export const GuestLandingView: React.FC = () => {
             </button>
           </div>
         </section>
+
+        {/* HOMEPAGE SEO CONTENT SECTION */}
+        <section className="p-6 md:p-8 rounded-3xl bg-slate-800/40 border border-slate-800 space-y-6 text-slate-300 leading-relaxed text-xs md:text-sm">
+          <p>
+            Looking to <strong>buy gmail accounts</strong> or <strong>sell old gmail</strong>? Mail Factory is Bangladesh's most trusted Gmail market since 2022. We do both - <strong>gmail kinbo</strong> and <strong>gmail bikri korbo</strong>. Whether you need USA PVA, BD PVA, or Old Gmail 2010-2024 for YouTube and business, we have instant stock. And if you have <strong>puran gmail bikri</strong> to do, we give best price with instant bKash payment.
+          </p>
+
+          <h2 className="text-lg md:text-xl font-black text-white flex items-center gap-2.5 pt-2 border-t border-slate-800/80">
+            <span className="w-1.5 h-5 bg-indigo-500 rounded-full" />
+            Buy Gmail PVA Accounts - USA, UK, BD, Old
+          </h2>
+          <p>
+            Want to <strong>buy gmail pva accounts</strong>? We provide 100% phone verified Gmail created with clean IP. Best for YouTube, Google Ads, business.{' '}
+            <a 
+              href="/buy-gmail-accounts"
+              onClick={(e) => {
+                e.preventDefault();
+                setActiveTab('buy-gmail-accounts');
+              }}
+              className="text-indigo-400 hover:text-indigo-300 underline font-extrabold inline-flex items-center gap-1"
+            >
+              See Price & Buy Now →
+            </a>
+          </p>
+
+          <h2 className="text-lg md:text-xl font-black text-white flex items-center gap-2.5 pt-2 border-t border-slate-800/80">
+            <span className="w-1.5 h-5 bg-indigo-500 rounded-full" />
+            Sell Your Old Gmail Accounts for Instant Cash
+          </h2>
+          <p>
+            Have old Gmail 2010-2019? <strong>Sell gmail accounts</strong> to us for best price in BD. Instant bKash, Nagad, PayPal payment in 2 hours. Safe & trusted.{' '}
+            <a 
+              href="/sell-gmail-accounts"
+              onClick={(e) => {
+                e.preventDefault();
+                setActiveTab('sell-old-gmail-accounts');
+              }}
+              className="text-indigo-400 hover:text-indigo-300 underline font-extrabold inline-flex items-center gap-1"
+            >
+              Get Price Now →
+            </a>
+          </p>
+
+          <h2 className="text-lg md:text-xl font-black text-white flex items-center gap-2.5 pt-2 border-t border-slate-800/80">
+            <span className="w-1.5 h-5 bg-indigo-500 rounded-full" />
+            Why 3200+ Customers Trust Mail Factory?
+          </h2>
+          <ul className="list-disc pl-5 space-y-2 text-slate-300">
+            <li>Since 2022, Real Office Khulna, BD</li>
+            <li>100% PVA Verified Gmail</li>
+            <li>Instant Delivery in 5-10 Mins</li>
+            <li>bKash, Nagad, PayPal, Crypto Accepted</li>
+            <li>24/7 WhatsApp Support</li>
+          </ul>
+        </section>
       </main>
 
       {/* Landing Footer */}
@@ -924,41 +1041,91 @@ export const GuestLandingView: React.FC = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto py-4 space-y-3 pr-1">
-              {displayedReviews.map((rev) => (
-                <div key={rev.id} className="p-3.5 rounded-2xl bg-slate-800/70 border border-slate-700/70 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center overflow-hidden">
-                        {rev.userPhoto ? (
-                          <img src={rev.userPhoto} alt={rev.userName} width={28} height={28} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+              {displayedReviews.map((rev) => {
+                const uName = rev.userName || (rev as any).name || 'User';
+                const uPhoto = rev.userPhoto || (rev as any).avatarUrl || (rev as any).avatar || (rev as any).photoUrl || (rev as any).photo || (rev as any).photoURL || '';
+                const isPinned = (rev as any).pinned || false;
+                const isVerified = rev.isVerified || (rev as any).isVerified || false;
+                const textToShow = rev.text || (rev as any).comment || '';
+                const isBn = language === 'bn';
+
+                const dateStr = rev.createdAt 
+                  ? new Date(rev.createdAt).toLocaleDateString(isBn ? 'bn-BD' : 'en-US', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric'
+                    })
+                  : '';
+
+                return (
+                  <div key={rev.id} className="p-3.5 rounded-2xl bg-slate-800/70 border border-slate-700/70 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        {/* Dynamic Avatar Resolver */}
+                        {uPhoto ? (
+                          <img
+                            src={uPhoto}
+                            alt={uName}
+                            referrerPolicy="no-referrer"
+                            className="w-8 h-8 rounded-full object-cover shrink-0 border border-slate-700"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const sibling = e.currentTarget.nextElementSibling as HTMLElement;
+                              if (sibling) sibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+
+                        {/* Fallback Letter Placeholder */}
+                        {uPhoto ? (
+                          <div 
+                            style={{ display: 'none' }}
+                            className="w-8 h-8 rounded-full bg-indigo-500/10 text-indigo-400 font-extrabold text-xs flex items-center justify-center shrink-0 border border-indigo-500/20"
+                          >
+                            {uName.charAt(0).toUpperCase()}
+                          </div>
                         ) : (
-                          rev.userName?.charAt(0).toUpperCase() || 'U'
+                          <div className="w-8 h-8 rounded-full bg-indigo-500/10 text-indigo-400 font-extrabold text-xs flex items-center justify-center shrink-0 border border-indigo-500/20">
+                            {uName.charAt(0).toUpperCase()}
+                          </div>
                         )}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs font-extrabold text-white">{rev.userName}</span>
-                          {rev.isVerified && <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />}
+
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-xs font-extrabold text-white truncate">{uName}</span>
+                            {isVerified && (
+                              <span className="inline-flex items-center gap-0.5 px-1 py-0.2 rounded-full bg-emerald-500/10 text-emerald-400 text-[7px] font-black tracking-wide border border-emerald-500/20 shrink-0">
+                                <ShieldCheck className="w-2.5 h-2.5" />
+                                {isBn ? 'ভেরিফাইড' : 'Verified'}
+                              </span>
+                            )}
+                            {isPinned && (
+                              <span className="inline-flex items-center gap-0.5 px-1 py-0.2 rounded-full bg-amber-500/10 text-amber-400 text-[7px] font-black tracking-wide border border-amber-500/20 shrink-0">
+                                <Pin className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
+                                {isBn ? 'পিনড' : 'Pinned'}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[10px] text-slate-400 font-medium block">
+                            {dateStr}
+                          </span>
                         </div>
-                        <span className="text-[10px] text-slate-400 font-medium">
-                          {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString() : ''}
-                        </span>
+                      </div>
+                      <div className="flex items-center text-amber-400 text-xs">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Star
+                            key={s}
+                            className={`w-3 h-3 ${s <= (rev.rating || 5) ? 'fill-amber-400 text-amber-400' : 'fill-slate-700 text-slate-600'}`}
+                          />
+                        ))}
                       </div>
                     </div>
-                    <div className="flex items-center text-amber-400 text-xs">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <Star
-                          key={s}
-                          className={`w-3 h-3 ${s <= (rev.rating || 5) ? 'fill-amber-400 text-amber-400' : 'fill-slate-700 text-slate-600'}`}
-                        />
-                      ))}
-                    </div>
+                    <p className="text-xs text-slate-300 font-normal leading-relaxed">
+                      "{textToShow}"
+                    </p>
                   </div>
-                  <p className="text-xs text-slate-300 font-normal leading-relaxed">
-                    "{rev.text}"
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="pt-3 border-t border-slate-800">

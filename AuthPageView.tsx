@@ -328,21 +328,38 @@ export const AuthPageView: React.FC<AuthPageViewProps> = ({
         }
       }
     } catch (err: any) {
-      console.error("Auth error:", err);
+      const code = err?.code || '';
+      const errMsg = (err?.message || '').toLowerCase();
+      const isInvalidCred =
+        code === 'auth/invalid-credential' ||
+        code === 'auth/wrong-password' ||
+        code === 'auth/user-not-found' ||
+        errMsg.includes('invalid-credential') ||
+        errMsg.includes('wrong-password') ||
+        errMsg.includes('user-not-found');
+
+      if (isInvalidCred || code === 'auth/email-already-in-use' || code === 'auth/weak-password' || code === 'auth/invalid-email') {
+        console.warn("Auth check warning:", code || errMsg);
+      } else {
+        console.error("Auth error:", err);
+      }
+
       let msg = err.message || 'Authentication error';
-      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
-        msg = language === 'bn' ? 'ভুল ইমেইল অথবা পাসওয়ার্ড।' : 'Invalid email or password.';
-      } else if (err.code === 'auth/email-already-in-use') {
+      if (isInvalidCred) {
+        msg = language === 'bn' 
+          ? 'ভুল ইমেইল অথবা পাসওয়ার্ড দেওয়া হয়েছে। অনুগ্রহ করে সঠিক পাসওয়ার্ড লিখুন অথবা পাসওয়ার্ড রিসেট করুন।' 
+          : 'Invalid email or password. Please verify your credentials or reset your password.';
+      } else if (code === 'auth/email-already-in-use' || errMsg.includes('email-already-in-use')) {
         msg = language === 'bn' ? 'এই ইমেইল দিয়ে ইতিমধ্যে একটি একাউন্ট খোলা আছে। অনুগ্রহ করে লগইন করুন।' : 'Email is already registered. Please login.';
-      } else if (err.code === 'auth/weak-password') {
+      } else if (code === 'auth/weak-password' || errMsg.includes('weak-password')) {
         msg = language === 'bn' ? 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।' : 'Password should be at least 6 characters.';
-      } else if (err.code === 'auth/invalid-email') {
+      } else if (code === 'auth/invalid-email' || errMsg.includes('invalid-email')) {
         msg = language === 'bn' ? 'অনুগ্রহ করে একটি সঠিক ইমেইল অ্যাড্রেস লিখুন।' : 'Please enter a valid email address.';
-      } else if (err.code === 'auth/too-many-requests') {
+      } else if (code === 'auth/too-many-requests' || errMsg.includes('too-many-requests')) {
         msg = language === 'bn' ? 'অতিরিক্ত চেষ্টার কারণে সাময়িকভাবে ব্লক করা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।' : 'Too many unsuccessful login attempts. Please try again later.';
-      } else if (err.code === 'auth/network-request-failed') {
+      } else if (code === 'auth/network-request-failed' || errMsg.includes('network-request-failed')) {
         msg = language === 'bn' ? 'ইন্টারনেট কানেকশন সমস্যা। সংযোগ চেক করে পুনরায় চেষ্টা করুন।' : 'Network error. Please check your internet connection.';
-      } else if (err.code === 'auth/operation-not-allowed') {
+      } else if (code === 'auth/operation-not-allowed' || errMsg.includes('operation-not-allowed')) {
         msg = language === 'bn' ? 'Firebase Console-এ Email/Password অথেনটিকেশন সক্রিয় করা নেই।' : 'Email/Password sign-in is not enabled in Firebase Console.';
       }
       setErrorMessage(msg);
@@ -766,46 +783,7 @@ export const AuthPageView: React.FC<AuthPageViewProps> = ({
           </div>
         </div>
 
-        {/* Live Customer Reviews Trust Showcase on Auth Page */}
-        {liveReviews.length > 0 && (
-          <div className="w-full max-w-md mt-6 p-4 rounded-3xl bg-slate-800/60 border border-slate-700/70 backdrop-blur-md space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-xs font-black text-amber-300">
-                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                <span>{language === 'bn' ? 'সেলারদের সাম্প্রতিক রিভিউ' : 'Recent Seller Reviews'}</span>
-              </div>
-              <span className="text-[10px] text-slate-400 font-bold">
-                5.0 ★ ({liveReviews.length} {language === 'bn' ? 'টি রিভিউ' : 'reviews'})
-              </span>
-            </div>
 
-            <div className="space-y-2">
-              {liveReviews.slice(0, 2).map((rev) => (
-                <div key={rev.id} className="p-3 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-indigo-600/80 text-white font-bold text-[10px] flex items-center justify-center overflow-hidden">
-                        {rev.userPhoto ? (
-                          <img src={rev.userPhoto} alt={rev.userName} className="w-full h-full object-cover" />
-                        ) : (
-                          rev.userName?.charAt(0).toUpperCase() || 'U'
-                        )}
-                      </div>
-                      <span className="text-xs font-extrabold text-white truncate max-w-[130px]">{rev.userName}</span>
-                      {rev.isVerified && <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />}
-                    </div>
-                    <div className="flex items-center text-amber-400 text-[10px]">
-                      {'★'.repeat(rev.rating || 5)}
-                    </div>
-                  </div>
-                  <p className="text-[11px] text-slate-300 font-normal italic leading-relaxed line-clamp-2">
-                    "{rev.text}"
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Security Badge Footer */}
         <div className="text-center mt-6 text-[11px] text-slate-500 flex items-center justify-center gap-1.5 font-medium">

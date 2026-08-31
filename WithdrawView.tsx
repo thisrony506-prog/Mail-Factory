@@ -17,9 +17,11 @@ import {
 } from 'lucide-react';
 import { PaymentMethodConfig } from './types';
 import { hapticFeedback } from './haptics';
+import { useUserBalance } from './useUserBalance';
 
 export const WithdrawView: React.FC = () => {
   const {
+    user,
     language,
     profile,
     paymentMethods,
@@ -30,7 +32,9 @@ export const WithdrawView: React.FC = () => {
   } = useApp();
 
   const t = translations[language];
-  const availableBalance = profile?.balance || 0;
+  const { balance: realTimeBalance, depositBalance: realTimeDepositBalance, loading: balanceLoading } = useUserBalance(user);
+  const availableBalance = Number(realTimeBalance !== undefined ? realTimeBalance : (profile?.balance || 0));
+  const depositBalance = Number(realTimeDepositBalance !== undefined ? realTimeDepositBalance : (profile?.deposit_balance || 0));
 
   const methodsArray = (Object.entries(paymentMethods) as [string, PaymentMethodConfig][]).filter(([_, m]) => m.active);
 
@@ -299,15 +303,17 @@ export const WithdrawView: React.FC = () => {
           {/* Balance display box */}
           <div className="mt-5 p-2 sm:p-3 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex justify-around items-center shadow-sm">
             <div className="px-1 text-center">
-              <span className="text-[10px] sm:text-xs uppercase font-extrabold text-white/70 block tracking-widest">{t.mainBalance}</span>
-              <span className="text-base sm:text-xl font-black text-white font-mono mt-0.5 block">৳{availableBalance.toFixed(2)}</span>
+              <span className="text-[10px] sm:text-xs uppercase font-extrabold text-emerald-200 block tracking-widest">{language === 'bn' ? 'সেলিং ইনকাম (উত্তোলনযোগ্য)' : 'Selling Earnings (Withdrawable)'}</span>
+              <span className="text-base sm:text-xl font-black text-white font-mono mt-0.5 block">৳{balanceLoading ? "..." : availableBalance.toFixed(2)}</span>
             </div>
             <div className="w-px h-8 bg-white/20 mx-1" />
             <div className="px-1 text-center">
-              <span className="text-[10px] sm:text-xs uppercase font-extrabold text-white/70 block tracking-widest">{t.holdBalance}</span>
+              <span className="text-[10px] sm:text-xs uppercase font-extrabold text-amber-200 block tracking-widest">{t.holdBalance}</span>
               <span className="text-base sm:text-xl font-black text-amber-300 font-mono mt-0.5 block">৳{(profile?.hold || 0).toFixed(2)}</span>
             </div>
           </div>
+
+
         </div>
 
         {/* Success State */}

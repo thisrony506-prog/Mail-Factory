@@ -34,6 +34,7 @@ export const ExchangeView: React.FC = () => {
     submitGmails,
     maintenanceMode,
     user,
+    profile,
     setAuthModalOpen,
     setRateModalOpen,
   } = useApp();

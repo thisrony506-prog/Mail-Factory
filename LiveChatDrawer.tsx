@@ -54,7 +54,7 @@ export const LiveChatDrawer: React.FC = () => {
           </div>
           <button
             onClick={() => setChatDrawerOpen(false)}
-            className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+            className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -134,7 +134,7 @@ export const LiveChatDrawer: React.FC = () => {
               onClick={() => {
                 setInputVal(suggestion);
               }}
-              className="inline-block px-3 py-1.5 bg-white border border-slate-200 rounded-full text-[10px] font-bold text-indigo-600 hover:bg-indigo-50 transition-colors whitespace-nowrap"
+              className="inline-block px-3 py-1.5 bg-white border border-slate-200 rounded-full text-[10px] font-bold text-indigo-600 hover:bg-indigo-50 transition-colors whitespace-nowrap cursor-pointer"
             >
               {suggestion}
             </button>
@@ -152,7 +152,7 @@ export const LiveChatDrawer: React.FC = () => {
           />
           <button
             type="submit"
-            className="p-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow transition-all active:scale-95 flex items-center justify-center"
+            className="p-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow transition-all active:scale-95 flex items-center justify-center cursor-pointer"
           >
             <Send className="w-4 h-4" />
           </button>

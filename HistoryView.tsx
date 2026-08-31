@@ -22,6 +22,8 @@ export const HistoryView: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
+  const [visibleCount, setVisibleCount] = useState<number>(20);
+
   // Filter Submissions
   const filteredSubmissions = submissions.filter((sub) => {
     const parentNorm = normalizeSubmissionStatus(sub.status);
@@ -41,6 +43,8 @@ export const HistoryView: React.FC = () => {
     }
     return true;
   });
+
+  const paginatedSubmissions = filteredSubmissions.slice(0, visibleCount);
 
   const getStatusBadge = (status?: string) => {
     const norm = normalizeSubmissionStatus(status);
@@ -135,7 +139,7 @@ export const HistoryView: React.FC = () => {
           </div>
 
           {/* Submissions List */}
-          {filteredSubmissions.length === 0 ? (
+          {paginatedSubmissions.length === 0 ? (
             <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center text-slate-400">
               <Layers className="w-10 h-10 mx-auto mb-2 opacity-30 text-indigo-600" />
               <p className="text-xs font-bold text-slate-600">
@@ -146,7 +150,8 @@ export const HistoryView: React.FC = () => {
               </p>
             </div>
           ) : (
-            filteredSubmissions.map((sub, index) => {
+            <div className="space-y-3">
+              {paginatedSubmissions.map((sub, index) => {
               const subKey = sub.key || sub.id || String(index);
               const dateFormatted = new Date(sub.submittedAt).toLocaleString('en-GB', {
                 day: 'numeric',
@@ -217,7 +222,19 @@ export const HistoryView: React.FC = () => {
                   </div>
                 </div>
               );
-            })
+            })}
+
+            {visibleCount < filteredSubmissions.length && (
+              <div className="text-center pt-2">
+                <button
+                  onClick={() => setVisibleCount((prev) => prev + 20)}
+                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all shadow-xs cursor-pointer"
+                >
+                  {language === 'bn' ? 'আরও দেখুন (Load More)' : 'Load More'}
+                </button>
+              </div>
+            )}
+            </div>
           )}
         </div>
       )}

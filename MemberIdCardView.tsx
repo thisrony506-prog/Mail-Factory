@@ -393,7 +393,7 @@ export const MemberIdCardView: React.FC<MemberIdCardViewProps> = ({ onBack }) =>
   // Format Real Member ID derived consistently from User UID
   const cleanUid = useMemo(() => {
     const rawUid = profile?.uid || user?.uid || '8A72K9';
-    return rawUid.replace(/[^a-zA-Z0-9]/g, '').slice(0, 6).toUpperCase();
+    return (rawUid || "").replace(/[^a-zA-Z0-9]/g, "").slice(0, 6).toUpperCase();
   }, [profile?.uid, user?.uid]);
 
   const memberId = useMemo(() => {

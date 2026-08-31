@@ -297,21 +297,38 @@ export const AuthModal: React.FC = () => {
         setAuthModalOpen(false);
       }
     } catch (err: any) {
-      console.error("Auth error:", err);
+      const code = err?.code || '';
+      const errMsg = (err?.message || '').toLowerCase();
+      const isInvalidCred =
+        code === 'auth/invalid-credential' ||
+        code === 'auth/wrong-password' ||
+        code === 'auth/user-not-found' ||
+        errMsg.includes('invalid-credential') ||
+        errMsg.includes('wrong-password') ||
+        errMsg.includes('user-not-found');
+
+      if (isInvalidCred || code === 'auth/email-already-in-use' || code === 'auth/weak-password' || code === 'auth/invalid-email') {
+        console.warn("Auth check warning:", code || errMsg);
+      } else {
+        console.error("Auth error:", err);
+      }
+
       let msg = err.message || 'Authentication error';
-      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
-        msg = language === 'bn' ? 'ভুল ইমেইল অথবা পাসওয়ার্ড।' : 'Invalid email or password.';
-      } else if (err.code === 'auth/email-already-in-use') {
+      if (isInvalidCred) {
+        msg = language === 'bn' 
+          ? 'ভুল ইমেইল অথবা পাসওয়ার্ড দেওয়া হয়েছে। অনুগ্রহ করে সঠিক পাসওয়ার্ড লিখুন অথবা পাসওয়ার্ড রিসেট করুন।' 
+          : 'Invalid email or password. Please verify your credentials or reset your password.';
+      } else if (code === 'auth/email-already-in-use' || errMsg.includes('email-already-in-use')) {
         msg = language === 'bn' ? 'এই ইমেইল দিয়ে ইতিমধ্যে একটি একাউন্ট খোলা আছে। অনুগ্রহ করে লগইন করুন।' : 'Email is already registered. Please login.';
-      } else if (err.code === 'auth/weak-password') {
+      } else if (code === 'auth/weak-password' || errMsg.includes('weak-password')) {
         msg = language === 'bn' ? 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।' : 'Password should be at least 6 characters.';
-      } else if (err.code === 'auth/invalid-email') {
+      } else if (code === 'auth/invalid-email' || errMsg.includes('invalid-email')) {
         msg = language === 'bn' ? 'অনুগ্রহ করে একটি সঠিক ইমেইল অ্যাড্রেস লিখুন।' : 'Please enter a valid email address.';
-      } else if (err.code === 'auth/too-many-requests') {
+      } else if (code === 'auth/too-many-requests' || errMsg.includes('too-many-requests')) {
         msg = language === 'bn' ? 'অতিরিক্ত চেষ্টার কারণে সাময়িকভাবে ব্লক করা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।' : 'Too many unsuccessful login attempts. Please try again later.';
-      } else if (err.code === 'auth/network-request-failed') {
+      } else if (code === 'auth/network-request-failed' || errMsg.includes('network-request-failed')) {
         msg = language === 'bn' ? 'ইন্টারনেট কানেকশন সমস্যা। সংযোগ চেক করে পুনরায় চেষ্টা করুন।' : 'Network error. Please check your internet connection.';
-      } else if (err.code === 'auth/operation-not-allowed') {
+      } else if (code === 'auth/operation-not-allowed' || errMsg.includes('operation-not-allowed')) {
         msg = language === 'bn' ? 'Firebase Console-এ Email/Password অথেনটিকেশন সক্রিয় করা নেই।' : 'Email/Password sign-in is not enabled in Firebase Console.';
       }
       setErrorMessage(msg);

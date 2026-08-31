@@ -43,6 +43,8 @@ export interface TranslationSchema {
   trending: string;
   mainBalance: string;
   holdBalance: string;
+  depositBalance: string;
+  lockedBalance: string;
   withdraw: string;
   invite: string;
   dailyStreak: string;
@@ -201,6 +203,7 @@ export interface TranslationSchema {
   shiftReport: string;
   directWithdrawMethods: string;
   holdBalanceNotice: string;
+  buyerLockedNotice: string;
   dailyStreakBonusSub: string;
   streakBonusClaimedToday: string;
   ratePerTask: string;
@@ -276,6 +279,8 @@ export const translations: Record<Language, TranslationSchema> = {
     trending: "ট্রেন্ডিং",
     mainBalance: "মেইন ব্যালেন্স",
     holdBalance: "হোল্ড ব্যালেন্স",
+    depositBalance: "ডিপোজিট ব্যালেন্স",
+    lockedBalance: "লকড ব্যালেন্স",
     withdraw: "উত্তোলন",
     invite: "রেফার",
     dailyStreak: "ডেইলি লগইন স্ট্রিক",
@@ -434,6 +439,7 @@ export const translations: Record<Language, TranslationSchema> = {
     shiftReport: "রিপোর্ট দেওয়ার সময়",
     directWithdrawMethods: "সরাসরি বিকাশ, নগদ বা রকেটে উইথড্র সম্ভব",
     holdBalanceNotice: "কাজের অডিট শেষ হলে মেইন ব্যালেন্সে জমা হবে",
+    buyerLockedNotice: "অর্ডার ডেলিভারি বা রিজেক্ট না হওয়া পর্যন্ত টাকা লক থাকবে",
     dailyStreakBonusSub: "প্রতিদিন লগইন করুন এবং জিতে নিন ৳০.৫০ - ৳৪.০০ ফ্রি ক্যাশ বোনাস",
     streakBonusClaimedToday: "আজকের দৈনিক বোনাস সংগৃহীত হয়েছে ✅",
     ratePerTask: "প্রতি টাস্ক রেট:",
@@ -507,6 +513,8 @@ export const translations: Record<Language, TranslationSchema> = {
     "trending": "Trending",
     "mainBalance": "Main Balance",
     "holdBalance": "Hold Balance",
+    "depositBalance": "Deposit Balance",
+    "lockedBalance": "Locked Balance",
     "withdraw": "Withdraw",
     "invite": "Refer",
     "dailyStreak": "Daily Streak",
@@ -663,6 +671,7 @@ export const translations: Record<Language, TranslationSchema> = {
     "shiftReport": "Audit Window",
     "directWithdrawMethods": "Direct Payouts (bKash, Nagad, Rocket, USDT)",
     "holdBalanceNotice": "Hold balance will unlock automatically upon admin audit completion.",
+    "buyerLockedNotice": "Funds will remain locked until the order is delivered or rejected.",
     "dailyStreakBonusSub": "Check in daily to claim ৳0.50 - ৳4.00 free cash bonus!",
     "streakBonusClaimedToday": "Streak bonus already claimed today.",
     "ratePerTask": "Rate / Pcs",

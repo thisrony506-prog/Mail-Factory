@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { GmailType, TopSellerItem, isExcludedSeller } from './types';
 import { DEFAULT_BENCHMARK_SELLERS } from './SellersView';
+import { useUserBalance } from './useUserBalance';
 
 export const HomeView: React.FC = () => {
   const {
@@ -41,7 +42,8 @@ export const HomeView: React.FC = () => {
   const t = translations[language];
   const [selectedType, setSelectedType] = useState<GmailType>('new');
 
-  const availableBalance = profile?.balance || 0;
+  const { balance: realTimeBalance, loading: balanceLoading } = useUserBalance(user);
+  const availableBalance = realTimeBalance;
   const netBalance = availableBalance * 0.94; // 6% fee model
   const netUsd = netBalance / 120; // 1 USD = 120 BDT
 
@@ -198,19 +200,19 @@ export const HomeView: React.FC = () => {
           {/* BDT Gross */}
           <div className="bg-white rounded-2xl p-3 border border-slate-200 text-center flex flex-col justify-center">
             <span className="text-[10px] font-extrabold text-slate-400 uppercase mb-0.5">BDT (Gross)</span>
-            <span className="text-sm font-black text-slate-800 font-mono">৳{availableBalance.toFixed(2)}</span>
+            <span className="text-sm font-black text-slate-800 font-mono">{balanceLoading ? "..." : `৳${availableBalance.toFixed(2)}`}</span>
           </div>
           
           {/* Net BDT */}
           <div className="bg-white rounded-2xl p-3 border border-emerald-200 text-center flex flex-col justify-center">
              <span className="text-[10px] font-extrabold text-emerald-500 uppercase mb-0.5">BDT (Net)</span>
-             <span className="text-sm font-black text-emerald-700 font-mono">৳{netBalance.toFixed(2)}</span>
+             <span className="text-sm font-black text-emerald-700 font-mono">{balanceLoading ? "..." : `৳${netBalance.toFixed(2)}`}</span>
           </div>
 
           {/* USDT */}
           <div className="bg-white rounded-2xl p-3 border border-amber-200 text-center flex flex-col justify-center">
              <span className="text-[10px] font-extrabold text-amber-500 uppercase mb-0.5">USD/USDT</span>
-             <span className="text-sm font-black text-amber-600 font-mono">${netUsd.toFixed(2)}</span>
+             <span className="text-sm font-black text-amber-600 font-mono">{balanceLoading ? "..." : `$${netUsd.toFixed(2)}`}</span>
           </div>
         </div>
       </div>

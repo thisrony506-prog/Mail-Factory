@@ -44,8 +44,8 @@ export const EditProfileView: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      setError(language === 'bn' ? 'ফাইল সাইজ ৫MB এর বেশি হতে পারবে না' : 'File must be under 5MB');
+    if (file.size > 50 * 1024 * 1024) {
+      setError(language === 'bn' ? 'ফাইল সাইজ ৫০MB এর বেশি হতে পারবে না' : 'File must be under 50MB');
       return;
     }
 
@@ -170,9 +170,9 @@ export const EditProfileView: React.FC = () => {
               />
             </label>
           </div>
-          <span className="text-xs text-slate-500 font-bold mt-3">
+          <span className="text-xs text-indigo-600 font-extrabold mt-3 animate-pulse">
             {isUploading
-              ? 'ছবি আপলোড হচ্ছে...'
+              ? (language === 'bn' ? '⚡ ছবিটি অটো-কমপ্রেস ও আপলোড হচ্ছে...' : '⚡ Auto-compressing & uploading photo...')
               : language === 'bn'
               ? 'প্রোফাইল ছবি পরিবর্তন করতে ক্যামেরায় ট্যাপ করুন'
               : 'Tap camera to upload new photo'}

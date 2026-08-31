@@ -104,14 +104,27 @@ export const ChangePasswordView: React.FC = () => {
       setNewPass('');
       setConfirmPass('');
     } catch (err: any) {
-      console.error(err);
-      if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+      const code = err?.code || '';
+      const errMsg = (err?.message || '').toLowerCase();
+      const isInvalidCred =
+        code === 'auth/wrong-password' ||
+        code === 'auth/invalid-credential' ||
+        errMsg.includes('wrong-password') ||
+        errMsg.includes('invalid-credential');
+
+      if (isInvalidCred || code === 'auth/too-many-requests') {
+        console.warn('Password change notice:', code || errMsg);
+      } else {
+        console.error(err);
+      }
+
+      if (isInvalidCred) {
         setError(
           language === 'bn'
             ? 'বর্তমান পাসওয়ার্ডটি সঠিক নয়। আবার চেষ্টা করুন।'
             : 'Current password is incorrect.'
         );
-      } else if (err.code === 'auth/too-many-requests') {
+      } else if (code === 'auth/too-many-requests' || errMsg.includes('too-many-requests')) {
         setError(
           language === 'bn'
             ? 'অনেকবার ভুল চেষ্টা করা হয়েছে। কিছুক্ষণ পর চেষ্টা করুন।'

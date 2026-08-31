@@ -9,7 +9,10 @@ export async function uploadToImgBB(file: File): Promise<string> {
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
-        const maxDimension = 500;
+        
+        // Dynamic dimension scaling based on original size
+        // Keeps profile pictures crisp (max 800px)
+        const maxDimension = 800;
 
         if (width > height) {
           if (width > maxDimension) {
@@ -32,7 +35,21 @@ export async function uploadToImgBB(file: File): Promise<string> {
         }
 
         ctx.drawImage(img, 0, 0, width, height);
-        const base64Data = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
+        
+        // Dynamically adjust JPEG compression quality based on input file size
+        // If file is > 10MB, compress aggressively (0.75)
+        // If file is > 5MB, compress moderately (0.80)
+        // Otherwise, compress lightly (0.85)
+        let quality = 0.85;
+        if (file.size > 10 * 1024 * 1024) {
+          quality = 0.70;
+        } else if (file.size > 5 * 1024 * 1024) {
+          quality = 0.78;
+        } else if (file.size > 2 * 1024 * 1024) {
+          quality = 0.82;
+        }
+
+        const base64Data = canvas.toDataURL('image/jpeg', quality).split(',')[1];
 
         const formData = new FormData();
         formData.append('key', IMGBB_API_KEY);
@@ -65,3 +82,4 @@ export async function uploadToImgBB(file: File): Promise<string> {
     reader.readAsDataURL(file);
   });
 }
+

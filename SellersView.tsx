@@ -15,18 +15,7 @@ import { TopSellerItem, isExcludedSeller } from './types';
 
 const ADMIN_EMAILS = ['gmrony135@gmail.com', 'mailfactorybd@gmail.com', 'iamronyofficial1@gmail.com'];
 
-export const DEFAULT_BENCHMARK_SELLERS: TopSellerItem[] = [
-  { uid: 'top_1', username: 'Rafiqul Islam', email: 'rafiqul@gmail.com', photoURL: '', totalEarnings: 18450, balance: 1250, manual_approved_count: 1420, total_submitted: 1450, badge: 'VIP Champion', rank: 1 },
-  { uid: 'top_2', username: 'Sabbir Ahmed', email: 'sabbir@gmail.com', photoURL: '', totalEarnings: 14200, balance: 980, manual_approved_count: 1110, total_submitted: 1140, badge: 'Diamond VIP', rank: 2 },
-  { uid: 'top_3', username: 'Anika Rahman', email: 'anika@gmail.com', photoURL: '', totalEarnings: 11800, balance: 750, manual_approved_count: 920, total_submitted: 940, badge: 'Diamond VIP', rank: 3 },
-  { uid: 'top_4', username: 'Hasan Mahmud', email: 'hasan@gmail.com', photoURL: '', totalEarnings: 9650, balance: 620, manual_approved_count: 760, total_submitted: 780, badge: 'Gold Partner', rank: 4 },
-  { uid: 'top_5', username: 'Mahfuz Alam', email: 'mahfuz@gmail.com', photoURL: '', totalEarnings: 8200, balance: 510, manual_approved_count: 640, total_submitted: 650, badge: 'Gold Partner', rank: 5 },
-  { uid: 'top_6', username: 'Nusrat Jahan', email: 'nusrat@gmail.com', photoURL: '', totalEarnings: 6900, balance: 430, manual_approved_count: 530, total_submitted: 540, badge: 'Gold Partner', rank: 6 },
-  { uid: 'top_7', username: 'Kamrul Islam', email: 'kamrul@gmail.com', photoURL: '', totalEarnings: 5800, balance: 390, manual_approved_count: 450, total_submitted: 460, badge: 'Silver Member', rank: 7 },
-  { uid: 'top_8', username: 'Fahim Shahriar', email: 'fahim@gmail.com', photoURL: '', totalEarnings: 4750, balance: 310, manual_approved_count: 370, total_submitted: 380, badge: 'Silver Member', rank: 8 },
-  { uid: 'top_9', username: 'Jubayer Hossain', email: 'jubayer@gmail.com', photoURL: '', totalEarnings: 3900, balance: 250, manual_approved_count: 300, total_submitted: 310, badge: 'Silver Member', rank: 9 },
-  { uid: 'top_10', username: 'Imran Khan', email: 'imran@gmail.com', photoURL: '', totalEarnings: 3150, balance: 200, manual_approved_count: 240, total_submitted: 250, badge: 'Bronze Member', rank: 10 },
-];
+export const DEFAULT_BENCHMARK_SELLERS: TopSellerItem[] = [];
 
 export const SellersView: React.FC = () => {
   const { language, topSellers, allUsers, user, setActiveTab, syncRealUsersToTopSellers, addNotification } = useApp();

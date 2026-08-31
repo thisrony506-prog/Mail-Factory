@@ -615,4 +615,192 @@ export const checkFraudulentSignup = functions.database
     return null;
   });
 
+/**
+ * 4. Server-Side Deposit Verification & Automatic Balance Crediting
+ * Validates approved deposit requests and securely credits the user's wallet.
+ */
+export const onDepositStatusChange = functions.database
+  .ref("/deposit_requests/{depId}")
+  .onUpdate(async (change, context) => {
+    const before = change.before.val();
+    const after = change.after.val();
+    const depId = context.params.depId;
+
+    if (!after || !before) return null;
+
+    const isNowApproved = after.status === "approved";
+    const wasApproved = before.status === "approved";
+
+    if (isNowApproved && !wasApproved && !after.credited) {
+      // Mark as credited atomically first
+      await change.after.ref.update({
+        credited: true,
+        processedAt: Date.now(),
+      });
+
+      const userId = after.userId;
+      const amount = Number(after.amount) || 0;
+      const method = after.method || "Payment";
+      const trxId = after.trxId || depId;
+
+      if (amount <= 0 || !userId) return null;
+
+      try {
+        // Safe Atomic Server Transaction: Credit ONLY deposit_balance for buying Gmails
+        await db.ref(`users/${userId}`).transaction((user: any) => {
+          if (!user) return user;
+          return {
+            ...user,
+            deposit_balance: (Number(user.deposit_balance) || 0) + amount,
+          };
+        });
+
+        console.log(`Successfully credited deposit ৳${amount} to user ${userId}`);
+
+        // Record Transaction
+        await db.ref("transactions").push({
+          userId,
+          username: after.username || "Buyer",
+          type: "deposit",
+          category: "Deposit",
+          title: `Wallet Deposit via ${method}`,
+          amount: amount,
+          trxId: trxId,
+          status: "completed",
+          timestamp: Date.now(),
+          date: new Date().toISOString(),
+        });
+
+        // Push User In-App Notification
+        await db.ref(`users/${userId}/notifications`).push({
+          title: "Deposit Approved 🎉",
+          desc: `Your deposit of ৳${amount.toFixed(2)} via ${method} (TrxID: ${trxId}) has been verified and added to your balance!`,
+          type: "success",
+          read: false,
+          timestamp: Date.now(),
+          time: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+        });
+
+        // Send Email confirmation if configured
+        if (APP_PASSWORD) {
+          try {
+            const userRecord = await admin.auth().getUser(userId);
+            const email = userRecord.email;
+            const displayName = userRecord.displayName || after.username || "Buyer";
+            if (email) {
+              const transporter = getTransporter();
+              await transporter.sendMail({
+                from: '"Mail Factory" <mailfactorybd@gmail.com>',
+                to: email,
+                subject: `Deposit Confirmed: ৳${amount.toFixed(2)} Added to Wallet 💳`,
+                html: `
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
+                    <div style="background-color: #10B981; padding: 24px; text-align: center; color: #ffffff;">
+                      <h2 style="margin: 0;">Deposit Verified Successfully!</h2>
+                    </div>
+                    <div style="padding: 24px;">
+                      <p>Hello <strong>${displayName}</strong>,</p>
+                      <p>Your deposit of <strong>৳${amount.toFixed(2)}</strong> has been verified and credited to your Mail Factory balance.</p>
+                      <div style="background-color: #f0fdf4; padding: 16px; border-radius: 8px; margin: 16px 0; border: 1px solid #bbf7d0;">
+                        <p style="margin: 4px 0;"><strong>Method:</strong> ${method}</p>
+                        <p style="margin: 4px 0;"><strong>TrxID:</strong> ${trxId}</p>
+                        <p style="margin: 4px 0;"><strong>Amount:</strong> ৳${amount.toFixed(2)}</p>
+                      </div>
+                      <p>You can now purchase verified Gmail packages seamlessly.</p>
+                    </div>
+                  </div>
+                `,
+              });
+            }
+          } catch (mErr) {
+            console.error("Failed to send deposit email:", mErr);
+          }
+        }
+      } catch (err) {
+        console.error(`Failed to process deposit approval for ${depId}:`, err);
+      }
+    }
+
+    return null;
+  });
+
+/**
+ * 5. Buyer Order Status Change Handler
+ * Handles order delivery alerts and automatic server refunds on rejected/failed orders.
+ */
+export const onBuyerOrderStatusChange = functions.database
+  .ref("/buyer_orders/{orderId}")
+  .onUpdate(async (change, context) => {
+    const before = change.before.val();
+    const after = change.after.val();
+    const orderId = context.params.orderId;
+
+    if (!after || !before) return null;
+
+    const userId = after.userId;
+    const amount = Number(after.amount) || 0;
+    const productTitle = after.productTitle || "Gmail Package";
+
+    // Case A: Order Delivered
+    if (after.status === "delivered" && before.status !== "delivered") {
+      try {
+        await db.ref(`users/${userId}/notifications`).push({
+          title: "Order Delivered! 📦",
+          desc: `Your order for "${productTitle}" (ID: ${orderId.slice(-6).toUpperCase()}) is ready! Check My Orders for delivery data.`,
+          type: "success",
+          read: false,
+          timestamp: Date.now(),
+          time: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+        });
+      } catch (err) {
+        console.error("Error pushing order delivery notification:", err);
+      }
+    }
+
+    // Case B: Order Refunded
+    if (after.status === "refunded" && before.status !== "refunded" && !after.refundProcessed) {
+      await change.after.ref.update({
+        refundProcessed: true,
+      });
+
+      if (amount > 0 && userId) {
+        try {
+          // Refund order payment back to buyer's deposit_balance
+          await db.ref(`users/${userId}`).transaction((user: any) => {
+            if (!user) return user;
+            return {
+              ...user,
+              deposit_balance: (Number(user.deposit_balance) || 0) + amount,
+            };
+          });
+
+          await db.ref("transactions").push({
+            userId,
+            username: after.username || "Buyer",
+            type: "refund",
+            category: "Refund",
+            title: `Refund for Order #${orderId.slice(-6).toUpperCase()}`,
+            amount: amount,
+            status: "completed",
+            timestamp: Date.now(),
+            date: new Date().toISOString(),
+          });
+
+          await db.ref(`users/${userId}/notifications`).push({
+            title: "Order Refunded ↩️",
+            desc: `Your order for "${productTitle}" was refunded. ৳${amount.toFixed(2)} has been safely credited back to your wallet.`,
+            type: "info",
+            read: false,
+            timestamp: Date.now(),
+            time: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+          });
+        } catch (rErr) {
+          console.error("Error processing order refund:", rErr);
+        }
+      }
+    }
+
+    return null;
+  });
+
 export * from "./reviews";

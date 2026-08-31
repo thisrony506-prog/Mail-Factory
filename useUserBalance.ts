@@ -11,12 +11,27 @@ export function useUserBalance(currentUser: any) {
         const parsed = JSON.parse(cached);
         return Number(parsed.balance || 0);
       }
-      const generalProfile = localStorage.getItem('mf_last_user_profile');
-      if (generalProfile) {
-        const parsed = JSON.parse(generalProfile);
-        if (parsed.uid === currentUser.uid) {
-          return Number(parsed.balance || 0);
-        }
+    } catch {}
+    return 0;
+  });
+  const [depositBalance, setDepositBalance] = useState<number>(() => {
+    if (!currentUser?.uid) return 0;
+    try {
+      const cached = localStorage.getItem(`mf_wallet_cache_${currentUser.uid}`);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        return Number(parsed.deposit_balance !== undefined ? parsed.deposit_balance : (parsed.buyerWalletBalance || 0));
+      }
+    } catch {}
+    return 0;
+  });
+  const [reservedBalance, setReservedBalance] = useState<number>(() => {
+    if (!currentUser?.uid) return 0;
+    try {
+      const cached = localStorage.getItem(`mf_wallet_cache_${currentUser.uid}`);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        return Number(parsed.reserved_balance || 0);
       }
     } catch {}
     return 0;
@@ -35,6 +50,8 @@ export function useUserBalance(currentUser: any) {
       if (cached) {
         const parsed = JSON.parse(cached);
         setBalance(Number(parsed.balance || 0));
+        setDepositBalance(Number(parsed.deposit_balance !== undefined ? parsed.deposit_balance : (parsed.buyerWalletBalance || 0)));
+        setReservedBalance(Number(parsed.reserved_balance || 0));
       }
     } catch {}
 
@@ -44,10 +61,21 @@ export function useUserBalance(currentUser: any) {
       if (snapshot.exists()) {
         const userData = snapshot.val();
         const newBalance = Number(userData.balance || 0);
+        const newDepositBalance = Number(
+          userData.deposit_balance !== undefined 
+            ? userData.deposit_balance 
+            : (userData.buyerWalletBalance !== undefined ? userData.buyerWalletBalance : 0)
+        );
+        const newReservedBalance = Number(userData.reserved_balance || 0);
         setBalance(newBalance);
+        setDepositBalance(newDepositBalance);
+        setReservedBalance(newReservedBalance);
         try {
           localStorage.setItem(`mf_wallet_cache_${currentUser.uid}`, JSON.stringify({
             balance: newBalance,
+            deposit_balance: newDepositBalance,
+            buyerWalletBalance: newDepositBalance,
+            reserved_balance: newReservedBalance,
             hold: userData.hold || 0,
             totalEarnings: userData.totalEarnings || 0,
             referralEarnings: userData.referralEarnings || 0,
@@ -56,6 +84,8 @@ export function useUserBalance(currentUser: any) {
         } catch {}
       } else {
         setBalance(0);
+        setDepositBalance(0);
+        setReservedBalance(0);
       }
       setLoading(false);
     }, (err) => {
@@ -66,5 +96,5 @@ export function useUserBalance(currentUser: any) {
     return () => unsubscribe();
   }, [currentUser]);
 
-  return { balance, loading };
+  return { balance, depositBalance, reservedBalance, loading };
 }

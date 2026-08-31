@@ -62,8 +62,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      setError('File must be under 5MB');
+    if (file.size > 50 * 1024 * 1024) {
+      setError(language === 'bn' ? 'ফাইল সাইজ ৫০MB এর বেশি হতে পারবে না' : 'File must be under 50MB');
       return;
     }
 
@@ -157,9 +157,11 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
                 />
               </label>
             </div>
-            <span className="text-[10px] text-slate-400 mt-1 font-medium">
-              {isUploading ? 'Uploading to cloud...' : 'Click camera to change photo'}
-            </span>
+             <span className="text-[10px] text-indigo-600 font-extrabold mt-1 animate-pulse">
+               {isUploading 
+                 ? (language === 'bn' ? '⚡ ছবিটি অটো-কমপ্রেস ও আপলোড হচ্ছে...' : '⚡ Auto-compressing & uploading...') 
+                 : (language === 'bn' ? 'ক্যামেরায় ট্যাপ করে ছবি পরিবর্তন করুন' : 'Click camera to change photo')}
+             </span>
           </div>
 
           <div>

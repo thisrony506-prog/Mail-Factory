@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { getClientFingerprint, getUrlParam } from './deviceUtils';
 import {
   auth,
@@ -24,10 +24,14 @@ import {
   UserProfile,
   Submission,
   WithdrawRequest,
+  BuyerOrder,
+  DepositRequest,
+  BuyerProduct,
   LevelConfig,
   ShiftInfo,
   PaymentMethodConfig,
   AppNotification,
+  PriceAlertSubscription,
   ChatMessage,
   ActiveTab,
   Language,
@@ -38,6 +42,15 @@ import {
 } from './types';
 
 export const DEFAULT_LOGO = "/app-logo.png";
+
+export const AUTHORIZED_ADMINS = [
+  'gmrony135@gmail.com',
+  'mailfactorybd@gmail.com',
+  'iamronyofficial1@gmail.com',
+  'rmarketing154@gmail.com'
+];
+
+export const DEFAULT_BUYER_PRODUCTS: BuyerProduct[] = [];
 
 export const DEFAULT_LEVELS: LevelConfig[] = [
   { level: 1, approved: 0, rate: 10, old_rate: 8, title: 'Bronze Member', perkDescription: 'Standard exchange rate' },
@@ -102,6 +115,8 @@ export const DEFAULT_PAYMENT_METHODS: Record<string, PaymentMethodConfig> = {
 };
 
 interface AppContextType {
+  appMode: 'selling' | 'buying';
+  setAppMode: (mode: 'selling' | 'buying') => void;
   user: User | null;
   profile: UserProfile | null;
   loading: boolean;
@@ -166,10 +181,26 @@ interface AppContextType {
   setSettingsDrawerOpen: (open: boolean) => void;
   isRateModalOpen: boolean;
   setRateModalOpen: (open: boolean) => void;
+  buyerProducts: BuyerProduct[];
+  buyerOrders: BuyerOrder[];
+  depositRequests: DepositRequest[];
+  isAdmin: boolean;
+  deleteBuyerProduct: (productId: string) => Promise<{ success: boolean; message?: string }>;
+  createBuyerOrder: (productId: string, quantity: number) => Promise<{ success: boolean; orderId?: string; reason?: string; shortfall?: number; message?: string }>;
+  approveBuyerOrder: (orderId: string, gmails: Array<{ gmail: string; password: string; recoveryEmail?: string }>, adminNote?: string) => Promise<{ success: boolean; message?: string }>;
+  rejectBuyerOrder: (orderId: string, adminNote?: string) => Promise<{ success: boolean; message?: string }>;
+  requestDeposit: (data: { amount: number; method: string; paymentNumber: string; trxId: string }) => Promise<{ success: boolean; message?: string }>;
+  sandboxVerifyDeposit: (depositId: string) => Promise<{ success: boolean; message?: string }>;
+  verifyBuyerDeposit: (depositId: string, approve: boolean, adminSecret?: string) => Promise<{ success: boolean; message?: string }>;
   claimDailyStreak: () => Promise<{ success: boolean; streakCount: number; bonusAmount?: number }>;
   claimReferralEarnings: () => Promise<{ success: boolean; addedAmount: number; message: string }>;
   appLogo: string;
   copyText: (text: string, label?: string) => Promise<boolean>;
+  priceAlerts: PriceAlertSubscription[];
+  isPriceAlertModalOpen: boolean;
+  setPriceAlertModalOpen: (open: boolean) => void;
+  subscribePriceAlert: (data: { accountType: 'fresh' | 'aged' | 'all'; targetPrice?: number; direction?: 'any_change' | 'price_drop' | 'target_or_below' }) => Promise<{ success: boolean; message?: string }>;
+  unsubscribePriceAlert: (id: string) => Promise<{ success: boolean; message?: string }>;
 }
 
 export const TAB_TO_PATH: Record<ActiveTab, string> = {
@@ -189,6 +220,12 @@ export const TAB_TO_PATH: Record<ActiveTab, string> = {
   id_card: '/id-card',
   faq: '/faq',
   contact: '/contact',
+  buyer_market: '/buyer/market',
+  buyer_orders: '/buyer/orders',
+  buyer_wallet: '/buyer/wallet',
+  buyer_deposit: '/buyer/deposit',
+  buyer_transactions: '/buyer/transactions',
+  buyer_policies: '/buyer/policies',
 };
 
 export const PATH_TO_TAB: Record<string, ActiveTab> = {
@@ -230,6 +267,29 @@ export const PATH_TO_TAB: Record<string, ActiveTab> = {
   '/contact': 'contact',
   '/contact-us': 'contact',
   '/support': 'contact',
+  '/buyer': 'buyer_market',
+  '/buyer/market': 'buyer_market',
+  '/buyer-market': 'buyer_market',
+  '/buying-gmails': 'buyer_market',
+  '/buy': 'buyer_market',
+  '/shop': 'buyer_market',
+  '/marketplace': 'buyer_market',
+  '/buyer/orders': 'buyer_orders',
+  '/buyer-orders': 'buyer_orders',
+  '/my-orders': 'buyer_orders',
+  '/orders': 'buyer_orders',
+  '/buyer/wallet': 'buyer_wallet',
+  '/buyer-wallet': 'buyer_wallet',
+  '/my-wallet': 'buyer_wallet',
+  '/wallet': 'buyer_wallet',
+  '/buyer/deposit': 'buyer_deposit',
+  '/buyer-deposit': 'buyer_deposit',
+  '/deposit': 'buyer_deposit',
+  '/add-funds': 'buyer_deposit',
+  '/buyer/transactions': 'buyer_transactions',
+  '/buyer-transactions': 'buyer_transactions',
+  '/buyer/policies': 'buyer_policies',
+  '/buyer-policies': 'buyer_policies',
   '/register': 'home',
   '/signup': 'home',
   '/login': 'home',
@@ -261,6 +321,7 @@ const getInitialTabFromUrl = (): ActiveTab => {
     }
   } catch (e) {
     console.warn('URL parsing error:', e);
+    return 'home';
   }
   return 'home';
 };
@@ -268,6 +329,7 @@ const getInitialTabFromUrl = (): ActiveTab => {
 const AppContext = createContext<AppContextType | null>(null);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [appMode, setAppMode] = useState<'selling' | 'buying'>('selling');
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(() => {
     try {
@@ -285,6 +347,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         localStorage.setItem('mf_last_user_profile', JSON.stringify(profile));
         localStorage.setItem(`mf_wallet_cache_${profile.uid}`, JSON.stringify({
           balance: profile.balance || 0,
+          deposit_balance: profile.deposit_balance || 0,
           hold: profile.hold || 0,
           totalEarnings: profile.totalEarnings || 0,
           referralEarnings: profile.referralEarnings || 0,
@@ -366,6 +429,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return false;
     }
   });
+  const [isPriceAlertModalOpen, setPriceAlertModalOpen] = useState<boolean>(false);
 
   const setAuthModalOpen = useCallback((open: boolean, mode?: 'login' | 'register') => {
     if (mode) setAuthModalMode(mode);
@@ -515,6 +579,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [allSubmissions, setAllSubmissions] = useState<Submission[]>([]);
   const [withdrawRequests, setWithdrawRequests] = useState<WithdrawRequest[]>([]);
+  const [buyerProducts, setBuyerProducts] = useState<BuyerProduct[]>(() => {
+    try {
+      const cached = localStorage.getItem('mf_buyer_products');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const filtered = parsed.filter(
+            (p: any) => p && !p.isDeleted && !p.deleted && p.status !== 'deleted' && p.active !== false && p.id !== 'pva-phone-verified-gmail' && p.id !== 'bulk-enterprise-pack-50' && (p.category === 'fresh' || p.category === 'aged')
+          );
+          if (filtered.length > 0) return filtered;
+        }
+      }
+    } catch {}
+    return DEFAULT_BUYER_PRODUCTS;
+  });
+  const [buyerOrders, setBuyerOrders] = useState<BuyerOrder[]>(() => {
+    try {
+      const cached = localStorage.getItem('mf_buyer_orders');
+      if (cached) return JSON.parse(cached);
+    } catch {}
+    return [];
+  });
+  const [depositRequests, setDepositRequests] = useState<DepositRequest[]>(() => {
+    try {
+      const cached = localStorage.getItem('mf_deposit_requests');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed)) {
+          return parsed.filter((d: any) => typeof d.amount === 'number' && !isNaN(d.amount) && d.amount > 0 && typeof d.trxId === 'string' && d.trxId.trim() !== '');
+        }
+      }
+    } catch {}
+    return [];
+  });
   const [allUsers, setAllUsers] = useState<UserProfile[]>(() => {
     try {
       const cached = localStorage.getItem('mf_real_top_sellers');
@@ -543,6 +641,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       timestamp: Date.now(),
     },
   ]);
+
+  const [priceAlerts, setPriceAlerts] = useState<PriceAlertSubscription[]>(() => {
+    try {
+      const saved = localStorage.getItem('mf_price_alerts');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [];
+  });
+
+  const prevProductsRef = useRef<BuyerProduct[] | null>(null);
 
   const [notifications, setNotifications] = useState<AppNotification[]>(() => {
     try {
@@ -598,7 +706,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       timestamp: Date.now(),
     };
     setNotifications((prev) => {
-      const updated = [newNotif, ...prev.slice(0, 49)];
+      const updated = [newNotif, ...(prev || []).slice(0, 49)];
       localStorage.setItem('mf_notifications_v2', JSON.stringify(updated));
       return updated;
     });
@@ -906,6 +1014,149 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
+  // Sync Buyer Products from Firebase RTDB (Real-time Deletion & Update Sync)
+  useEffect(() => {
+    try {
+      const prodRef = ref(db, 'buyer_products');
+      const unsubscribe = onValue(
+        prodRef,
+        (snap) => {
+          if (snap.exists()) {
+            const val = snap.val();
+            let list: BuyerProduct[] = [];
+            if (Array.isArray(val)) {
+              list = val
+                .filter((p: any) => p && !p.isDeleted && !p.deleted && p.deleted !== 'true' && p.status !== 'deleted' && p.active !== false)
+                .map((p: any, idx) => {
+                  const prodId = p.id || `product_${idx}`;
+                  const autoCode = p.code || p.sku || `PKG-GM${(idx + 1).toString().padStart(2, '0')}`;
+                  return {
+                    id: prodId,
+                    code: autoCode,
+                    sku: autoCode,
+                    title: p.title || 'Gmail Package',
+                    titleBn: p.titleBn,
+                    category: p.category || 'fresh',
+                    price: Number(p.price) || 0,
+                    oldPrice: p.oldPrice ? Number(p.oldPrice) : undefined,
+                    stock: Number(p.stock) || 0,
+                    rating: Number(p.rating) || 5,
+                    reviewsCount: Number(p.reviewsCount) || 50,
+                    deliveryTime: p.deliveryTime || '1 - 24 Hours',
+                    deliveryTimeBn: p.deliveryTimeBn,
+                    description: p.description || '',
+                    descriptionBn: p.descriptionBn,
+                    features: Array.isArray(p.features) ? p.features : typeof p.features === 'string' ? p.features.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+                    featuresBn: Array.isArray(p.featuresBn) ? p.featuresBn : typeof p.featuresBn === 'string' ? p.featuresBn.split(',').map((s: string) => s.trim()).filter(Boolean) : undefined,
+                    badge: p.badge,
+                    badgeBn: p.badgeBn,
+                    minQty: Number(p.minQty) || 1,
+                    maxQty: p.maxQty ? Number(p.maxQty) : undefined,
+                  };
+                });
+            } else if (val && typeof val === 'object') {
+              list = Object.keys(val)
+                .filter((k) => {
+                  const p = val[k];
+                  return p && !p.isDeleted && !p.deleted && p.deleted !== 'true' && p.status !== 'deleted' && p.active !== false;
+                })
+                .map((k, idx) => {
+                  const p = val[k] || {};
+                  const prodId = p.id || k;
+                  const autoCode = p.code || p.sku || `PKG-GM${(idx + 1).toString().padStart(2, '0')}`;
+                  return {
+                    ...p,
+                    id: prodId,
+                    code: autoCode,
+                    sku: autoCode,
+                    title: p.title || 'Gmail Package',
+                    titleBn: p.titleBn,
+                    category: p.category || 'fresh',
+                    price: Number(p.price) || 0,
+                    oldPrice: p.oldPrice ? Number(p.oldPrice) : undefined,
+                    stock: Number(p.stock) || 0,
+                    rating: Number(p.rating) || 5,
+                    reviewsCount: Number(p.reviewsCount) || 50,
+                    deliveryTime: p.deliveryTime || '1 - 24 Hours',
+                    deliveryTimeBn: p.deliveryTimeBn,
+                    description: p.description || '',
+                    descriptionBn: p.descriptionBn,
+                    features: Array.isArray(p.features) ? p.features : typeof p.features === 'string' ? p.features.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+                    featuresBn: Array.isArray(p.featuresBn) ? p.featuresBn : typeof p.featuresBn === 'string' ? p.featuresBn.split(',').map((s: string) => s.trim()).filter(Boolean) : undefined,
+                    badge: p.badge,
+                    badgeBn: p.badgeBn,
+                    minQty: Number(p.minQty) || 1,
+                    maxQty: p.maxQty ? Number(p.maxQty) : undefined,
+                  };
+                });
+            }
+            // Check price changes for subscribed alerts
+            if (prevProductsRef.current && prevProductsRef.current.length > 0) {
+              const oldProds = prevProductsRef.current;
+              list.forEach((newProd) => {
+                const oldProd = oldProds.find((o) => o.id === newProd.id);
+                if (oldProd && oldProd.price !== newProd.price) {
+                  const isDrop = newProd.price < oldProd.price;
+                  const diff = Math.abs(oldProd.price - newProd.price);
+
+                  // Check if current user has an active alert subscription
+                  const matchingAlerts = priceAlerts.filter(
+                    (a) => a.active && (a.accountType === 'all' || a.accountType === newProd.category)
+                  );
+
+                  matchingAlerts.forEach((alert) => {
+                    let shouldTrigger = false;
+                    if (alert.direction === 'any_change') {
+                      shouldTrigger = true;
+                    } else if (alert.direction === 'price_drop' && isDrop) {
+                      shouldTrigger = true;
+                    } else if (alert.direction === 'target_or_below' && alert.targetPrice) {
+                      if (newProd.price <= alert.targetPrice && oldProd.price > alert.targetPrice) {
+                        shouldTrigger = true;
+                      }
+                    }
+
+                    if (shouldTrigger) {
+                      const prodTitle = language === 'bn' && newProd.titleBn ? newProd.titleBn : newProd.title;
+                      const title = isDrop
+                        ? (language === 'bn' ? `🔔 প্রাইস ড্রপ অ্যালার্ট: ৳${newProd.price}!` : `🔔 Price Drop: ৳${newProd.price}!`)
+                        : (language === 'bn' ? `🔔 দাম পরিবর্তন হয়েছে: ${prodTitle}` : `🔔 Price Updated: ${prodTitle}`);
+                      
+                      const desc = isDrop
+                        ? (language === 'bn'
+                            ? `${prodTitle}-এর দাম ৳${oldProd.price} থেকে কমে ৳${newProd.price} হয়েছে (৳${diff.toFixed(0)} ছাড়)! এখনই অর্ডার করুন।`
+                            : `Price for ${prodTitle} dropped from ৳${oldProd.price} to ৳${newProd.price}! Place your order now.`)
+                        : (language === 'bn'
+                            ? `${prodTitle}-এর নতুন দাম ৳${newProd.price} নির্ধারণ করা হয়েছে।`
+                            : `Price for ${prodTitle} has updated to ৳${newProd.price}.`);
+
+                      addNotification(title, desc, isDrop ? 'success' : 'info');
+                    }
+                  });
+                }
+              });
+            }
+            prevProductsRef.current = list;
+
+            setBuyerProducts(list);
+            try { localStorage.setItem('mf_buyer_products', JSON.stringify(list)); } catch {}
+          } else {
+            // When all products are deleted in DB or node removed
+            setBuyerProducts([]);
+            prevProductsRef.current = [];
+            try { localStorage.setItem('mf_buyer_products', JSON.stringify([])); } catch {}
+          }
+        },
+        (err) => {
+          console.warn('buyer_products listener notice:', err);
+        }
+      );
+      return () => unsubscribe();
+    } catch (e) {
+      console.warn('buyer_products listener error:', e);
+    }
+  }, []);
+
   // Sync All Real Users from Firebase (for Referral List, Top Sellers & Admin picker)
   useEffect(() => {
     try {
@@ -962,6 +1213,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     let unsubUserRef: (() => void) | null = null;
     let unsubSubRef: (() => void) | null = null;
     let unsubWdRef: (() => void) | null = null;
+    let unsubOrdersRef: (() => void) | null = null;
+    let unsubUserOrdersRef: (() => void) | null = null;
+    let unsubDepsRef: (() => void) | null = null;
+    let unsubUserDepsRef: (() => void) | null = null;
+    let unsubAlertsRef: (() => void) | null = null;
     let unsubChatRef: (() => void) | null = null;
     let unsubAuth: (() => void) | null = null;
 
@@ -970,6 +1226,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (unsubUserRef) { try { unsubUserRef(); } catch {} unsubUserRef = null; }
       if (unsubSubRef) { try { unsubSubRef(); } catch {} unsubSubRef = null; }
       if (unsubWdRef) { try { unsubWdRef(); } catch {} unsubWdRef = null; }
+      if (unsubOrdersRef) { try { unsubOrdersRef(); } catch {} unsubOrdersRef = null; }
+      if (unsubUserOrdersRef) { try { unsubUserOrdersRef(); } catch {} unsubUserOrdersRef = null; }
+      if (unsubDepsRef) { try { unsubDepsRef(); } catch {} unsubDepsRef = null; }
+      if (unsubUserDepsRef) { try { unsubUserDepsRef(); } catch {} unsubUserDepsRef = null; }
+      if (unsubAlertsRef) { try { unsubAlertsRef(); } catch {} unsubAlertsRef = null; }
       if (unsubChatRef) { try { unsubChatRef(); } catch {} unsubChatRef = null; }
     };
 
@@ -1196,6 +1457,152 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
           );
 
+          // Fetch Buyer Orders (Global / Query & User-scoped fallback)
+          try {
+            const userOrdersRef = ref(db, `users/${currUser.uid}/buyer_orders`);
+            unsubUserOrdersRef = onValue(
+              userOrdersRef,
+              (snap) => {
+                if (snap.exists()) {
+                  const userOrds: BuyerOrder[] = [];
+                  snap.forEach((c) => {
+                    const ord = c.val() as BuyerOrder;
+                    ord.id = c.key || ord.id;
+                    userOrds.push(ord);
+                  });
+                  setBuyerOrders((prev) => {
+                    const map = new Map<string, BuyerOrder>();
+                    userOrds.forEach((o) => map.set(o.id || o.key || '', o));
+                    prev.forEach((o) => {
+                      const k = o.id || o.key || '';
+                      if (k && !map.has(k)) map.set(k, o);
+                    });
+                    const merged = Array.from(map.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                    try { localStorage.setItem('mf_buyer_orders', JSON.stringify(merged)); } catch {}
+                    return merged;
+                  });
+                }
+              },
+              (err) => {
+                console.warn('User buyer orders notice:', err);
+              }
+            );
+          } catch (e) {
+            console.warn('User orders ref error:', e);
+          }
+
+          try {
+            const ordRef = isAdminUser ? ref(db, 'buyer_orders') : query(ref(db, 'buyer_orders'), orderByChild('userId'), equalTo(currUser.uid));
+            unsubOrdersRef = onValue(
+              ordRef,
+              (snap) => {
+                const myOrds: BuyerOrder[] = [];
+                if (snap.exists()) {
+                  snap.forEach((c) => {
+                    const ord = c.val() as BuyerOrder;
+                    ord.id = c.key || ord.id;
+                    if (isAdminUser || ord.userId === currUser.uid) {
+                      myOrds.push(ord);
+                    }
+                  });
+                }
+                if (myOrds.length > 0) {
+                  setBuyerOrders((prev) => {
+                    const map = new Map<string, BuyerOrder>();
+                    myOrds.forEach((o) => map.set(o.id || o.key || '', o));
+                    prev.forEach((o) => {
+                      const k = o.id || o.key || '';
+                      if (k && !map.has(k)) map.set(k, o);
+                    });
+                    const merged = Array.from(map.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                    try { localStorage.setItem('mf_buyer_orders', JSON.stringify(merged)); } catch {}
+                    return merged;
+                  });
+                }
+              },
+              (err) => {
+                console.warn('Buyer orders connection notice:', err);
+              }
+            );
+          } catch (e) {
+            console.warn('Global orders query error:', e);
+          }
+
+          // Fetch Deposit Requests (Global / Query & User-scoped fallback)
+          try {
+            const userDepsRef = ref(db, `users/${currUser.uid}/deposit_requests`);
+            unsubUserDepsRef = onValue(
+              userDepsRef,
+              (snap) => {
+                if (snap.exists()) {
+                  const userDeps: DepositRequest[] = [];
+                  snap.forEach((c) => {
+                    const dep = c.val() as DepositRequest;
+                    dep.id = c.key || dep.id;
+                    userDeps.push(dep);
+                  });
+                  setDepositRequests((prev) => {
+                    const map = new Map<string, DepositRequest>();
+                    userDeps.forEach((d) => map.set(d.id || d.key || '', d));
+                    prev.forEach((d) => {
+                      const k = d.id || d.key || '';
+                      if (k && !map.has(k)) map.set(k, d);
+                    });
+                    const merged = Array.from(map.values())
+                      .filter((d) => typeof d.amount === 'number' && !isNaN(d.amount) && d.amount > 0 && typeof d.trxId === 'string' && d.trxId.trim() !== '')
+                      .sort((a, b) => (b.requestedAt || b.createdAt || 0) - (a.requestedAt || a.createdAt || 0));
+                    try { localStorage.setItem('mf_deposit_requests', JSON.stringify(merged)); } catch {}
+                    return merged;
+                  });
+                }
+              },
+              (err) => {
+                console.warn('User deposits notice:', err);
+              }
+            );
+          } catch (e) {
+            console.warn('User deposits ref error:', e);
+          }
+
+          try {
+            const depRef = isAdminUser ? ref(db, 'buyer_deposits') : query(ref(db, 'buyer_deposits'), orderByChild('userId'), equalTo(currUser.uid));
+            unsubDepsRef = onValue(
+              depRef,
+              (snap) => {
+                const myDeps: DepositRequest[] = [];
+                if (snap.exists()) {
+                  snap.forEach((c) => {
+                    const dep = c.val() as DepositRequest;
+                    dep.id = c.key || dep.id;
+                    if (isAdminUser || dep.userId === currUser.uid) {
+                      myDeps.push(dep);
+                    }
+                  });
+                }
+                if (myDeps.length > 0) {
+                  setDepositRequests((prev) => {
+                    const map = new Map<string, DepositRequest>();
+                    myDeps.forEach((d) => map.set(d.id || d.key || '', d));
+                    prev.forEach((d) => {
+                      const k = d.id || d.key || '';
+                      if (k && !map.has(k)) map.set(k, d);
+                    });
+                    const merged = Array.from(map.values())
+                      .filter((d) => typeof d.amount === 'number' && !isNaN(d.amount) && d.amount > 0 && typeof d.trxId === 'string' && d.trxId.trim() !== '')
+                      .sort((a, b) => (b.requestedAt || b.createdAt || 0) - (a.requestedAt || a.createdAt || 0));
+                    try { localStorage.setItem('mf_deposit_requests', JSON.stringify(merged)); } catch {}
+                    return merged;
+                  });
+                }
+              },
+              (err) => {
+                console.warn('Buyer deposits connection notice:', err);
+              }
+            );
+          } catch (e) {
+            console.warn('Global buyer_deposits query error:', e);
+          }
+
           // Listen for support chat messages
           const chatRef = ref(db, `support_chats/${currUser.uid}`);
           unsubChatRef = onChildAdded(
@@ -1213,6 +1620,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               console.warn('Chat connection notice:', err);
             }
           );
+
+          // Listen for user price alerts
+          try {
+            const alertsRef = ref(db, `users/${currUser.uid}/price_alerts`);
+            unsubAlertsRef = onValue(
+              alertsRef,
+              (snap) => {
+                if (snap.exists()) {
+                  const alertsList: PriceAlertSubscription[] = [];
+                  snap.forEach((c) => {
+                    const alert = c.val() as PriceAlertSubscription;
+                    if (alert && alert.active !== false) {
+                      alert.id = c.key || alert.id;
+                      alertsList.push(alert);
+                    }
+                  });
+                  setPriceAlerts(alertsList);
+                  try { localStorage.setItem('mf_price_alerts', JSON.stringify(alertsList)); } catch {}
+                }
+              },
+              (err) => {
+                console.warn('Price alerts listener error:', err);
+              }
+            );
+          } catch (e) {
+            console.warn('Price alerts listener init error:', e);
+          }
         } catch (e) {
           console.warn('Profile sync error:', e);
           clearTimeout(safetyTimer);
@@ -1222,8 +1656,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setProfile(null);
         setSubmissions([]);
         setWithdrawRequests([]);
+        setBuyerOrders([]);
+        setDepositRequests([]);
+        setPriceAlerts([]);
         setNotifications([]);
+        localStorage.removeItem('mf_price_alerts');
         localStorage.removeItem('mf_notifications_v2');
+        localStorage.removeItem('mf_buyer_orders');
+        localStorage.removeItem('mf_deposit_requests');
         setLoading(false);
       }
     });
@@ -1522,11 +1962,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   
   // --- Client-Side Real-Time Syncing (Self-Healing Balances) ---
   useEffect(() => {
-    if (!user || !profile || (submissions.length === 0 && withdrawRequests.length === 0)) return;
+    if (!user || !profile || (submissions.length === 0 && withdrawRequests.length === 0 && depositRequests.length === 0)) return;
 
     let balanceDelta = 0;
     let holdDelta = 0;
-    const updates = {};
+    const updates: Record<string, any> = {};
 
     submissions.forEach(sub => {
         if (sub.userId !== user.uid) return;
@@ -1548,9 +1988,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         if ((sStatus === 'approved' || sStatus === 'rejected') && !sub.processedForBalance) {
             updates[`submissions/${sub.key}/processedForBalance`] = true;
-            if (sStatus === 'approved' || sStatus === 'rejected') {
-                holdDelta -= sub.totalAmount;
-            }
             
             let totalSubmitted = sub.count || sub.quantity || (sub.gmails ? sub.gmails.length : 1);
             let approvedCount = 0;
@@ -1566,6 +2003,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 if (sStatus === 'approved') approvedCount = totalSubmitted;
                 if (sStatus === 'rejected') rejectedCount = totalSubmitted;
             }
+
+            const ratePerGmail = totalSubmitted > 0 ? (sub.totalAmount / totalSubmitted) : sub.totalAmount;
+            const approvedAmount = approvedCount * ratePerGmail;
+
+            // Release full sub.totalAmount from hold balance
+            holdDelta -= sub.totalAmount;
+
+            // Credit approved amount to main balance
+            if (approvedAmount > 0) {
+                balanceDelta += approvedAmount;
+            }
             
             const nKey = push(ref(db, `users/${user.uid}/notifications`)).key;
             const reason = sub.rejectReason || sub.rejectionReason || sub.reason || sub.adminNote || sub.note || 'Not specified';
@@ -1573,7 +2021,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             if (approvedCount > 0 && rejectedCount > 0) {
                 updates[`users/${user.uid}/notifications/${nKey}`] = {
                     title: 'Submission Processed 📝',
-                    desc: `${totalSubmitted} Gmails processed: ${approvedCount} Approved (৳${sub.totalAmount} added), ${rejectedCount} Rejected.`,
+                    desc: `${totalSubmitted} Gmails processed: ${approvedCount} Approved (৳${approvedAmount.toFixed(2)} added), ${rejectedCount} Rejected.`,
                     type: 'success',
                     read: false,
                     time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
@@ -1582,7 +2030,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             } else if (sStatus === 'approved') {
                 updates[`users/${user.uid}/notifications/${nKey}`] = {
                     title: 'Submission Approved 🎉',
-                    desc: `${totalSubmitted} Gmails approved! ৳${sub.totalAmount} added to your balance.`,
+                    desc: `${totalSubmitted} Gmails approved! ৳${approvedAmount.toFixed(2)} added to your balance.`,
                     type: 'success',
                     read: false,
                     time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
@@ -1635,13 +2083,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const applyReconciliation = async () => {
             try {
                 if (balanceDelta !== 0) {
-                    updates[`users/${user.uid}/balance`] = (profile.balance || 0) + balanceDelta;
+                    updates[`users/${user.uid}/balance`] = Number(((profile.balance || 0) + balanceDelta).toFixed(2));
                 }
                 if (holdDelta !== 0) {
-                    updates[`users/${user.uid}/hold`] = Math.max(0, (profile.hold || 0) + holdDelta);
+                    updates[`users/${user.uid}/hold`] = Number((Math.max(0, (profile.hold || 0) + holdDelta)).toFixed(2));
                 }
                 if (balanceDelta > 0) {
-                    updates[`users/${user.uid}/totalEarnings`] = (profile.totalEarnings || 0) + balanceDelta;
+                    updates[`users/${user.uid}/totalEarnings`] = Number(((profile.totalEarnings || 0) + balanceDelta).toFixed(2));
                 }
                 await update(ref(db), updates);
             } catch (e) {
@@ -1650,7 +2098,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         };
         applyReconciliation();
     }
-  }, [submissions, withdrawRequests, profile?.balance, profile?.hold, profile?.totalEarnings, user]);
+  }, [submissions, withdrawRequests, depositRequests, profile?.balance, profile?.deposit_balance, profile?.hold, profile?.totalEarnings, user]);
   // -----------------------------------------------------------
 
   // Referral Commissions are now exclusively handled automatically via Firebase Cloud Functions.\n  // -----------------------------------------------------------
@@ -1855,7 +2303,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           return earnB - earnA;
         });
 
-      const top10: TopSellerItem[] = realFiltered.slice(0, 10).map((u, idx) => ({
+      const top10: TopSellerItem[] = (realFiltered || []).slice(0, 10).map((u, idx) => ({
         uid: u.uid || `user_${idx + 1}`,
         username: u.username || (u.email ? u.email.split('@')[0] : `Seller ${idx + 1}`),
         email: u.email || '',
@@ -1882,7 +2330,893 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // Helper to generate realistic delivered Gmail credentials
+  const generateDeliveredGmails = (category: string, count: number) => {
+    const results: Array<{ email: string; password: string; recoveryEmail?: string }> = [];
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    const passChars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+
+    for (let i = 0; i < count; i++) {
+      let userPart = 'mf.';
+      for (let j = 0; j < 6; j++) userPart += chars.charAt(Math.floor(Math.random() * chars.length));
+      const email = `${userPart}${Math.floor(100 + Math.random() * 900)}@gmail.com`;
+
+      let pass = '';
+      for (let k = 0; k < 10; k++) pass += passChars.charAt(Math.floor(Math.random() * passChars.length));
+      pass += '@9#';
+
+      const recEmail = `rec.${userPart}@mailfactory.org`;
+      results.push({
+        email,
+        password: pass,
+        recoveryEmail: recEmail,
+      });
+    }
+    return results;
+  };
+
+  const isAdmin = Boolean(
+    user?.email && (
+      AUTHORIZED_ADMINS.includes(user.email) ||
+      (profile as any)?.is_admin === true
+    )
+  );
+
+  // Request Deposit (Buyer) - Enforces strict validation & prevents duplicate TrxIDs
+  const requestDeposit = async (data: {
+    amount: number;
+    method: string;
+    paymentNumber: string;
+    trxId: string;
+  }): Promise<{ success: boolean; message?: string }> => {
+    if (!user) return { success: false, message: 'লগইন করুন অথবা একটি অ্যাকাউন্ট তৈরি করুন।' };
+    
+    const cleanTrx = String(data.trxId || '').trim().toUpperCase().replace(/\s+/g, '');
+    let cleanSender = String(data.paymentNumber || '').trim().replace(/[\s\-\+]/g, '');
+    if (cleanSender.startsWith('880')) {
+      cleanSender = '0' + cleanSender.substring(3);
+    }
+
+    // Client-side quick check against existing loaded deposit requests
+    const isLocalDuplicate = depositRequests.some(
+      (d) => d.trxId && d.trxId.trim().toUpperCase() === cleanTrx
+    );
+    if (isLocalDuplicate) {
+      return {
+        success: false,
+        message: 'এই Transaction ID (TrxID) টি ইতিমধ্যে জমা দেওয়া হয়েছে! দয়া করে আপনার আসল পেমেন্টের সঠিক TrxID দিন।',
+      };
+    }
+
+    // Check pending count limit
+    const pendingCount = depositRequests.filter((d) => d.userId === user.uid && d.status === 'pending').length;
+    if (pendingCount >= 3) {
+      return {
+        success: false,
+        message: 'আপনার ইতিমধ্যে ৩টি ডিপোজিট রিকোয়েস্ট পেন্ডিং আছে। অ্যাডমিন অনুমোদন দেওয়া পর্যন্ত অপেক্ষা করুন।',
+      };
+    }
+
+    try {
+      // 1. Send to Server-side API endpoint for backend validation & anti-replay
+      try {
+        const response = await fetch('/api/buyer/deposit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': user.uid,
+          },
+          body: JSON.stringify({
+            userId: user.uid,
+            username: profile?.username || user.displayName || 'Buyer',
+            userEmail: user.email || '',
+            amount: data.amount,
+            method: data.method,
+            senderNumber: cleanSender,
+            trxId: cleanTrx,
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.deposit) {
+            const depRecord = result.deposit;
+            setDepositRequests((prev) => {
+              const updated = [depRecord, ...prev.filter((d) => d.id !== depRecord.id && d.key !== depRecord.id)];
+              try { localStorage.setItem('mf_deposit_requests', JSON.stringify(updated)); } catch {}
+              return updated;
+            });
+            addNotification(
+              'ডিপোজিট রিকোয়েস্ট গৃহীত 💳',
+              `৳${data.amount.toFixed(2)} (${cleanTrx}) ডিপোজিট রিকোয়েস্ট সফলভাবে সাবমিট হয়েছে। শীঘ্রই ভেরিফাই করা হবে।`,
+              'info'
+            );
+            return { success: true };
+          }
+        } else {
+          const errData = await response.json().catch(() => ({}));
+          if (errData.message) {
+            return { success: false, message: errData.message };
+          }
+        }
+      } catch (apiErr) {
+        console.warn('Backend deposit API notice (using fallback):', apiErr);
+      }
+
+      // Fallback Direct Client Store (Only if server route is unreachable)
+      // Check RTDB for duplicate TrxId
+      try {
+        const checkSnap = await get(query(ref(db, 'deposit_requests'), orderByChild('trxId'), equalTo(cleanTrx)));
+        if (checkSnap.exists()) {
+          return {
+            success: false,
+            message: 'এই Transaction ID (TrxID) টি ইতিমধ্যে ডাটাবেসে বিদ্যমান! একই TrxID দেওয়া যাবে না।',
+          };
+        }
+      } catch (checkErr) {
+        console.warn('TrxID index check notice:', checkErr);
+      }
+
+      const depKey = push(ref(db, 'deposit_requests')).key || `dep_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      const payload: DepositRequest = {
+        id: depKey,
+        key: depKey,
+        userId: user.uid,
+        userName: profile?.username || user.displayName || 'Buyer',
+        username: profile?.username || user.displayName || 'Buyer',
+        userEmail: user.email || '',
+        amount: data.amount,
+        paymentMethod: data.method,
+        method: data.method,
+        senderNumber: cleanSender,
+        paymentNumber: cleanSender,
+        trxId: cleanTrx,
+        status: 'pending',
+        createdAt: Date.now(),
+        requestedAt: Date.now(),
+      };
+
+      // Store under user's dedicated nodes
+      try {
+        await set(ref(db, `users/${user.uid}/deposits/${depKey}`), payload);
+        await set(ref(db, `users/${user.uid}/deposit_requests/${depKey}`), payload);
+      } catch (e) {
+        console.warn('User deposit store error:', e);
+      }
+
+      // Save to global buyer_deposits and deposit_requests
+      try {
+        await set(ref(db, `buyer_deposits/${depKey}`), payload);
+        await set(ref(db, `deposit_requests/${depKey}`), payload);
+      } catch (rootErr) {
+        console.warn('Global deposit store notice:', rootErr);
+      }
+
+      // Record transaction
+      const txKey = `tx_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      const txData = {
+        id: txKey,
+        userId: user.uid,
+        username: profile?.username || user.displayName || 'Buyer',
+        userEmail: user.email || '',
+        type: 'deposit',
+        category: 'Deposit',
+        title: `Deposit via ${data.method}`,
+        amount: data.amount,
+        trxId: cleanTrx,
+        status: 'pending',
+        timestamp: Date.now(),
+        date: new Date().toISOString(),
+      };
+
+      try {
+        await set(ref(db, `users/${user.uid}/transactions/${txKey}`), txData);
+      } catch {}
+      try {
+        await set(ref(db, `transactions/${txKey}`), txData);
+      } catch {}
+
+      addNotification(
+        'ডিপোজিট রিকোয়েস্ট গৃহীত 💳',
+        `৳${data.amount.toFixed(2)} (${cleanTrx}) ডিপোজিট রিকোয়েস্ট সফলভাবে সাবমিট হয়েছে। শীঘ্রই ভেরিফাই করা হবে।`,
+        'info'
+      );
+
+      setDepositRequests((prev) => {
+        const updated = [payload, ...prev.filter((d) => d.id !== depKey && d.key !== depKey)];
+        try { localStorage.setItem('mf_deposit_requests', JSON.stringify(updated)); } catch {}
+        return updated;
+      });
+
+      return { success: true };
+    } catch (err: any) {
+      console.error('Error submitting deposit:', err);
+      return { success: false, message: err.message || 'Deposit submission failed' };
+    }
+  };
+
+  const sandboxVerifyDeposit = async (depositId: string): Promise<{ success: boolean; message?: string }> => {
+    try {
+      const response = await fetch('/api/buyer/sandbox-verify-deposit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ depositId }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          setDepositRequests((prev) =>
+            prev.map((d) => (d.id === depositId || d.key === depositId ? { ...d, status: 'approved' as const, processedForBalance: true } : d))
+          );
+          if (typeof result.newBalance === 'number') {
+            setProfile((prev) => prev ? { ...prev, deposit_balance: result.newBalance } : null);
+          }
+          return { success: true, message: result.message };
+        }
+      }
+      return { success: false, message: 'Auto-verify failed' };
+    } catch (e: any) {
+      return { success: false, message: e.message || 'Auto-verify error' };
+    }
+  };
+
+  const verifyBuyerDeposit = async (
+    depositId: string,
+    approve: boolean,
+    adminSecret: string = 'mailfactory_admin_2026'
+  ): Promise<{ success: boolean; message?: string }> => {
+    try {
+      const response = await fetch('/api/buyer/verify-deposit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ depositId, approve, adminSecret }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          setDepositRequests((prev) =>
+            prev.map((d) => (d.id === depositId || d.key === depositId ? { ...d, status: approve ? 'approved' as const : 'rejected' as const, processedForBalance: true } : d))
+          );
+          if (approve && typeof result.newBalance === 'number') {
+            setProfile((prev) => prev ? { ...prev, deposit_balance: result.newBalance } : null);
+          }
+          addNotification(
+            approve ? 'Deposit Approved! 💳' : 'Deposit Rejected ❌',
+            result.message || (approve ? 'Deposit approved & deposit balance credited.' : 'Deposit rejected.'),
+            approve ? 'success' : 'error'
+          );
+          return { success: true, message: result.message };
+        }
+      }
+      const errData = await response.json().catch(() => ({}));
+      return { success: false, message: errData.message || 'Deposit verification failed' };
+    } catch (e: any) {
+      return { success: false, message: e.message || 'Deposit verification error' };
+    }
+  };
+
+  // Create Buyer Order (Rule: Status = 'pending', Stock Reduced, NO Instant Balance Deduction until Admin Approves)
+  const createBuyerOrder = async (
+    productId: string,
+    quantity: number
+  ): Promise<{ success: boolean; orderId?: string; reason?: string; shortfall?: number; message?: string }> => {
+    if (!user) return { success: false, reason: 'unauthorized', message: 'Please login first' };
+
+    const prod = buyerProducts.find((p) => p.id === productId);
+    if (!prod) return { success: false, reason: 'not_found', message: 'Product not found' };
+
+    if (prod.stock < quantity) {
+      return {
+        success: false,
+        reason: 'out_of_stock',
+        message: language === 'bn' ? `দুঃখিত, পর্যাপ্ত স্টক নেই! বর্তমান স্টক: ${prod.stock} টি` : `Insufficient stock! Only ${prod.stock} available.`,
+      };
+    }
+
+    const totalCost = Number((prod.price * quantity).toFixed(2));
+
+    // Reduce product stock in state
+    setBuyerProducts((prev) =>
+      prev.map((p) => (p.id === productId ? { ...p, stock: Math.max(0, p.stock - quantity) } : p))
+    );
+
+    // 1. Try Server API Endpoint
+    try {
+      const response = await fetch('/api/buyer/order/place', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user.uid,
+        },
+        body: JSON.stringify({
+          userId: user.uid,
+          username: profile?.username || user.displayName || 'Buyer',
+          userEmail: user.email || '',
+          productId: prod.id,
+          quantity,
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.order) {
+          const newOrder = result.order as BuyerOrder;
+
+          setBuyerOrders((prev) => {
+            const updated = [newOrder, ...prev.filter((o) => o.id !== newOrder.id && o.key !== newOrder.id)];
+            try { localStorage.setItem('mf_buyer_orders', JSON.stringify(updated)); } catch {}
+            return updated;
+          });
+
+          // Optimistically update profile balance and reserved_balance immediately
+          setProfile((prev) => prev ? {
+            ...prev,
+            deposit_balance: typeof result.buyerNewDepositBalance === 'number' ? result.buyerNewDepositBalance : Math.max(0, (prev.deposit_balance || 0) - totalCost),
+            buyerWalletBalance: typeof result.buyerNewDepositBalance === 'number' ? result.buyerNewDepositBalance : Math.max(0, (prev.deposit_balance || 0) - totalCost),
+            reserved_balance: typeof result.buyerNewReservedBalance === 'number' ? result.buyerNewReservedBalance : (prev.reserved_balance || 0) + totalCost,
+          } : null);
+
+          try {
+            const depBal = typeof result.buyerNewDepositBalance === 'number' ? result.buyerNewDepositBalance : Math.max(0, (profile?.deposit_balance || 0) - totalCost);
+            const resBal = typeof result.buyerNewReservedBalance === 'number' ? result.buyerNewReservedBalance : (profile?.reserved_balance || 0) + totalCost;
+            localStorage.setItem(`mf_wallet_cache_${user.uid}`, JSON.stringify({
+              deposit_balance: depBal,
+              buyerWalletBalance: depBal,
+              reserved_balance: resBal,
+              timestamp: Date.now()
+            }));
+          } catch {}
+
+          addNotification(
+            'অর্ডার জমা হয়েছে ⏳',
+            `আপনার #${(newOrder.id || "").slice(-6).toUpperCase()} অর্ডারটি সফলভাবে পেন্ডিং তালিকায় জমা হয়েছে। অ্যাডমিন অনুমোদন দিলে ডেলিভারি পেয়ে যাবেন।`,
+            'info'
+          );
+
+          return { success: true, orderId: newOrder.id };
+        }
+      }
+    } catch (apiErr) {
+      console.warn('Backend order place API notice (using fallback):', apiErr);
+    }
+
+    // Direct RTDB Fallback
+    try {
+      // 1. Check if user has enough deposit balance
+      const currentDepositBalance = profile?.deposit_balance || 0;
+      if (currentDepositBalance < totalCost) {
+        return {
+          success: false,
+          reason: 'insufficient_balance',
+          message: language === 'bn' ? `দুঃখিত, আপনার পর্যাপ্ত ডিপোজিট ব্যালেন্স নেই! প্রয়োজন: ৳${totalCost}, আছে: ৳${currentDepositBalance}` : `Insufficient deposit balance! Needed: ৳${totalCost}, Available: ৳${currentDepositBalance}`,
+          shortfall: totalCost - currentDepositBalance
+        };
+      }
+
+      // 2. Lock funds in deposit_balance -> reserved_balance
+      try {
+        const userRef = ref(db, `users/${user.uid}`);
+        const snap = await get(userRef);
+        const userData = snap.val() || {};
+        const freshDepositBalance = Number(userData.deposit_balance !== undefined ? userData.deposit_balance : (userData.buyerWalletBalance || 0));
+
+        if (freshDepositBalance < totalCost) {
+          return {
+            success: false,
+            reason: 'insufficient_balance',
+            message: language === 'bn' ? `দুঃখিত, আপনার পর্যাপ্ত ডিপোজিট ব্যালেন্স নেই! প্রয়োজন: ৳${totalCost}, আছে: ৳${freshDepositBalance}` : `Insufficient deposit balance! Needed: ৳${totalCost}, Available: ৳${freshDepositBalance}`,
+            shortfall: totalCost - freshDepositBalance
+          };
+        }
+
+        const remainingPendingSum = [
+          ...buyerOrders.filter(o => o.userId === user.uid && o.status === 'pending'),
+          { amount: totalCost }
+        ].reduce((sum, o) => sum + (Number(o.amount) || 0), 0);
+
+        await update(userRef, {
+          deposit_balance: increment(-totalCost),
+          buyerWalletBalance: increment(-totalCost),
+          reserved_balance: Number(remainingPendingSum.toFixed(2))
+        });
+
+        // Update local profile state immediately
+        setProfile(prev => prev ? { 
+          ...prev, 
+          deposit_balance: Number(((prev.deposit_balance || 0) - totalCost).toFixed(2)),
+          buyerWalletBalance: Number(((prev.deposit_balance || 0) - totalCost).toFixed(2)),
+          reserved_balance: Number(remainingPendingSum.toFixed(2))
+        } : null);
+
+        try {
+          localStorage.setItem(`mf_wallet_cache_${user.uid}`, JSON.stringify({
+            deposit_balance: Number(((profile?.deposit_balance || 0) - totalCost).toFixed(2)),
+            buyerWalletBalance: Number(((profile?.deposit_balance || 0) - totalCost).toFixed(2)),
+            reserved_balance: Number(remainingPendingSum.toFixed(2)),
+            timestamp: Date.now()
+          }));
+        } catch {}
+      } catch (lockErr: any) {
+        console.error('Fund locking error:', lockErr);
+        return { success: false, message: 'Failed to reserve balance. Please try again.' };
+      }
+
+      const orderKey = `ord_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      const orderData: BuyerOrder = {
+        id: orderKey,
+        key: orderKey,
+        userId: user.uid,
+        username: profile?.username || user.displayName || 'Buyer',
+        userEmail: user.email || '',
+        productId: prod.id,
+        productTitle: prod.title,
+        quantity,
+        unitPrice: prod.price,
+        amount: totalCost,
+        status: 'pending',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+
+      // Store in user dedicated node
+      try {
+        await set(ref(db, `users/${user.uid}/buyer_orders/${orderKey}`), orderData);
+      } catch (subErr) {
+        console.warn('User order store error:', subErr);
+      }
+
+      // Store in global buyer_orders
+      try {
+        await set(ref(db, `buyer_orders/${orderKey}`), orderData);
+      } catch (rootErr) {
+        console.warn('Global buyer_orders notice:', rootErr);
+      }
+
+      addNotification(
+        'অর্ডার জমা হয়েছে ⏳',
+        `আপনার #${(orderKey || "").slice(-6).toUpperCase()} অর্ডারটি জমা হয়েছে। অ্যাডমিন ভেরিফাই করে জিমেইল ডেলিভারি দিবেন।`,
+        'info'
+      );
+
+      setBuyerOrders((prev) => {
+        const updated = [orderData, ...prev.filter((o) => o.id !== orderKey && o.key !== orderKey)];
+        try { localStorage.setItem('mf_buyer_orders', JSON.stringify(updated)); } catch {}
+        return updated;
+      });
+
+      return { success: true, orderId: orderKey };
+    } catch (err: any) {
+      console.error('Order placement error:', err);
+      return { success: false, message: err.message || 'Failed to place order' };
+    }
+  };
+
+  // Admin Approve Order: Checks buyer balance >= total_amount, instantly deducts balance, saves gmails, sets status='delivered'
+  const approveBuyerOrder = async (
+    orderId: string,
+    gmails: Array<{ gmail: string; password: string; recoveryEmail?: string }>,
+    adminNote?: string
+  ): Promise<{ success: boolean; message?: string }> => {
+    try {
+      // 1. Send to server-side endpoint for atomic approval & ledger recording
+      const response = await fetch('/api/admin/orders/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId,
+          gmails,
+          adminNote: adminNote || 'Approved & Delivered by Admin',
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.order) {
+          const deliveredOrder = result.order as BuyerOrder;
+          const orderTarget = buyerOrders.find((o) => o.id === orderId || o.key === orderId) || deliveredOrder;
+
+          // Calculate remaining pending orders sum
+          const remainingPendingSum = buyerOrders
+            .filter((o) => (o.id !== orderId && o.key !== orderId) && (o.userId === orderTarget.userId) && (o.status === 'pending' || o.status === 'processing'))
+            .reduce((sum, o) => sum + (Number(o.amount || (Number(o.unitPrice || 0) * Number(o.quantity || 1))) || 0), 0);
+
+          const safeReserved = typeof result.buyerNewReservedBalance === 'number' && result.buyerNewReservedBalance >= 0
+            ? result.buyerNewReservedBalance
+            : Number(remainingPendingSum.toFixed(2));
+
+          // Directly sync to RTDB user node to ensure real-time consistency
+          if (orderTarget.userId) {
+            try {
+              await update(ref(db, `users/${orderTarget.userId}`), {
+                reserved_balance: safeReserved,
+                total_spent: increment(orderTarget.amount || 0)
+              });
+            } catch (e) {
+              console.warn('Direct RTDB sync on approve:', e);
+            }
+          }
+
+          // Update local state
+          setBuyerOrders((prev) =>
+            prev.map((o) => (o.id === orderId || o.key === orderId ? deliveredOrder : o))
+          );
+
+          // If current logged in user is the buyer, update local balance
+          if (user && deliveredOrder.userId === user.uid) {
+            setProfile((p) => (p ? { 
+              ...p, 
+              deposit_balance: typeof result.buyerNewDepositBalance === 'number' ? result.buyerNewDepositBalance : p.deposit_balance,
+              buyerWalletBalance: typeof result.buyerNewDepositBalance === 'number' ? result.buyerNewDepositBalance : p.deposit_balance,
+              reserved_balance: safeReserved
+            } : null));
+
+            try {
+              localStorage.setItem(`mf_wallet_cache_${user.uid}`, JSON.stringify({
+                deposit_balance: typeof result.buyerNewDepositBalance === 'number' ? result.buyerNewDepositBalance : (profile?.deposit_balance || 0),
+                buyerWalletBalance: typeof result.buyerNewDepositBalance === 'number' ? result.buyerNewDepositBalance : (profile?.deposit_balance || 0),
+                reserved_balance: safeReserved,
+                timestamp: Date.now()
+              }));
+            } catch {}
+          }
+
+          addNotification(
+            'অর্ডার অনুমোদিত ✓',
+            `অর্ডার #${(orderId || "").slice(-6).toUpperCase()} সফলভাবে অনুমোদন করা হয়েছে।`,
+            'success'
+          );
+
+          return { success: true, message: result.message };
+        }
+      } else {
+        const errJson = await response.json().catch(() => ({}));
+        return { success: false, message: errJson.message || 'অর্ডার অনুমোদন ব্যর্থ হয়েছে।' };
+      }
+    } catch (e: any) {
+      console.warn('Server approve API notice (using fallback):', e);
+    }
+
+    // Direct fallback
+    try {
+      const order = buyerOrders.find((o) => o.id === orderId || o.key === orderId);
+      if (!order) return { success: false, message: 'Order not found' };
+
+      // Calculate remaining pending orders sum
+      const remainingPendingSum = buyerOrders
+        .filter((o) => (o.id !== orderId && o.key !== orderId) && o.userId === order.userId && (o.status === 'pending' || o.status === 'processing'))
+        .reduce((sum, o) => sum + (Number(o.amount || (Number(o.unitPrice || 0) * Number(o.quantity || 1))) || 0), 0);
+
+      await update(ref(db, `users/${order.userId}`), {
+        reserved_balance: Number(remainingPendingSum.toFixed(2)),
+        total_spent: increment(order.amount || 0)
+      });
+
+      const formattedGmails = gmails.map((g) => ({
+        email: g.gmail || (g as any).email,
+        gmail: g.gmail || (g as any).email,
+        password: g.password,
+        recoveryEmail: g.recoveryEmail,
+      }));
+
+      const updatePayload = {
+        status: 'delivered',
+        deliveredAt: Date.now(),
+        deliveryData: formattedGmails,
+        delivered_gmails: formattedGmails,
+        adminNote: adminNote || 'Approved & Delivered by Admin',
+      };
+
+      await update(ref(db, `buyer_orders/${orderId}`), updatePayload);
+      await update(ref(db, `users/${order.userId}/buyer_orders/${orderId}`), updatePayload);
+
+      // Record Debit Transaction
+      const txKey = `tx_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      const txData = {
+        id: txKey,
+        userId: order.userId,
+        username: order.username,
+        userEmail: order.userEmail || '',
+        type: 'debit',
+        category: 'Purchase',
+        title: `অর্ডার #${(orderId || "").slice(-6).toUpperCase()} (${order.quantity} টি জিমেইল)`,
+        amount: -order.amount,
+        orderId,
+        status: 'completed',
+        timestamp: Date.now(),
+        date: new Date().toISOString(),
+      };
+
+      try {
+        await set(ref(db, `users/${order.userId}/transactions/${txKey}`), txData);
+        await set(ref(db, `transactions/${txKey}`), txData);
+      } catch {}
+
+      // Notify Buyer
+      const notifKey = `notif_${Date.now()}`;
+      try {
+        await set(ref(db, `users/${order.userId}/notifications/${notifKey}`), {
+          id: notifKey,
+          title: 'Order Delivered 🎉',
+          desc: `আপনার অর্ডার #${(orderId || "").slice(-6).toUpperCase()} অনুমোদন হয়েছে।`,
+          type: 'success',
+          read: false,
+          time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          timestamp: Date.now(),
+        });
+      } catch {}
+
+      setBuyerOrders((prev) =>
+        prev.map((o) => (o.id === orderId || o.key === orderId ? { ...o, ...updatePayload } : o))
+      );
+
+      return { success: true, message: 'অর্ডার সফলভাবে অনুমোদন করা হয়েছে।' };
+    } catch (err: any) {
+      console.error('Approve order error:', err);
+      return { success: false, message: err.message || 'Error approving order' };
+    }
+  };
+
+  // Admin Reject Order: Sets status='cancelled', restores product stock
+  const rejectBuyerOrder = async (orderId: string, adminNote?: string): Promise<{ success: boolean; message?: string }> => {
+    try {
+      const response = await fetch('/api/admin/orders/reject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, adminNote: adminNote || 'Order cancelled by Admin. Stock restored.' }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const order = buyerOrders.find((o) => o.id === orderId || o.key === orderId);
+        if (order) {
+          // Calculate remaining pending orders sum excluding this rejected order
+          const remainingPendingSum = buyerOrders
+            .filter((o) => (o.id !== orderId && o.key !== orderId) && (o.userId === order.userId) && (o.status === 'pending' || o.status === 'processing'))
+            .reduce((sum, o) => sum + (Number(o.amount || (Number(o.unitPrice || 0) * Number(o.quantity || 1))) || 0), 0);
+
+          const safeReserved = typeof result.buyerNewReservedBalance === 'number' && result.buyerNewReservedBalance >= 0
+            ? result.buyerNewReservedBalance
+            : Number(remainingPendingSum.toFixed(2));
+
+          // Ensure RTDB user node has the synchronized reserved_balance
+          if (order.userId) {
+            try {
+              await update(ref(db, `users/${order.userId}`), {
+                reserved_balance: safeReserved
+              });
+            } catch (e) {
+              console.warn('Direct RTDB sync on reject:', e);
+            }
+          }
+
+          setBuyerProducts((prev) =>
+            prev.map((p) => (p.id === order.productId ? { ...p, stock: p.stock + order.quantity } : p))
+          );
+
+          // Update local profile immediately if the current user is the buyer
+          if (user && user.uid === order.userId) {
+            setProfile((prev) => prev ? {
+              ...prev,
+              deposit_balance: typeof result.buyerNewDepositBalance === 'number' ? result.buyerNewDepositBalance : prev.deposit_balance,
+              buyerWalletBalance: typeof result.buyerNewDepositBalance === 'number' ? result.buyerNewDepositBalance : prev.deposit_balance,
+              reserved_balance: safeReserved
+            } : null);
+
+            try {
+              if (typeof result.buyerNewDepositBalance === 'number') {
+                localStorage.setItem(`mf_wallet_cache_${user.uid}`, JSON.stringify({
+                  deposit_balance: result.buyerNewDepositBalance,
+                  buyerWalletBalance: result.buyerNewDepositBalance,
+                  reserved_balance: safeReserved,
+                  timestamp: Date.now()
+                }));
+              }
+            } catch {}
+          }
+        }
+
+        setBuyerOrders((prev) => {
+          const updated = prev.map((o) => (o.id === orderId || o.key === orderId ? { ...o, status: 'cancelled' as const, adminNote, refundProcessed: true } : o));
+          try { localStorage.setItem('mf_buyer_orders', JSON.stringify(updated)); } catch {}
+          return updated;
+        });
+
+        return { success: true };
+      }
+    } catch (e) {
+      console.warn('Reject API error:', e);
+    }
+
+    try {
+      const order = buyerOrders.find((o) => o.id === orderId || o.key === orderId);
+      if (order) {
+        // Calculate remaining pending orders sum
+        const remainingPendingSum = buyerOrders
+          .filter((o) => (o.id !== orderId && o.key !== orderId) && o.userId === order.userId && (o.status === 'pending' || o.status === 'processing'))
+          .reduce((sum, o) => sum + (Number(o.amount || (Number(o.unitPrice || 0) * Number(o.quantity || 1))) || 0), 0);
+
+        // Refund reserved_balance back to deposit_balance
+        try {
+          await update(ref(db, `users/${order.userId}`), {
+            deposit_balance: increment(order.amount || 0),
+            buyerWalletBalance: increment(order.amount || 0),
+            reserved_balance: Number(remainingPendingSum.toFixed(2))
+          });
+
+          // Push exact refund notification
+          const nKey = push(ref(db, `users/${order.userId}/notifications`)).key;
+          const reasonText = adminNote ? ` (কারণ: ${adminNote})` : '';
+          await update(ref(db, `users/${order.userId}/notifications/${nKey}`), {
+            id: nKey,
+            title: 'Order Cancelled & Refunded 💳',
+            desc: `আপনার #${order.id || orderId} অর্ডারটি বাতিল করা হয়েছে এবং অর্ডারের সম্পূর্ণ ৳${Number(order.amount).toFixed(2)} টাকা সরাসরি আপনার ডিপোজিট ব্যালেন্সে ফেরত দেওয়া হয়েছে।${reasonText}`,
+            type: 'info',
+            read: false,
+            time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+            timestamp: Date.now()
+          });
+          
+          // Update local profile if the logged in user is the buyer
+          if (user && user.uid === order.userId) {
+            const newDep = Number(((profile?.deposit_balance || 0) + order.amount).toFixed(2));
+            setProfile(prev => prev ? {
+              ...prev,
+              deposit_balance: newDep,
+              buyerWalletBalance: newDep,
+              reserved_balance: Number(remainingPendingSum.toFixed(2))
+            } : null);
+
+            try {
+              localStorage.setItem(`mf_wallet_cache_${user.uid}`, JSON.stringify({
+                deposit_balance: newDep,
+                buyerWalletBalance: newDep,
+                reserved_balance: Number(remainingPendingSum.toFixed(2)),
+                timestamp: Date.now()
+              }));
+            } catch {}
+          }
+        } catch (refundErr) {
+          console.warn('Fund refund error:', refundErr);
+        }
+
+        await update(ref(db, `buyer_orders/${orderId}`), {
+          status: 'cancelled',
+          refundProcessed: true,
+          adminNote: adminNote || 'Order cancelled by Admin.',
+        });
+        await update(ref(db, `users/${order.userId}/buyer_orders/${orderId}`), {
+          status: 'cancelled',
+          refundProcessed: true,
+          adminNote: adminNote || 'Order cancelled by Admin.',
+        });
+
+        setBuyerProducts((prev) =>
+          prev.map((p) => (p.id === order.productId ? { ...p, stock: p.stock + order.quantity } : p))
+        );
+
+        setBuyerOrders((prev) => {
+          const updated = prev.map((o) => (o.id === orderId || o.key === orderId ? { ...o, status: 'cancelled' as const, adminNote, refundProcessed: true } : o));
+          try { localStorage.setItem('mf_buyer_orders', JSON.stringify(updated)); } catch {}
+          return updated;
+        });
+      }
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, message: err.message };
+    }
+  };
+
+  // Delete Buyer Product (Deletes from Firebase RTDB and propagates real-time)
+  const deleteBuyerProduct = async (productId: string): Promise<{ success: boolean; message?: string }> => {
+    try {
+      // 1. Delete node in Firebase RTDB
+      await set(ref(db, `buyer_products/${productId}`), null);
+
+      // 2. Call backend endpoint if available
+      try {
+        await fetch(`/api/admin/products/${productId}`, {
+          method: 'DELETE',
+        });
+      } catch (e) {
+        console.warn('Server delete product API notice:', e);
+      }
+
+      // 3. Optimistic local state & cache update
+      setBuyerProducts((prev) => {
+        const updated = prev.filter((p) => p.id !== productId);
+        try { localStorage.setItem('mf_buyer_products', JSON.stringify(updated)); } catch {}
+        return updated;
+      });
+
+      return { success: true, message: 'প্রোডাক্টটি সফলভাবে ডিলিট করা হয়েছে।' };
+    } catch (err: any) {
+      console.error('Delete product error:', err);
+      return { success: false, message: err?.message || 'Failed to delete product' };
+    }
+  };
+
+  // Price Alert Subscription Management
+  const subscribePriceAlert = async (data: {
+    accountType: 'fresh' | 'aged' | 'all';
+    targetPrice?: number;
+    direction?: 'any_change' | 'price_drop' | 'target_or_below';
+  }): Promise<{ success: boolean; message?: string }> => {
+    if (!user) {
+      return { success: false, message: 'Please login first' };
+    }
+
+    const alertId = `alert_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const newAlert: PriceAlertSubscription = {
+      id: alertId,
+      userId: user.uid,
+      userEmail: user.email || '',
+      accountType: data.accountType,
+      targetPrice: data.targetPrice,
+      direction: data.direction || 'price_drop',
+      createdAt: Date.now(),
+      active: true,
+    };
+
+    try {
+      await set(ref(db, `users/${user.uid}/price_alerts/${alertId}`), newAlert);
+      await set(ref(db, `price_alerts/${alertId}`), newAlert);
+    } catch (e) {
+      console.warn('Price alert DB write error:', e);
+    }
+
+    setPriceAlerts((prev) => {
+      const updated = [newAlert, ...prev.filter((a) => a.id !== alertId)];
+      try { localStorage.setItem('mf_price_alerts', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+
+    const categoryLabel = data.accountType === 'all'
+      ? (language === 'bn' ? 'সকল প্যাকেজ' : 'All Accounts')
+      : data.accountType === 'fresh'
+      ? (language === 'bn' ? 'ফ্রেশ জিমেইল' : 'Fresh Gmail')
+      : (language === 'bn' ? 'ওল্ড জিমেইল' : 'Aged Gmail');
+
+    addNotification(
+      language === 'bn' ? 'প্রাইস অ্যালার্ট সেট করা হয়েছে 🔔' : 'Price Alert Subscribed 🔔',
+      language === 'bn'
+        ? `${categoryLabel}-এর জন্য আপনার প্রাইস অ্যালার্ট সক্রিয় হয়েছে। দাম পরিবর্তন হলে সাথে সাথে নোটিফিকেশন পাবেন।`
+        : `Your price alert for ${categoryLabel} is now active. You will be notified instantly on price drops.`,
+      'success'
+    );
+
+    return { success: true };
+  };
+
+  const unsubscribePriceAlert = async (id: string): Promise<{ success: boolean; message?: string }> => {
+    if (user) {
+      try {
+        await set(ref(db, `users/${user.uid}/price_alerts/${id}`), null);
+        await set(ref(db, `price_alerts/${id}`), null);
+      } catch (e) {
+        console.warn('Unsubscribe alert DB write error:', e);
+      }
+    }
+
+    setPriceAlerts((prev) => {
+      const updated = prev.filter((a) => a.id !== id);
+      try { localStorage.setItem('mf_price_alerts', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+
+    addNotification(
+      language === 'bn' ? 'প্রাইস অ্যালার্ট সরানো হয়েছে' : 'Price Alert Removed',
+      language === 'bn' ? 'অ্যালার্টটি নিষ্ক্রিয় করা হয়েছে।' : 'The price alert subscription has been removed.',
+      'info'
+    );
+
+    return { success: true };
+  };
+
   const contextValue = useMemo<AppContextType>(() => ({
+    appMode,
+    setAppMode,
     user,
     profile,
     loading,
@@ -1905,8 +3239,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     commissionPercent,
     signupBonusUser,
     signupBonusReferrer,
-    submissions,
-    withdrawRequests,
+    submissions: submissions || [],
+    allSubmissions: allSubmissions || [],
+    withdrawRequests: withdrawRequests || [],
+    buyerProducts: buyerProducts || [],
+    buyerOrders: buyerOrders || [],
+    depositRequests: depositRequests || [],
+    isAdmin,
+    deleteBuyerProduct,
+    createBuyerOrder,
+    approveBuyerOrder,
+    rejectBuyerOrder,
+    requestDeposit,
+    sandboxVerifyDeposit,
+    verifyBuyerDeposit,
     notifications,
     unreadNotifsCount,
     addNotification,
@@ -1939,7 +3285,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     claimReferralEarnings,
     appLogo,
     copyText,
+    priceAlerts,
+    isPriceAlertModalOpen,
+    setPriceAlertModalOpen,
+    subscribePriceAlert,
+    unsubscribePriceAlert,
   }), [
+    appMode,
     user,
     profile,
     loading,
@@ -1961,7 +3313,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     signupBonusUser,
     signupBonusReferrer,
     submissions,
+    allSubmissions,
     withdrawRequests,
+    buyerProducts,
+    buyerOrders,
+    depositRequests,
+    isAdmin,
+    deleteBuyerProduct,
+    createBuyerOrder,
+    approveBuyerOrder,
+    rejectBuyerOrder,
+    requestDeposit,
     notifications,
     unreadNotifsCount,
     addNotification,
@@ -1990,8 +3352,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSettingsDrawerOpen,
     isRateModalOpen,
     setRateModalOpen,
+    isPriceAlertModalOpen,
+    setPriceAlertModalOpen,
+    priceAlerts,
+    subscribePriceAlert,
+    unsubscribePriceAlert,
     claimDailyStreak,
     claimReferralEarnings,
+    sandboxVerifyDeposit,
     appLogo,
     copyText,
   ]);

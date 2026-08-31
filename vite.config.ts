@@ -16,6 +16,7 @@ export default defineConfig(() => {
         },
         includeAssets: ['app-logo.png', 'app-logo-clean.png', 'icon-192.png', 'icon-512.png', 'favicon.png', 'favicon.ico', 'apple-touch-icon.png', 'apple-touch-icon-precomposed.png', 'favicon.svg'],
         workbox: {
+          maximumFileSizeToCacheInBytes: 6000000,
           globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
           runtimeCaching: [
             {
@@ -98,9 +99,17 @@ export default defineConfig(() => {
       })
     ],
     resolve: {
+      dedupe: ['react', 'react-dom'],
       alias: {
         '@': path.resolve(__dirname, '.'),
       },
+    },
+    optimizeDeps: {
+      include: [
+        'react',
+        'react-dom',
+        'lucide-react',
+      ],
     },
     build: {
       target: 'es2020',
@@ -108,16 +117,6 @@ export default defineConfig(() => {
       minify: 'esbuild' as const,
       sourcemap: false,
       chunkSizeWarningLimit: 1000,
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            vendor: ['react', 'react-dom'],
-            firebase: ['firebase/app', 'firebase/auth', 'firebase/database'],
-            icons: ['lucide-react'],
-            animation: ['motion']
-          }
-        }
-      }
     },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
