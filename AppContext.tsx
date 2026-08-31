@@ -53,11 +53,11 @@ export const AUTHORIZED_ADMINS = [
 export const DEFAULT_BUYER_PRODUCTS: BuyerProduct[] = [];
 
 export const DEFAULT_LEVELS: LevelConfig[] = [
-  { level: 1, approved: 0, rate: 10, old_rate: 8, title: 'Bronze Member', perkDescription: 'Standard exchange rate' },
-  { level: 2, approved: 40, rate: 11, old_rate: 9, title: 'Silver Member', perkDescription: '+1৳ per Gmail' },
-  { level: 3, approved: 100, rate: 12, old_rate: 10, title: 'Gold VIP', perkDescription: '+2৳ per Gmail + Fast payouts' },
-  { level: 4, approved: 250, rate: 13, old_rate: 11, title: 'Platinum Partner', perkDescription: '+3৳ per Gmail + Instant audit' },
-  { level: 5, approved: 500, rate: 14, old_rate: 12, title: 'Diamond Boss', perkDescription: 'Maximum rate + VIP 24/7 dedicated review' },
+  { level: 1, approved: 0, rate: 15, old_rate: 17, title: 'Bronze Member', perkDescription: 'Standard exchange rate' },
+  { level: 2, approved: 40, rate: 16, old_rate: 18, title: 'Silver Member', perkDescription: '+1৳ per Gmail' },
+  { level: 3, approved: 100, rate: 17, old_rate: 19, title: 'Gold VIP', perkDescription: '+2৳ per Gmail + Fast payouts' },
+  { level: 4, approved: 250, rate: 18, old_rate: 20, title: 'Platinum Partner', perkDescription: '+3৳ per Gmail + Instant audit' },
+  { level: 5, approved: 500, rate: 20, old_rate: 22, title: 'Diamond Boss', perkDescription: 'Maximum rate + VIP 24/7 dedicated review' },
 ];
 
 export const DEFAULT_TOP_SELLERS: UserProfile[] = [];
@@ -226,6 +226,10 @@ export const TAB_TO_PATH: Record<ActiveTab, string> = {
   buyer_deposit: '/buyer/deposit',
   buyer_transactions: '/buyer/transactions',
   buyer_policies: '/buyer/policies',
+  'buy-gmail-accounts': '/buy-gmail-accounts',
+  'sell-old-gmail-accounts': '/sell-gmail-accounts',
+  login: '/login',
+  register: '/register',
 };
 
 export const PATH_TO_TAB: Record<string, ActiveTab> = {
@@ -290,9 +294,15 @@ export const PATH_TO_TAB: Record<string, ActiveTab> = {
   '/buyer-transactions': 'buyer_transactions',
   '/buyer/policies': 'buyer_policies',
   '/buyer-policies': 'buyer_policies',
-  '/register': 'home',
-  '/signup': 'home',
-  '/login': 'home',
+  '/buy-gmail-accounts': 'buy-gmail-accounts',
+  '/buy-gmail-accounts/': 'buy-gmail-accounts',
+  '/sell-old-gmail-accounts': 'sell-old-gmail-accounts',
+  '/sell-old-gmail-accounts/': 'sell-old-gmail-accounts',
+  '/sell-gmail-accounts': 'sell-old-gmail-accounts',
+  '/sell-gmail-accounts/': 'sell-old-gmail-accounts',
+  '/register': 'register',
+  '/signup': 'register',
+  '/login': 'login',
   '/admin': 'home',
   '/admin-panel': 'home',
 };
@@ -1712,9 +1722,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Check if already claimed today
     const isBonusDateToday = profile.lastBonusDate
       ? new Date(profile.lastBonusDate).toDateString() === today
-      : lastLogin === today;
+      : false;
 
-    if ((profile.dailyBonusClaimedToday && isBonusDateToday) || lastLogin === today) {
+    if (profile.dailyBonusClaimedToday && isBonusDateToday) {
       return { success: false, streakCount: profile.login_streak || 1 };
     }
 
@@ -1765,8 +1775,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               lastBonusDate: now,
               login_streak: newStreak,
               last_login_date: today,
-              balance: (Number(prev.balance) || 0) + bonusAmount,
-              totalEarnings: (Number(prev.totalEarnings) || 0) + bonusAmount,
             }
           : null
       );

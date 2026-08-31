@@ -324,7 +324,11 @@ export type ActiveTab =
   | 'buyer_wallet'
   | 'buyer_deposit'
   | 'buyer_transactions'
-  | 'buyer_policies';
+  | 'buyer_policies'
+  | 'buy-gmail-accounts'
+  | 'sell-old-gmail-accounts'
+  | 'login'
+  | 'register';
 export type Language = 'bn' | 'en';
 
 export interface BuyerProduct {

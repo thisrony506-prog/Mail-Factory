@@ -258,7 +258,7 @@ export const BuyGmailSEOView: React.FC = () => {
               <tbody className="divide-y divide-slate-700/60 text-xs md:text-sm text-slate-300">
                 <tr className="hover:bg-slate-800/30 transition-colors">
                   <td className="p-4 font-bold text-white">Fresh PVA Gmail (USA IP)</td>
-                  <td className="p-4 font-extrabold text-indigo-400">৳15 / Account</td>
+                  <td className="p-4 font-extrabold text-indigo-400">৳35 / Account</td>
                   <td className="p-4">YouTube Channels, Social Media, App Setup</td>
                   <td className="p-4 text-center">
                     <button 
@@ -271,7 +271,7 @@ export const BuyGmailSEOView: React.FC = () => {
                 </tr>
                 <tr className="hover:bg-slate-800/30 transition-colors">
                   <td className="p-4 font-bold text-white">UK / EU Phone Verified Gmail</td>
-                  <td className="p-4 font-extrabold text-indigo-400">৳16 / Account</td>
+                  <td className="p-4 font-extrabold text-indigo-400">৳50 / Account</td>
                   <td className="p-4">International E-commerce, Stripe, UK Ads</td>
                   <td className="p-4 text-center">
                     <button 
@@ -284,7 +284,7 @@ export const BuyGmailSEOView: React.FC = () => {
                 </tr>
                 <tr className="hover:bg-slate-800/30 transition-colors">
                   <td className="p-4 font-bold text-white">BD Phone Verified Gmail (bKash)</td>
-                  <td className="p-4 font-extrabold text-indigo-400">৳15 / Account</td>
+                  <td className="p-4 font-extrabold text-indigo-400">৳40 / Account</td>
                   <td className="p-4">BD Local SEO, Freelancing, Local Signups</td>
                   <td className="p-4 text-center">
                     <button 
@@ -297,7 +297,7 @@ export const BuyGmailSEOView: React.FC = () => {
                 </tr>
                 <tr className="hover:bg-slate-800/30 transition-colors">
                   <td className="p-4 font-bold text-white">Old Aged Gmail (2018-2022)</td>
-                  <td className="p-4 font-extrabold text-indigo-400">৳18 / Account</td>
+                  <td className="p-4 font-extrabold text-indigo-400">৳95 / Account</td>
                   <td className="p-4">CPA Marketing, Google Ads, YouTube Trust</td>
                   <td className="p-4 text-center">
                     <button 

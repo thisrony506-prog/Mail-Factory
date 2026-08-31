@@ -55,10 +55,15 @@ export const AuthPageView: React.FC<AuthPageViewProps> = ({
   initialMode = 'register',
   onBackToLanding,
 }) => {
-  const { language, setLanguage, appLogo, signupBonusUser, signupBonusReferrer } = useApp();
+  const { language, setLanguage, appLogo, signupBonusUser, signupBonusReferrer, setActiveTab } = useApp();
   const t = translations[language] || translations['bn'];
 
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
+
+  // Keep local mode state synced with the prop/URL route
+  useEffect(() => {
+    setMode(initialMode);
+  }, [initialMode]);
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -481,7 +486,7 @@ export const AuthPageView: React.FC<AuthPageViewProps> = ({
                 type="button"
                 onClick={() => {
                   hapticFeedback.light();
-                  setMode('register');
+                  setActiveTab('register');
                   setErrorMessage(null);
                 }}
                 className={`py-2 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
@@ -498,7 +503,7 @@ export const AuthPageView: React.FC<AuthPageViewProps> = ({
                 type="button"
                 onClick={() => {
                   hapticFeedback.light();
-                  setMode('login');
+                  setActiveTab('login');
                   setErrorMessage(null);
                 }}
                 className={`py-2 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
@@ -755,7 +760,7 @@ export const AuthPageView: React.FC<AuthPageViewProps> = ({
                     type="button"
                     onClick={() => {
                       hapticFeedback.light();
-                      setMode('login');
+                      setActiveTab('login');
                       setErrorMessage(null);
                     }}
                     className="font-extrabold text-indigo-400 hover:underline cursor-pointer ml-1"
@@ -770,7 +775,7 @@ export const AuthPageView: React.FC<AuthPageViewProps> = ({
                     type="button"
                     onClick={() => {
                       hapticFeedback.light();
-                      setMode('register');
+                      setActiveTab('register');
                       setErrorMessage(null);
                     }}
                     className="font-extrabold text-indigo-400 hover:underline cursor-pointer ml-1"

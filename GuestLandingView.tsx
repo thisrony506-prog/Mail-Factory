@@ -256,7 +256,7 @@ export const GuestLandingView: React.FC = () => {
       userId: 'u2',
       userName: 'Tanvir Rahman',
       rating: 5,
-      text: 'The level system is amazing! I started at Level 1 and now I am getting ৳14 per Gmail at Level 5. Highly recommended!',
+      text: 'The level system is amazing! I started at Level 1 and now I am getting ৳22 per Gmail at Level 5. Highly recommended!',
       isVerified: true,
       createdAt: Date.now() - 172800000,
       status: 'approved',
@@ -449,7 +449,7 @@ export const GuestLandingView: React.FC = () => {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-4 border-t border-slate-800/80">
               <div className="flex items-center gap-2 text-[11px] font-bold text-slate-300">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>{language === 'bn' ? '৳১৫-৳২৫ / Gmail' : '৳15-৳25 / Gmail'}</span>
+                <span>{language === 'bn' ? '৳১৫-৳২২ / Gmail' : '৳15-৳22 / Gmail'}</span>
               </div>
               <div className="flex items-center gap-2 text-[11px] font-bold text-slate-300">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -710,11 +710,15 @@ export const GuestLandingView: React.FC = () => {
                   </h4>
 
                   {/* Price Rate Highlight */}
-                  <div className="my-2 py-1.5 px-2 rounded-xl bg-slate-900/60 border border-slate-700/50 text-center">
-                    <span className="text-2xl font-black text-emerald-400 tracking-tight">
-                      ৳{lvl.rate}
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-medium ml-1">/Pcs</span>
+                  <div className="my-2 py-2 px-2.5 rounded-xl bg-slate-900/60 border border-slate-700/50 text-center space-y-1">
+                    <div className="flex items-center justify-between text-[11px] border-b border-slate-800/40 pb-1">
+                      <span className="text-slate-400 font-bold">{language === 'bn' ? 'নিউ' : 'New'}:</span>
+                      <span className="font-extrabold text-emerald-400">৳{lvl.rate}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-slate-400 font-bold">{language === 'bn' ? 'ওল্ড' : 'Old'}:</span>
+                      <span className="font-extrabold text-amber-400">৳{lvl.old_rate}</span>
+                    </div>
                   </div>
 
                   {/* Criteria / Gmail Target */}

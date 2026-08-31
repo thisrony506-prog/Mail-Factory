@@ -255,8 +255,15 @@ export const HomeView: React.FC = () => {
                 <div className="text-[10px] font-extrabold uppercase">
                   {lvl.title} {isCurrent && '👑'}
                 </div>
-                <div className="text-base font-black text-amber-300 my-0.5">
-                  ৳{lvl.rate} <span className="text-[10px] font-normal text-white/70">/mail</span>
+                <div className="my-1.5 py-1 px-2 rounded bg-black/10 border border-white/5 space-y-0.5 text-left text-[11px]">
+                  <div className="flex justify-between font-bold text-slate-200">
+                    <span>New:</span>
+                    <span className="text-emerald-400">৳{lvl.rate}</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-slate-200">
+                    <span>Old:</span>
+                    <span className="text-amber-300">৳{lvl.old_rate}</span>
+                  </div>
                 </div>
                 <div className="text-[9px] text-white/60 truncate">
                   {lvl.approved === 0 ? 'Start' : `${lvl.approved}+ approved`}

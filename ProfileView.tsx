@@ -116,10 +116,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const todayStr = new Date().toDateString();
   const isBonusDateToday = profile?.lastBonusDate
     ? new Date(profile.lastBonusDate).toDateString() === todayStr
-    : profile?.last_login_date === todayStr;
+    : false;
 
   const alreadyClaimed = Boolean(
-    (profile?.dailyBonusClaimedToday && isBonusDateToday) || profile?.last_login_date === todayStr
+    profile?.dailyBonusClaimedToday && isBonusDateToday
   );
 
   const handleClaimStreak = async () => {

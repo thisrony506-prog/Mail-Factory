@@ -29,10 +29,10 @@ export const SellersView: React.FC = () => {
   const todayClaimedUsers = React.useMemo(() => {
     return (allUsers || []).filter((u) => {
       if (!u) return false;
-      const isToday = u.lastBonusDate
+      const isBonusToday = u.lastBonusDate
         ? new Date(u.lastBonusDate).toDateString() === todayStr
-        : u.last_login_date === todayStr;
-      return Boolean(u.dailyBonusClaimedToday && isToday) || (Boolean(u.dailyBonusToday) && isToday) || u.last_login_date === todayStr;
+        : false;
+      return Boolean(u.dailyBonusClaimedToday && isBonusToday);
     });
   }, [allUsers, todayStr]);
 
