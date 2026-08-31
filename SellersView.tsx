@@ -11,11 +11,10 @@ import {
   Edit3,
   Shield,
 } from 'lucide-react';
-import { TopSellerItem, isExcludedSeller } from './types';
+import { TopSellerItem, isExcludedSeller, DEFAULT_BENCHMARK_SELLERS } from './types';
+export { DEFAULT_BENCHMARK_SELLERS };
 
 const ADMIN_EMAILS = ['gmrony135@gmail.com', 'mailfactorybd@gmail.com', 'iamronyofficial1@gmail.com'];
-
-export const DEFAULT_BENCHMARK_SELLERS: TopSellerItem[] = [];
 
 export const SellersView: React.FC = () => {
   const { language, topSellers, allUsers, user, setActiveTab, syncRealUsersToTopSellers, addNotification } = useApp();

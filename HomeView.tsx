@@ -20,8 +20,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
-import { GmailType, TopSellerItem, isExcludedSeller } from './types';
-import { DEFAULT_BENCHMARK_SELLERS } from './SellersView';
+import { GmailType, TopSellerItem, isExcludedSeller, DEFAULT_BENCHMARK_SELLERS } from './types';
 import { useUserBalance } from './useUserBalance';
 
 export const HomeView: React.FC = () => {

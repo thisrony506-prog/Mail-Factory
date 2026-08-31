@@ -54,7 +54,6 @@
           e.preventDefault();
           window.__mf_deferred_prompt = e;
           window.dispatchEvent(new CustomEvent('mf_pwa_ready', { detail: e }));
-          console.log('[PWA] Native install prompt captured');
         });
         window.addEventListener('appinstalled', function() {
           window.__mf_deferred_prompt = null;
@@ -62,11 +61,10 @@
             localStorage.setItem('mailfactory_pwa_installed', 'true');
           } catch(err) {}
           window.dispatchEvent(new CustomEvent('mf_pwa_installed'));
-          console.log('[PWA] App installed successfully');
         });
         if ('serviceWorker' in navigator) {
           window.addEventListener('load', function() {
-            navigator.serviceWorker.getRegistrations().then(function(r) { for(let i of r) i.unregister(); }); navigator.serviceWorker.register('/sw.js').then(function(reg) {
+            navigator.serviceWorker.register('/sw.js').then(function(reg) {
               console.log('[PWA] SW active with scope:', reg.scope);
             }).catch(function(err) {
               console.warn('[PWA] SW registration notice:', err);
@@ -81,7 +79,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://fonts.googleapis.com">
     <link rel="dns-prefetch" href="https://fonts.gstatic.com">
-    <link rel="dns-prefetch" href="https://mail-factory-298a0-default-rtdb.asia-southeast1.firebasedatabase.app">
+    <link rel="dns-prefetch" href="https://exchanger-pro-default-rtdb.firebaseio.com">
     <link rel="preload" href="/app-logo.png" as="image" type="image/png" fetchpriority="high">
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Hind+Siliguri:wght@400;500;600;700&display=swap" />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
@@ -95,6 +93,7 @@
         min-height: 100%;
         background-color: #0b0f19;
         font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+        color: #f8fafc;
       }
       #root {
         min-height: 100vh;

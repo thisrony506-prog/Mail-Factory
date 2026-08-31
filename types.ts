@@ -370,6 +370,8 @@ export interface TopSellerItem {
   rank?: number;
 }
 
+export const DEFAULT_BENCHMARK_SELLERS: TopSellerItem[] = [];
+
 export interface BuyerCredential {
   email: string;
   password: string;

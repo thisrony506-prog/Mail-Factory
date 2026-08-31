@@ -1,46 +1,45 @@
-import React, { useState } from 'react';
-import './logoPreload';
+import React, { useState, lazy, Suspense } from 'react';
 import { AppProvider, useApp } from './AppContext';
 import { Navbar } from './Navbar';
 import { ViewSkeleton } from './ViewSkeleton';
 import { PWAInstallPrompt } from './PWAInstallPrompt';
-
 import { HomeView } from './HomeView';
 import { GuestLandingView } from './GuestLandingView';
-
 import { MessageSquare, Bell } from 'lucide-react';
+import { SEO } from './SEO';
 
-import { ExchangeView } from './ExchangeView';
-import { HistoryView } from './HistoryView';
-import { SellersView } from './SellersView';
-import { ProfileView } from './ProfileView';
-import { WithdrawView } from './WithdrawView';
-import { PrivacyView } from './PrivacyView';
-import { AboutView } from './AboutView';
-import { ReviewsView } from './ReviewsView';
-import { FAQView } from './FAQView';
-import { ContactView } from './ContactView';
-import { SettingsView } from './SettingsView';
-import { ChangePasswordView } from './ChangePasswordView';
-import { EditProfileView } from './EditProfileView';
-import { MemberIdCardView } from './MemberIdCardView';
-import { ReferralLeaderboard } from './ReferralLeaderboard';
-import { BuyerMarketplaceView } from './BuyerMarketplaceView';
-import { BuyerOrdersView } from './BuyerOrdersView';
-import { BuyerWalletView } from './BuyerWalletView';
-import { BuyerDepositView } from './BuyerDepositView';
-import { BuyerTransactionsView } from './BuyerTransactionsView';
-import { BuyerPoliciesView } from './BuyerPoliciesView';
-import { LiveChatDrawer } from './LiveChatDrawer';
-import { NotificationDrawer } from './NotificationDrawer';
-import { AuthModal } from './AuthModal';
+// Code-split secondary views & drawers for sub-50ms instant load
+const ExchangeView = lazy(() => import('./ExchangeView').then((m) => ({ default: m.ExchangeView })));
+const HistoryView = lazy(() => import('./HistoryView').then((m) => ({ default: m.HistoryView })));
+const SellersView = lazy(() => import('./SellersView').then((m) => ({ default: m.SellersView })));
+const ProfileView = lazy(() => import('./ProfileView').then((m) => ({ default: m.ProfileView })));
+const WithdrawView = lazy(() => import('./WithdrawView').then((m) => ({ default: m.WithdrawView })));
+const PrivacyView = lazy(() => import('./PrivacyView').then((m) => ({ default: m.PrivacyView })));
+const AboutView = lazy(() => import('./AboutView').then((m) => ({ default: m.AboutView })));
+const ReviewsView = lazy(() => import('./ReviewsView').then((m) => ({ default: m.ReviewsView })));
+const FAQView = lazy(() => import('./FAQView').then((m) => ({ default: m.FAQView })));
+const ContactView = lazy(() => import('./ContactView').then((m) => ({ default: m.ContactView })));
+const SettingsView = lazy(() => import('./SettingsView').then((m) => ({ default: m.SettingsView })));
+const ChangePasswordView = lazy(() => import('./ChangePasswordView').then((m) => ({ default: m.ChangePasswordView })));
+const EditProfileView = lazy(() => import('./EditProfileView').then((m) => ({ default: m.EditProfileView })));
+const MemberIdCardView = lazy(() => import('./MemberIdCardView').then((m) => ({ default: m.MemberIdCardView })));
+const ReferralLeaderboard = lazy(() => import('./ReferralLeaderboard').then((m) => ({ default: m.ReferralLeaderboard })));
+const BuyerMarketplaceView = lazy(() => import('./BuyerMarketplaceView').then((m) => ({ default: m.BuyerMarketplaceView })));
+const BuyerOrdersView = lazy(() => import('./BuyerOrdersView').then((m) => ({ default: m.BuyerOrdersView })));
+const BuyerWalletView = lazy(() => import('./BuyerWalletView').then((m) => ({ default: m.BuyerWalletView })));
+const BuyerDepositView = lazy(() => import('./BuyerDepositView').then((m) => ({ default: m.BuyerDepositView })));
+const BuyerTransactionsView = lazy(() => import('./BuyerTransactionsView').then((m) => ({ default: m.BuyerTransactionsView })));
+const BuyerPoliciesView = lazy(() => import('./BuyerPoliciesView').then((m) => ({ default: m.BuyerPoliciesView })));
+const LiveChatDrawer = lazy(() => import('./LiveChatDrawer').then((m) => ({ default: m.LiveChatDrawer })));
+const NotificationDrawer = lazy(() => import('./NotificationDrawer').then((m) => ({ default: m.NotificationDrawer })));
+const AuthModal = lazy(() => import('./AuthModal').then((m) => ({ default: m.AuthModal })));
+const BuyGmailSEOView = lazy(() => import('./BuyGmailSEOView').then((m) => ({ default: m.BuyGmailSEOView })));
+const SellGmailSEOView = lazy(() => import('./SellGmailSEOView').then((m) => ({ default: m.SellGmailSEOView })));
+const AuthPageView = lazy(() => import('./AuthPageView').then((m) => ({ default: m.AuthPageView })));
+
+// Modals
 import { FAQModal, ContactModal, RateAppModal } from './Modals';
 import { GlobalSMSPopup } from './GlobalSMSPopup';
-import { FCMSetup } from './FCMSetup';
-import { BuyGmailSEOView } from './BuyGmailSEOView';
-import { SellGmailSEOView } from './SellGmailSEOView';
-import { AuthPageView } from './AuthPageView';
-import { SEO } from './SEO';
 
 const MainLayout: React.FC = () => {
   const {
@@ -263,34 +262,38 @@ const MainLayout: React.FC = () => {
             </header>
 
             <main className="flex-1 max-w-4xl w-full mx-auto p-4 animate-fade-in">
-              {activeTab === 'buy-gmail-accounts' && <BuyGmailSEOView />}
-              {activeTab === 'sell-old-gmail-accounts' && <SellGmailSEOView />}
-              {activeTab === 'reviews' && <ReviewsView />}
-              {activeTab === 'sellers' && <SellersView />}
-              {activeTab === 'about' && <AboutView />}
-              {activeTab === 'privacy' && <PrivacyView />}
-              {activeTab === 'faq' && <FAQView />}
-              {activeTab === 'contact' && <ContactView />}
-              {activeTab === 'buyer_market' && (
-                <BuyerMarketplaceView
-                  onOpenDeposit={() => setAuthModalOpen(true, 'login')}
-                  onOpenOrders={() => setAuthModalOpen(true, 'login')}
-                  onOpenWallet={() => setAuthModalOpen(true, 'login')}
-                />
-              )}
-              {activeTab === 'buyer_orders' && <BuyerOrdersView />}
-              {activeTab === 'buyer_wallet' && <BuyerWalletView />}
-              {activeTab === 'buyer_deposit' && <BuyerDepositView />}
-              {activeTab === 'buyer_transactions' && <BuyerTransactionsView />}
-              {activeTab === 'buyer_policies' && <BuyerPoliciesView />}
-              {activeTab === 'id_card' && <MemberIdCardView onBack={() => setActiveTab('home')} />}
+              <Suspense fallback={<ViewSkeleton />}>
+                {activeTab === 'buy-gmail-accounts' && <BuyGmailSEOView />}
+                {activeTab === 'sell-old-gmail-accounts' && <SellGmailSEOView />}
+                {activeTab === 'reviews' && <ReviewsView />}
+                {activeTab === 'sellers' && <SellersView />}
+                {activeTab === 'about' && <AboutView />}
+                {activeTab === 'privacy' && <PrivacyView />}
+                {activeTab === 'faq' && <FAQView />}
+                {activeTab === 'contact' && <ContactView />}
+                {activeTab === 'buyer_market' && (
+                  <BuyerMarketplaceView
+                    onOpenDeposit={() => setAuthModalOpen(true, 'login')}
+                    onOpenOrders={() => setAuthModalOpen(true, 'login')}
+                    onOpenWallet={() => setAuthModalOpen(true, 'login')}
+                  />
+                )}
+                {activeTab === 'buyer_orders' && <BuyerOrdersView />}
+                {activeTab === 'buyer_wallet' && <BuyerWalletView />}
+                {activeTab === 'buyer_deposit' && <BuyerDepositView />}
+                {activeTab === 'buyer_transactions' && <BuyerTransactionsView />}
+                {activeTab === 'buyer_policies' && <BuyerPoliciesView />}
+                {activeTab === 'id_card' && <MemberIdCardView onBack={() => setActiveTab('home')} />}
+              </Suspense>
             </main>
           </div>
         ) : (
           <GuestLandingView />
         )}
-        <AuthModal />
-        <LiveChatDrawer />
+        <Suspense fallback={null}>
+          <AuthModal />
+          <LiveChatDrawer />
+        </Suspense>
         <FAQModal
           isOpen={isFAQOpen}
           onClose={() => setIsFAQOpen(false)}
@@ -317,50 +320,52 @@ const MainLayout: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 w-full pb-6">
-        {activeTab === 'buy-gmail-accounts' && <BuyGmailSEOView />}
-        {activeTab === 'sell-old-gmail-accounts' && <SellGmailSEOView />}
-        {activeTab === 'home' && <HomeView />}
-        {activeTab === 'exchange' && <ExchangeView />}
-        {activeTab === 'history' && <HistoryView />}
-        {activeTab === 'sellers' && <SellersView />}
-        {activeTab === 'privacy' && <PrivacyView />}
-        {activeTab === 'about' && <AboutView />}
-        {activeTab === 'faq' && <FAQView />}
-        {activeTab === 'contact' && <ContactView />}
-        {activeTab === 'buyer_market' && (
-          <BuyerMarketplaceView
-            onOpenDeposit={() => setActiveTab('buyer_deposit')}
-            onOpenOrders={() => setActiveTab('buyer_orders')}
-            onOpenWallet={() => setActiveTab('buyer_wallet')}
-          />
-        )}
-        {activeTab === 'buyer_orders' && <BuyerOrdersView />}
-        {activeTab === 'buyer_wallet' && <BuyerWalletView />}
-        {activeTab === 'buyer_deposit' && <BuyerDepositView />}
-        {activeTab === 'buyer_transactions' && <BuyerTransactionsView />}
-        {activeTab === 'buyer_policies' && <BuyerPoliciesView />}
-        {activeTab === 'profile' && (
-          <ProfileView
-            onOpenEditProfile={() => setActiveTab('edit_profile')}
-            onOpenChangePass={() => setActiveTab('change_password')}
-            onOpenFAQ={() => setActiveTab('faq')}
-            onOpenContact={() => setActiveTab('contact')}
-          />
-        )}
-        {activeTab === 'withdraw' && <WithdrawView />}
-        {activeTab === 'reviews' && <ReviewsView />}
-        {activeTab === 'referral_leaderboard' && <ReferralLeaderboard />}
-        {activeTab === 'change_password' && <ChangePasswordView />}
-        {activeTab === 'edit_profile' && <EditProfileView />}
-        {activeTab === 'id_card' && <MemberIdCardView onBack={() => setActiveTab('profile')} />}
-        {activeTab === 'settings' && (
-          <SettingsView
-            onOpenEditProfile={() => setActiveTab('edit_profile')}
-            onOpenChangePass={() => setActiveTab('change_password')}
-            onOpenFAQ={() => setActiveTab('faq')}
-            onOpenContact={() => setActiveTab('contact')}
-          />
-        )}
+        <Suspense fallback={<ViewSkeleton />}>
+          {activeTab === 'buy-gmail-accounts' && <BuyGmailSEOView />}
+          {activeTab === 'sell-old-gmail-accounts' && <SellGmailSEOView />}
+          {activeTab === 'home' && <HomeView />}
+          {activeTab === 'exchange' && <ExchangeView />}
+          {activeTab === 'history' && <HistoryView />}
+          {activeTab === 'sellers' && <SellersView />}
+          {activeTab === 'privacy' && <PrivacyView />}
+          {activeTab === 'about' && <AboutView />}
+          {activeTab === 'faq' && <FAQView />}
+          {activeTab === 'contact' && <ContactView />}
+          {activeTab === 'buyer_market' && (
+            <BuyerMarketplaceView
+              onOpenDeposit={() => setActiveTab('buyer_deposit')}
+              onOpenOrders={() => setActiveTab('buyer_orders')}
+              onOpenWallet={() => setActiveTab('buyer_wallet')}
+            />
+          )}
+          {activeTab === 'buyer_orders' && <BuyerOrdersView />}
+          {activeTab === 'buyer_wallet' && <BuyerWalletView />}
+          {activeTab === 'buyer_deposit' && <BuyerDepositView />}
+          {activeTab === 'buyer_transactions' && <BuyerTransactionsView />}
+          {activeTab === 'buyer_policies' && <BuyerPoliciesView />}
+          {activeTab === 'profile' && (
+            <ProfileView
+              onOpenEditProfile={() => setActiveTab('edit_profile')}
+              onOpenChangePass={() => setActiveTab('change_password')}
+              onOpenFAQ={() => setActiveTab('faq')}
+              onOpenContact={() => setActiveTab('contact')}
+            />
+          )}
+          {activeTab === 'withdraw' && <WithdrawView />}
+          {activeTab === 'reviews' && <ReviewsView />}
+          {activeTab === 'referral_leaderboard' && <ReferralLeaderboard />}
+          {activeTab === 'change_password' && <ChangePasswordView />}
+          {activeTab === 'edit_profile' && <EditProfileView />}
+          {activeTab === 'id_card' && <MemberIdCardView onBack={() => setActiveTab('profile')} />}
+          {activeTab === 'settings' && (
+            <SettingsView
+              onOpenEditProfile={() => setActiveTab('edit_profile')}
+              onOpenChangePass={() => setActiveTab('change_password')}
+              onOpenFAQ={() => setActiveTab('faq')}
+              onOpenContact={() => setActiveTab('contact')}
+            />
+          )}
+        </Suspense>
       </main>
 
       {/* Floating Action Buttons */}
@@ -385,9 +390,11 @@ const MainLayout: React.FC = () => {
       </div>
 
       {/* Global Modals and Drawers */}
-      <AuthModal />
-      <LiveChatDrawer />
-      <NotificationDrawer />
+      <Suspense fallback={null}>
+        <AuthModal />
+        <LiveChatDrawer />
+        <NotificationDrawer />
+      </Suspense>
 
       <FAQModal
         isOpen={isFAQOpen}
