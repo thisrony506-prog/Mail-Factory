@@ -363,6 +363,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                           <img
                             src={profile.photoURL}
                             alt={profile.username}
+                            width={40}
+                            height={40}
+                            loading="lazy"
+                            decoding="async"
                             className="w-full h-full rounded-full object-cover"
                           />
                         ) : (
