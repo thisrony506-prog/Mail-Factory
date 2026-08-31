@@ -505,7 +505,7 @@ export const ReviewsView: React.FC = () => {
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-indigo-500/10 border border-indigo-400/20">
                           {r.avatarUrl ? (
-                            <img src={r.avatarUrl} alt={r.userName} width={36} height={36} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                            <img src={r.avatarUrl} alt={r.userName} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-xs font-black uppercase text-indigo-200">
                               {(r.userName || 'U').charAt(0)}
@@ -659,10 +659,6 @@ export const ReviewsView: React.FC = () => {
                           <img
                             src={r.avatarUrl || r.avatar || r.photoUrl || r.photo || r.photoURL}
                             alt={r.userName || r.name || 'User'}
-                            width={40}
-                            height={40}
-                            loading="lazy"
-                            decoding="async"
                             referrerPolicy="no-referrer"
                             className="w-10 h-10 rounded-full object-cover shrink-0 border border-slate-200"
                             onError={(e) => {

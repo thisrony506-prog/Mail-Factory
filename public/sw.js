@@ -6,8 +6,6 @@ const STATIC_ASSETS = [
   '/manifest.json',
   '/manifest.webmanifest',
   '/app-logo.png',
-  '/app-logo.webp',
-  '/logo.svg',
   '/icon-192.png',
   '/icon-512.png',
   '/favicon.ico',
@@ -47,15 +45,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   
-  if (request.method !== 'GET') {
-    return;
-  }
-
-  const url = new URL(request.url);
-  const isGoogleFont = url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
-
-  // Only handle origin requests and Google Font assets
-  if (!request.url.startsWith(self.location.origin) && !isGoogleFont) {
+  // Skip non-GET and cross-origin chrome-extension requests
+  if (request.method !== 'GET' || !request.url.startsWith(self.location.origin)) {
     return;
   }
 
@@ -69,16 +60,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Stale-while-revalidate for static assets, with immediate Cache-First cache hit for immutable font files
+  // Stale-while-revalidate for static assets
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
-      if (cachedResponse && url.hostname === 'fonts.gstatic.com') {
-        return cachedResponse;
-      }
-
       const fetchPromise = fetch(request)
         .then((networkResponse) => {
-          if (networkResponse && (networkResponse.status === 200 || (isGoogleFont && networkResponse.status === 0))) {
+          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
             const responseToCache = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(request, responseToCache);

@@ -1731,14 +1731,14 @@ async function startServer() {
       index: false,
       maxAge: '1d',
       setHeaders: (res, path) => {
-        if (path.includes('/assets/') || path.includes('/static/')) {
-          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-        } else if (path.endsWith('.js') || path.endsWith('.css')) {
-          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-        } else if (path.match(/\.(png|jpg|jpeg|gif|svg|ico|webp|avif|woff|woff2)$/)) {
-          res.setHeader('Cache-Control', 'public, max-age=2592000, must-revalidate'); // 30 days for images/fonts
+        if (path.endsWith('.js') || path.endsWith('.css')) {
+          res.setHeader('Cache-Control', 'public, max-age=2592000, must-revalidate'); // 1 month for CSS & JS
+        } else if (path.match(/\.(png|jpg|jpeg|gif|svg|ico|webp|avif|woff|woff2|ttf)$/)) {
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); // 1 year for Images & Fonts
         } else if (path.endsWith('.json') || path.endsWith('.webmanifest')) {
           res.setHeader('Cache-Control', 'public, max-age=86400, must-revalidate'); // 1 day for manifests
+        } else if (path.includes('/assets/') || path.includes('/static/')) {
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
         }
       }
     }));
