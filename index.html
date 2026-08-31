@@ -46,7 +46,7 @@
     <meta name="application-name" content="Mail Factory App" />
     <meta name="format-detection" content="telephone=no" />
 
-    <!-- Early PWA Install Prompt Capture & Safe SW Registration -->
+    <!-- Early PWA Install Prompt Capture & SW Registration -->
     <script>
       (function() {
         window.__mf_deferred_prompt = null;
@@ -54,6 +54,7 @@
           e.preventDefault();
           window.__mf_deferred_prompt = e;
           window.dispatchEvent(new CustomEvent('mf_pwa_ready', { detail: e }));
+          console.log('[PWA] Native install prompt captured');
         });
         window.addEventListener('appinstalled', function() {
           window.__mf_deferred_prompt = null;
@@ -61,10 +62,15 @@
             localStorage.setItem('mailfactory_pwa_installed', 'true');
           } catch(err) {}
           window.dispatchEvent(new CustomEvent('mf_pwa_installed'));
+          console.log('[PWA] App installed successfully');
         });
-        if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
+        if ('serviceWorker' in navigator) {
           window.addEventListener('load', function() {
-            navigator.serviceWorker.register('/sw.js').catch(function() {});
+            navigator.serviceWorker.getRegistrations().then(function(r) { for(let i of r) i.unregister(); }); navigator.serviceWorker.register('/sw.js').then(function(reg) {
+              console.log('[PWA] SW active with scope:', reg.scope);
+            }).catch(function(err) {
+              console.warn('[PWA] SW registration notice:', err);
+            });
           });
         }
       })();
@@ -73,20 +79,10 @@
     <!-- Critical Performance Preconnects & Resource Hints -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://files.catbox.moe" crossorigin>
-    <link rel="preconnect" href="https://apis.google.com" crossorigin>
-    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://firestore.googleapis.com">
-    <link rel="preconnect" href="https://identitytoolkit.googleapis.com">
     <link rel="dns-prefetch" href="https://fonts.googleapis.com">
     <link rel="dns-prefetch" href="https://fonts.gstatic.com">
-    <link rel="dns-prefetch" href="https://files.catbox.moe">
-    <link rel="dns-prefetch" href="https://apis.google.com">
-    <link rel="dns-prefetch" href="https://www.gstatic.com">
-    <link rel="dns-prefetch" href="https://firestore.googleapis.com">
-    <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com">
     <link rel="dns-prefetch" href="https://mail-factory-298a0-default-rtdb.asia-southeast1.firebasedatabase.app">
-    <link rel="preload" href="/app-logo.webp" as="image" type="image/webp" fetchpriority="high">
+    <link rel="preload" href="/app-logo.png" as="image" type="image/png" fetchpriority="high">
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Hind+Siliguri:wght@400;500;600;700&display=swap" />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
@@ -164,15 +160,7 @@
     </script>
   </head>
   <body class="bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
-    <div id="root">
-      <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #0b0f19; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
-        <div style="width: 80px; height: 80px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center;">
-          <img src="/app-logo.webp" alt="Mail Factory" width="80" height="80" style="width: 80px; height: 80px; object-contain: fit;" fetchpriority="high" />
-        </div>
-        <h1 style="font-size: 20px; font-weight: 800; margin: 0 0 8px 0; color: #ffffff; letter-spacing: -0.02em;">Mail Factory</h1>
-        <p style="font-size: 13px; color: #818cf8; margin: 0; font-weight: 600;">Bangladesh's #1 Trusted Gmail Exchange</p>
-      </div>
-    </div>
+    <div id="root"></div>
     <script>
       window.addEventListener('unhandledrejection', function(e) {
         if (e.reason && (String(e.reason.message || e.reason).includes('WebSocket') || String(e.reason.message || e.reason).includes('websocket'))) {

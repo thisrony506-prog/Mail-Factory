@@ -115,40 +115,8 @@ export default defineConfig(() => {
       target: 'es2020',
       cssCodeSplit: true,
       minify: 'esbuild' as const,
-      cssMinify: true,
       sourcemap: false,
-      chunkSizeWarningLimit: 1200,
-      assetsInlineLimit: 4096,
-      rollupOptions: {
-        output: {
-          manualChunks(id) {
-            if (id.includes('node_modules')) {
-              if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
-                return 'vendor-react';
-              }
-              if (id.includes('firebase')) {
-                return 'vendor-firebase';
-              }
-              if (id.includes('recharts') || id.includes('d3')) {
-                return 'vendor-charts';
-              }
-              if (id.includes('jspdf') || id.includes('jspdf-autotable') || id.includes('html-to-image')) {
-                return 'vendor-pdf';
-              }
-              if (id.includes('framer-motion') || id.includes('motion')) {
-                return 'vendor-motion';
-              }
-              if (id.includes('lucide-react')) {
-                return 'vendor-icons';
-              }
-              if (id.includes('sweetalert2')) {
-                return 'vendor-swal';
-              }
-              return 'vendor-others';
-            }
-          }
-        }
-      }
+      chunkSizeWarningLimit: 1000,
     },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.

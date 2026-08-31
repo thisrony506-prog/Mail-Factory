@@ -5,19 +5,12 @@ export const NAGAD_LOGO = "https://kommodo.ai/i/yIfqigMPVcRqfsstO0FL";
 export const NAGAD_DIRECT_LOGO = "https://plain-wnam-prod-public.komododecks.com/202608/23/yIfqigMPVcRqfsstO0FL/image.jpg";
 export const USDT_LOGO = "https://files.catbox.moe/217tw4.png";
 
-// Preload images during idle time to optimize startup thread performance
+// Preload images immediately
 if (typeof window !== 'undefined') {
-  const triggerPreload = () => {
-    [BKASH_LOGO, NAGAD_DIRECT_LOGO, USDT_LOGO].forEach((url) => {
-      const img = new Image();
-      img.src = url;
-    });
-  };
-  if ('requestIdleCallback' in window) {
-    (window as any).requestIdleCallback(() => triggerPreload());
-  } else {
-    setTimeout(triggerPreload, 2500);
-  }
+  [BKASH_LOGO, NAGAD_DIRECT_LOGO, USDT_LOGO].forEach((url) => {
+    const img = new Image();
+    img.src = url;
+  });
 }
 
 
