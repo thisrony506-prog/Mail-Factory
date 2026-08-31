@@ -2,11 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useApp } from './AppContext';
 import { translations, LANGUAGES } from './i18n';
 import { hapticFeedback } from './haptics';
-const AuthPageView = React.lazy(() => import('./AuthPageView').then((m) => ({ default: m.AuthPageView })));
+import { AuthPageView } from './AuthPageView';
 import { db } from './firebase';
 import { ref, onValue } from 'firebase/database';
-import { Review, TopSellerItem, isExcludedSeller, DEFAULT_BENCHMARK_SELLERS } from './types';
+import { Review, TopSellerItem, isExcludedSeller } from './types';
 import { AppLogo3D } from './AppLogo3D';
+import { DEFAULT_BENCHMARK_SELLERS } from './SellersView';
 import { SEO } from './SEO';
 import {
   ShieldCheck,
@@ -222,19 +223,17 @@ export const GuestLandingView: React.FC = () => {
 
   if (authMode !== 'none') {
     return (
-      <React.Suspense fallback={null}>
-        <AuthPageView
-          initialMode={authMode}
-          onBackToLanding={() => {
-            setAuthMode('none');
-            try {
-              if (window.location.pathname !== '/') {
-                window.history.pushState({}, '', '/');
-              }
-            } catch {}
-          }}
-        />
-      </React.Suspense>
+      <AuthPageView
+        initialMode={authMode}
+        onBackToLanding={() => {
+          setAuthMode('none');
+          try {
+            if (window.location.pathname !== '/') {
+              window.history.pushState({}, '', '/');
+            }
+          } catch {}
+        }}
+      />
     );
   }
 
