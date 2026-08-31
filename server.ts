@@ -1714,6 +1714,21 @@ app.get('/api/products', async (req: Request, res: Response) => {
   return res.json({ success: true, products: [] });
 });
 
+// Dynamic Sitemap XML Endpoint
+app.get('/sitemap.xml', (req: Request, res: Response) => {
+  const publicSitemap = path.join(process.cwd(), 'public', 'sitemap.xml');
+  const distSitemap = path.join(process.cwd(), 'dist', 'sitemap.xml');
+  const sitemapPath = fs.existsSync(publicSitemap) ? publicSitemap : distSitemap;
+  if (fs.existsSync(sitemapPath)) {
+    let xml = fs.readFileSync(sitemapPath, 'utf-8');
+    const domain = (process.env.APP_URL || 'https://www.mailfectory.top').replace(/\/$/, '');
+    xml = xml.replace(/https:\/\/(www\.)?mailfactory\.top/g, domain);
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+    return res.status(200).send(xml);
+  }
+  return res.status(404).send('Sitemap not found');
+});
+
 // ==========================================
 // Vite Middleware / Static Serving
 // ==========================================
@@ -1731,29 +1746,19 @@ async function startServer() {
     
     app.get("*", (req: Request, res: Response) => {
       const urlPath = req.path;
-      let title = "Buy & Sell Gmail Accounts - PVA USA, UK, BD Old | Mail Factory";
-      let description = "Buy & Sell Gmail PVA Accounts in BD. USA, UK, BD, Old Gmail 2010-2024. Instant delivery, bKash, Nagad, PayPal. Trusted since 2022 - 3200+ customers.";
-      let keywords = "buy gmail accounts, sell gmail accounts, gmail kinbo, gmail bikri korbo, gmail buy sell bd";
-      let canonical = "https://mailfactory.top" + (urlPath.endsWith("/") ? urlPath : urlPath + "/");
+      const baseUrl = (process.env.APP_URL || "https://www.mailfectory.top").replace(/\/$/, "");
+      let title = "Sell Gmail Accounts - PVA USA, UK, BD Old | Mail Factory";
+      let description = "Sell Gmail PVA Accounts in BD. USA, UK, BD, Old Gmail 2010-2024. Instant payout, bKash, Nagad, Rocket. Trusted since 2022 - 3200+ sellers.";
+      let keywords = "sell gmail accounts, gmail bikri korbo, gmail sell bd, earn money online bd";
+      let canonical = baseUrl + (urlPath.endsWith("/") ? urlPath : urlPath + "/");
       let schemaData: any = {
         "@context": "https://schema.org",
         "@type": "WebSite",
         "name": "Mail Factory",
-        "url": "https://mailfactory.top"
+        "url": baseUrl
       };
 
-      if (urlPath === "/buy-gmail-accounts" || urlPath === "/buy-gmail-accounts/") {
-        title = "Buy Gmail PVA Accounts - USA, UK, BD Old | Mail Factory";
-        description = "Buy Gmail PVA accounts 100% verified. USA, UK, BD, Old Gmail 2010-2024. Instant delivery, bKash/Nagad/PayPal. Trusted by 3200+ customers. Order now!";
-        schemaData = {
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          "mainEntity": [
-            {"@type": "Question","name": "Are these Gmail PVA?","acceptedAnswer": {"@type": "Answer","text": "Yes 100% PVA verified with real phone."}},
-            {"@type": "Question","name": "How fast delivery?","acceptedAnswer": {"@type": "Answer","text": "Instant 5-10 mins after bKash/PayPal payment."}}
-          ]
-        };
-      } else if (
+      if (
         urlPath === "/sell-old-gmail-accounts" || 
         urlPath === "/sell-old-gmail-accounts/" ||
         urlPath === "/sell-gmail-accounts" || 

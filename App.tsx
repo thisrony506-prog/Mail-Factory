@@ -87,7 +87,7 @@ const MainLayout: React.FC = () => {
           description: language === 'bn'
             ? "আপনার নতুন বা পুরনো জিমেইল বিক্রি করে ২ ঘণ্টার মধ্যে বিকাশ, রকেট বা নগদে নিশ্চিত পেমেন্ট নিন। ১০০০+ সেলারদের প্রিয় প্ল্যাটফর্ম।"
             : "Sell your fresh or old Gmail accounts in Bangladesh. Get paid instantly within 2 hours via bKash, Nagad, or Rocket with full security.",
-          url: "https://mailfactory.top/"
+          url: "https://www.mailfectory.top/"
         };
       case 'login':
         return {
@@ -95,7 +95,7 @@ const MainLayout: React.FC = () => {
           description: language === 'bn'
             ? "আপনার মেইল ফ্যাক্টরি অ্যাকাউন্টে লগইন করুন এবং জিমেইল সাবমিট করা শুরু করুন।"
             : "Log in to your Mail Factory account to submit Gmails, track approval status, and cashout.",
-          url: "https://mailfactory.top/login"
+          url: "https://www.mailfectory.top/login"
         };
       case 'register':
         return {
@@ -103,7 +103,7 @@ const MainLayout: React.FC = () => {
           description: language === 'bn'
             ? "ফ্রিতে অ্যাকাউন্ট খুলুন এবং জিমেইল অ্যাকাউন্ট বিক্রি করে আয় করা শুরু করুন।"
             : "Register for a free Mail Factory account. Start selling your Gmails with direct automated payouts.",
-          url: "https://mailfactory.top/register"
+          url: "https://www.mailfectory.top/register"
         };
       case 'exchange':
         return {
@@ -111,7 +111,7 @@ const MainLayout: React.FC = () => {
           description: language === 'bn'
             ? "আপনার জিমেইল অ্যাকাউন্টগুলো নিরাপদে আমাদের কাছে সাবমিট করুন।"
             : "Submit your fresh or aged Gmail credentials safely for automated verification.",
-          url: "https://mailfactory.top/exchange"
+          url: "https://www.mailfectory.top/exchange"
         };
       case 'history':
         return {
@@ -119,7 +119,7 @@ const MainLayout: React.FC = () => {
           description: language === 'bn'
             ? "আপনার সাবমিট করা জিমেইল এবং উইথড্র স্ট্যাটাস রিয়েল-টাইমে চেক করুন।"
             : "Track your submitted accounts, audit logs, and transaction history in real-time.",
-          url: "https://mailfactory.top/history"
+          url: "https://www.mailfectory.top/history"
         };
       case 'sellers':
         return {
@@ -127,7 +127,7 @@ const MainLayout: React.FC = () => {
           description: language === 'bn'
             ? "মেইল ফ্যাক্টরি লিডারবোর্ডের সেরা পারফর্মারদের তালিকা দেখুন।"
             : "View the highest earning VIP sellers and partners on the Mail Factory leaderboard.",
-          url: "https://mailfactory.top/sellers"
+          url: "https://www.mailfectory.top/sellers"
         };
       case 'profile':
         return {
@@ -135,7 +135,7 @@ const MainLayout: React.FC = () => {
           description: language === 'bn'
             ? "আপনার প্রোফাইল পরিচালনা করুন এবং রেফারেল আর্নিং ট্র্যাক করুন।"
             : "Manage your seller profile, track your level VIP perks, and copy your referral link.",
-          url: "https://mailfactory.top/profile"
+          url: "https://www.mailfectory.top/profile"
         };
       case 'withdraw':
         return {
@@ -143,7 +143,7 @@ const MainLayout: React.FC = () => {
           description: language === 'bn'
             ? "বিকাশ, নগদ বা রকেটে মাত্র ২ ঘণ্টার মধ্যে আপনার অর্জিত টাকা ক্যাশআউট করুন।"
             : "Cashout your approved earnings to bKash, Nagad, or Rocket securely within 2 hours.",
-          url: "https://mailfactory.top/withdraw"
+          url: "https://www.mailfectory.top/withdraw"
         };
       case 'reviews':
         return {
@@ -151,7 +151,7 @@ const MainLayout: React.FC = () => {
           description: language === 'bn'
             ? "আমাদের ১০০০+ বিশ্বস্ত গ্রাহকদের মতামত এবং কাজের অভিজ্ঞতা রিভিউ দেখুন।"
             : "Read honest feedback and performance reviews from real users of Mail Factory.",
-          url: "https://mailfactory.top/reviews"
+          url: "https://www.mailfectory.top/reviews"
         };
       case 'about':
         return {
@@ -159,7 +159,7 @@ const MainLayout: React.FC = () => {
           description: language === 'bn'
             ? "মেইল ফ্যাক্টরি এক্সচেঞ্জ প্ল্যাটফর্মের লক্ষ্য এবং নিরাপদ সেলিং ব্যবস্থা।"
             : "Learn about Mail Factory's secure digital assets brokerage and professional buying policies.",
-          url: "https://mailfactory.top/about"
+          url: "https://www.mailfectory.top/about"
         };
       case 'privacy':
         return {
@@ -167,7 +167,7 @@ const MainLayout: React.FC = () => {
           description: language === 'bn'
             ? "আপনার তথ্য সুরক্ষা আমাদের দ্বায়িত্ব। আমরা প্রতিটি মেইল কেনার পর ফ্যাক্টরি রিসেট করি।"
             : "Read how we strictly protect seller privacy and fully delete personal data from bought accounts.",
-          url: "https://mailfactory.top/privacy"
+          url: "https://www.mailfectory.top/privacy"
         };
       case 'faq':
         return {
@@ -175,7 +175,7 @@ const MainLayout: React.FC = () => {
           description: language === 'bn'
             ? "পেমেন্ট স্পিড, জিমেইল টাইপ এবং অ্যাকাউন্ট সিকিউরিটি নিয়ে সকল প্রশ্নের উত্তর।"
             : "Get answers to key questions on Gmail requirements, payout speeds, and secure transfer guidelines.",
-          url: "https://mailfactory.top/faq"
+          url: "https://www.mailfectory.top/faq"
         };
       case 'contact':
         return {
@@ -183,7 +183,7 @@ const MainLayout: React.FC = () => {
           description: language === 'bn'
             ? "যেকোনো সাহায্য বা জিমেইল অডিটের জন্য আমাদের ২৪/৭ সাপোর্ট টিমের সাথে যোগাযোগ করুন।"
             : "Get in touch with Mail Factory customer support agents on WhatsApp or via live chat.",
-          url: "https://mailfactory.top/contact"
+          url: "https://www.mailfectory.top/contact"
         };
       case 'buyer_market':
         return {
@@ -191,7 +191,7 @@ const MainLayout: React.FC = () => {
           description: language === 'bn'
             ? "মেইল ফ্যাক্টরি থেকে শতভাগ নিরাপদ এবং ভেরিফাইড জিমেইল পাইকারি দামে কিনুন।"
             : "Buy high quality bulk Gmails, PVA accounts, and aged verified channels at wholesale prices.",
-          url: "https://mailfactory.top/buyer/market"
+          url: "https://www.mailfectory.top/buyer/market"
         };
       default:
         return null;
