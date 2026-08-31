@@ -851,6 +851,10 @@ export const GuestLandingView: React.FC = () => {
                           <img
                             src={uPhoto}
                             alt={uName}
+                            width={32}
+                            height={32}
+                            loading="lazy"
+                            decoding="async"
                             referrerPolicy="no-referrer"
                             className="w-8 h-8 rounded-full object-cover shrink-0 border border-slate-700"
                             onError={(e) => {
@@ -1070,6 +1074,10 @@ export const GuestLandingView: React.FC = () => {
                           <img
                             src={uPhoto}
                             alt={uName}
+                            width={32}
+                            height={32}
+                            loading="lazy"
+                            decoding="async"
                             referrerPolicy="no-referrer"
                             className="w-8 h-8 rounded-full object-cover shrink-0 border border-slate-700"
                             onError={(e) => {
