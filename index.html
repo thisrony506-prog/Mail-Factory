@@ -54,7 +54,6 @@
           e.preventDefault();
           window.__mf_deferred_prompt = e;
           window.dispatchEvent(new CustomEvent('mf_pwa_ready', { detail: e }));
-          console.log('[PWA] Native install prompt captured');
         });
         window.addEventListener('appinstalled', function() {
           window.__mf_deferred_prompt = null;
@@ -62,11 +61,10 @@
             localStorage.setItem('mailfactory_pwa_installed', 'true');
           } catch(err) {}
           window.dispatchEvent(new CustomEvent('mf_pwa_installed'));
-          console.log('[PWA] App installed successfully');
         });
         if ('serviceWorker' in navigator) {
           window.addEventListener('load', function() {
-            navigator.serviceWorker.getRegistrations().then(function(r) { for(let i of r) i.unregister(); }); navigator.serviceWorker.register('/sw.js').then(function(reg) {
+            navigator.serviceWorker.register('/sw.js').then(function(reg) {
               console.log('[PWA] SW active with scope:', reg.scope);
             }).catch(function(err) {
               console.warn('[PWA] SW registration notice:', err);
@@ -81,13 +79,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://fonts.googleapis.com">
     <link rel="dns-prefetch" href="https://fonts.gstatic.com">
-    <link rel="dns-prefetch" href="https://mail-factory-298a0-default-rtdb.asia-southeast1.firebasedatabase.app">
+    <link rel="dns-prefetch" href="https://exchanger-pro-default-rtdb.firebaseio.com">
     <link rel="preload" href="/app-logo.png" as="image" type="image/png" fetchpriority="high">
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Hind+Siliguri:wght@400;500;600;700&display=swap" />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
 
-    <!-- Zero Layout Shift Root Styling -->
+    <!-- Zero Layout Shift Root Styling & Keyframes -->
     <style>
       html, body {
         margin: 0;
@@ -95,11 +93,80 @@
         min-height: 100%;
         background-color: #0b0f19;
         font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+        color: #f8fafc;
       }
       #root {
         min-height: 100vh;
         display: flex;
         flex-direction: column;
+      }
+      @keyframes mf-pulse-bar {
+        0% { transform: translateX(-100%); }
+        50% { transform: translateX(50%); }
+        100% { transform: translateX(200%); }
+      }
+      .mf-initial-loader {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(circle at center, #0f172a 0%, #0b0f19 100%);
+        z-index: 9999;
+        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      }
+      .mf-loader-logo-wrapper {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .mf-loader-logo-glow {
+        position: absolute;
+        inset: -12px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1, #a855f7);
+        opacity: 0.35;
+        filter: blur(14px);
+      }
+      .mf-loader-logo {
+        width: 72px;
+        height: 72px;
+        object-fit: contain;
+        position: relative;
+        z-index: 2;
+      }
+      .mf-loader-title {
+        font-size: 22px;
+        font-weight: 900;
+        color: #ffffff;
+        letter-spacing: -0.5px;
+        margin: 0 0 6px 0;
+      }
+      .mf-loader-subtitle {
+        font-size: 13px;
+        color: #818cf8;
+        font-weight: 600;
+        margin: 0 0 24px 0;
+      }
+      .mf-loader-bar-bg {
+        width: 180px;
+        height: 5px;
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        overflow: hidden;
+        position: relative;
+      }
+      .mf-loader-bar-fill {
+        width: 50%;
+        height: 100%;
+        background: linear-gradient(90deg, #6366f1, #a855f7);
+        border-radius: 999px;
+        animation: mf-pulse-bar 1.4s infinite ease-in-out;
       }
     </style>
 
@@ -160,7 +227,19 @@
     </script>
   </head>
   <body class="bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
-    <div id="root"></div>
+    <div id="root">
+      <div class="mf-initial-loader">
+        <div class="mf-loader-logo-wrapper">
+          <div class="mf-loader-logo-glow"></div>
+          <img src="/app-logo.png" alt="Mail Factory Logo" class="mf-loader-logo" />
+        </div>
+        <h1 class="mf-loader-title">Mail Factory</h1>
+        <p class="mf-loader-subtitle">বিশ্বস্ত এক্সচেঞ্জ প্ল্যাটফর্ম</p>
+        <div class="mf-loader-bar-bg">
+          <div class="mf-loader-bar-fill"></div>
+        </div>
+      </div>
+    </div>
     <script>
       window.addEventListener('unhandledrejection', function(e) {
         if (e.reason && (String(e.reason.message || e.reason).includes('WebSocket') || String(e.reason.message || e.reason).includes('websocket'))) {
