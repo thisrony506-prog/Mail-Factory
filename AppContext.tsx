@@ -1200,7 +1200,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         },
         (err) => {
-          console.warn('Users connection notice:', err);
+          try {
+            const cached = localStorage.getItem('mf_real_top_sellers');
+            if (cached) {
+              setAllUsers(JSON.parse(cached));
+            }
+          } catch {}
         }
       );
       return () => unsubscribe();

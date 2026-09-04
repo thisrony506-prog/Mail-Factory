@@ -50,6 +50,7 @@
       ".write": true
     },
     "users": {
+      ".read": true,
       ".indexOn": ["referralCode", "balance"],
       "$uid": {
         ".read": true,
