@@ -1729,6 +1729,35 @@ app.get('/sitemap.xml', (req: Request, res: Response) => {
   return res.status(404).send('Sitemap not found');
 });
 
+// Dedicated Favicon & Googlebot Icon Endpoints
+app.get(['/favicon.ico', '/favicon.png', '/icon-192.png', '/icon-512.png', '/app-logo.png', '/apple-touch-icon.png', '/apple-touch-icon-precomposed.png', '/favicon-48x48.png', '/favicon-96x96.png', '/favicon-32x32.png', '/favicon-16x16.png'], (req: Request, res: Response) => {
+  const filename = req.path.replace(/^\//, '');
+  const distFile = path.join(process.cwd(), 'dist', filename);
+  const pubFile = path.join(process.cwd(), 'public', filename);
+  const target = fs.existsSync(pubFile) ? pubFile : distFile;
+  if (fs.existsSync(target)) {
+    if (filename.endsWith('.ico')) {
+      res.setHeader('Content-Type', 'image/x-icon');
+    } else {
+      res.setHeader('Content-Type', 'image/png');
+    }
+    res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
+    return res.sendFile(target);
+  }
+  return res.status(404).send('Icon not found');
+});
+
+app.get('/robots.txt', (req: Request, res: Response) => {
+  const robotsPub = path.join(process.cwd(), 'public', 'robots.txt');
+  const robotsDist = path.join(process.cwd(), 'dist', 'robots.txt');
+  const target = fs.existsSync(robotsPub) ? robotsPub : robotsDist;
+  if (fs.existsSync(target)) {
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    return res.sendFile(target);
+  }
+  return res.status(404).send('Robots.txt not found');
+});
+
 // ==========================================
 // Vite Middleware / Static Serving
 // ==========================================
@@ -1755,7 +1784,20 @@ async function startServer() {
         "@context": "https://schema.org",
         "@type": "WebSite",
         "name": "Mail Factory",
-        "url": baseUrl
+        "alternateName": "Mail Factory App",
+        "url": baseUrl,
+        "image": `${baseUrl}/icon-512.png`,
+        "publisher": {
+          "@type": "Organization",
+          "name": "Mail Factory",
+          "url": baseUrl,
+          "logo": {
+            "@type": "ImageObject",
+            "url": `${baseUrl}/icon-512.png`,
+            "width": 512,
+            "height": 512
+          }
+        }
       };
 
       if (
