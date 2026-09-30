@@ -1730,7 +1730,12 @@ app.get('/sitemap.xml', (req: Request, res: Response) => {
 });
 
 // Dedicated Favicon & Googlebot Icon Endpoints
-app.get(['/favicon.ico', '/favicon.png', '/icon-192.png', '/icon-512.png', '/app-logo.png', '/apple-touch-icon.png', '/apple-touch-icon-precomposed.png', '/favicon-48x48.png', '/favicon-96x96.png', '/favicon-32x32.png', '/favicon-16x16.png'], (req: Request, res: Response) => {
+app.get([
+  '/favicon.ico', '/favicon.png', '/favicon.svg', '/logo.svg',
+  '/icon-192.png', '/icon-512.png', '/app-logo.png', '/app-logo.webp',
+  '/apple-touch-icon.png', '/apple-touch-icon-precomposed.png',
+  '/favicon-48x48.png', '/favicon-96x96.png', '/favicon-32x32.png', '/favicon-16x16.png'
+], (req: Request, res: Response) => {
   const filename = req.path.replace(/^\//, '');
   const distFile = path.join(process.cwd(), 'dist', filename);
   const pubFile = path.join(process.cwd(), 'public', filename);
@@ -1738,6 +1743,10 @@ app.get(['/favicon.ico', '/favicon.png', '/icon-192.png', '/icon-512.png', '/app
   if (fs.existsSync(target)) {
     if (filename.endsWith('.ico')) {
       res.setHeader('Content-Type', 'image/x-icon');
+    } else if (filename.endsWith('.svg')) {
+      res.setHeader('Content-Type', 'image/svg+xml');
+    } else if (filename.endsWith('.webp')) {
+      res.setHeader('Content-Type', 'image/webp');
     } else {
       res.setHeader('Content-Type', 'image/png');
     }

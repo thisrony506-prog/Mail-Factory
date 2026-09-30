@@ -35,9 +35,8 @@ export function AppLogo3D({
   
   const sources = useMemo(() => [
     src,
-    'https://files.catbox.moe/xdvz6g.png',
-    '/app-logo.png',
     APP_LOGO_BASE64,
+    '/app-logo.png',
     '/icon-192.png'
   ].filter(Boolean) as string[], [src]);
 
