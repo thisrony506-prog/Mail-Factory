@@ -7,6 +7,8 @@ import { hapticFeedback } from './haptics';
 import { usePWAInstall } from './usePWAInstall';
 import { useUserBalance } from './useUserBalance';
 import { AppLogo3D } from './AppLogo3D';
+import { PWAStatus } from './PWAStatus';
+import { PWAInstallGuideModal } from './PWAInstallGuideModal';
 import {
   Settings,
   User,
@@ -62,6 +64,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   
   const t = translations[language];
   const { isInstallable, promptInstall } = usePWAInstall();
+  const [isInstallGuideOpen, setIsInstallGuideOpen] = React.useState(false);
 
   const handleLogout = async () => {
     try {
@@ -573,30 +576,39 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <ChevronRight className="w-4 h-4 text-slate-400" />
           </button>
 
-          {isInstallable && (
-            <button
-              onClick={() => {
-                hapticFeedback.medium();
-                promptInstall();
-              }}
-              className="w-full flex items-center justify-between p-3 text-left bg-gradient-to-r from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 rounded-2xl transition-all cursor-pointer border border-indigo-200 shadow-xs mt-1"
-            >
-              <div className="flex items-center gap-3">
-                <AppLogo3D size={40} glow animated className="shrink-0" />
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <h3 className="text-xs font-black text-indigo-950">Mail Factory App</h3>
-                  </div>
-                  <p className="text-[10px] text-indigo-700 font-semibold">
-                    {language === 'bn' ? 'হোমস্ক্রিনে যোগ করুন • এক ক্লিকে ওপেন' : 'Install to Home Screen for instant access'}
-                  </p>
-                </div>
+          {/* How to Install App Guide Row */}
+          <button
+            onClick={() => {
+              hapticFeedback.light();
+              setIsInstallGuideOpen(true);
+            }}
+            className="w-full flex items-center justify-between py-3 px-2 text-left hover:bg-slate-50 rounded-2xl transition-all cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                <Download className="w-4 h-4 text-indigo-600" />
               </div>
-              <div className="p-2 rounded-xl bg-indigo-600 text-white shadow-xs">
-                <Download className="w-4 h-4" />
+              <div>
+                <h3 className="text-xs font-extrabold text-slate-800">
+                  {language === 'bn' ? 'অ্যাপ ইনস্টল করার নিয়ম (How to Install)' : 'How to Install App (Guide)'}
+                </h3>
+                <p className="text-[10px] text-slate-400 font-medium">
+                  {language === 'bn' ? 'অ্যান্ড্রয়েড, আইফোন বা কম্পিউটারে ইনস্টলেশন গাইড' : 'Browser-specific Add to Home Screen guide'}
+                </p>
               </div>
-            </button>
-          )}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
+                {language === 'bn' ? 'গাইড দেখুন' : 'View Guide'}
+              </span>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+            </div>
+          </button>
+
+          {/* PWA Status Component */}
+          <div className="pt-2">
+            <PWAStatus variant="card" />
+          </div>
         </div>
       </div>
 
@@ -610,6 +622,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <span>{t.logout}</span>
         </button>
       </div>
+
+      {/* How to Install Modal */}
+      <PWAInstallGuideModal
+        isOpen={isInstallGuideOpen}
+        onClose={() => setIsInstallGuideOpen(false)}
+      />
     </div>
   );
 };

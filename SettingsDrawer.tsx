@@ -6,6 +6,7 @@ import { auth, signOut } from './firebase';
 import { usePWAInstall } from './usePWAInstall';
 import { useUserBalance } from './useUserBalance';
 import { hapticFeedback } from './haptics';
+import { PWAStatus } from './PWAStatus';
 import {
   X,
   Settings,
@@ -564,18 +565,10 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
               <ChevronRight className="w-4 h-4 text-slate-400" />
             </button>
 
-            {isInstallable && (
-              <button
-                onClick={() => closeAndExecute(() => promptInstall())}
-                className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 rounded-2xl font-black text-xs shadow-sm transition-all cursor-pointer"
-              >
-                <div className="flex items-center gap-3">
-                  <Download className="w-4 h-4" />
-                  <span>{language === 'bn' ? 'অফিসিয়াল অ্যাপ ইনস্টল করুন' : 'Install Official App'}</span>
-                </div>
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            )}
+            {/* PWA App Status Component */}
+            <div className="pt-1">
+              <PWAStatus variant="row" />
+            </div>
           </div>
         </div>
 

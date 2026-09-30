@@ -101,11 +101,24 @@ export function usePWAInstall() {
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('mf_pwa_ready', handleCustomPWAReady);
     window.addEventListener('appinstalled', handleAppInstalled);
+    window.addEventListener('mf_pwa_installed', handleAppInstalled);
+
+    if (typeof navigator !== 'undefined' && 'getInstalledRelatedApps' in navigator) {
+      (navigator as any).getInstalledRelatedApps().then((relatedApps: any[]) => {
+        if (relatedApps && relatedApps.length > 0) {
+          setIsInstalled(true);
+          try {
+            localStorage.setItem('mailfactory_pwa_installed', 'true');
+          } catch {}
+        }
+      }).catch(() => {});
+    }
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('mf_pwa_ready', handleCustomPWAReady);
       window.removeEventListener('appinstalled', handleAppInstalled);
+      window.removeEventListener('mf_pwa_installed', handleAppInstalled);
     };
   }, []);
 
